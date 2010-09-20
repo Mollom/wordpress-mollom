@@ -244,21 +244,12 @@ class WP_Mollom {
 	* @return array The comment passed by the preprocess_comment hook
 	*/
 	function check_comment($comment) {
-		echo "<pre>";
-			var_dump("value to hold");
-		echo "</pre>";
 		$mollom_comment_data = array('post_body' => $comment['comment_content'],
 									 'author_name' => $comment['comment_author'],
 									 'author_url' => $comment['comment_author_url'],
 									 'author_mail' => $comment['comment_author_email']);
 
 		$result = $this->mollom->checkContent($mollom_comment_data); //('mollom.checkContent', $mollom_comment_data);	
-		echo "<pre>";
-			var_dump($result);
-		echo "</pre>";
-		echo "<pre>";
-			var_dump($this->mollom->getErrors());
-		echo "</pre>";
 		return $comment;
 	}
 	
