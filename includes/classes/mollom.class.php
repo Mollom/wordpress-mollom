@@ -30,13 +30,14 @@ define( 'MOLLOM_ANALYSIS_SPAM'    , 2);
 define( 'MOLLOM_ANALYSIS_UNSURE'  , 3);
 
 /**
- * Interface which needs to be implemented by any XML-RPC class before an instance
- * of that class can be passed to {@link Mollom::setRPCClient}
+ * XML-RPC Interface which needs to be implemented. Because implementations of XML-RPC
+ * differ, this part of the class is abstracted. See the documentation of {@link Mollom} for
+ * more details on how to implement this interface.
  *
  * @package Mollom
  */
-interface MollomRPCClient {
-  public function query();
+interface MollomXMLRPC {
+  public function xmlrpc($method, $args = NULL);
   public function setServer($server, $path = false, $port = 80);
   public function getResponse();
   public function isError();
@@ -46,11 +47,17 @@ interface MollomRPCClient {
 
 /**
  * This class abstracts the Mollom API and makes it available as a host of public
- * functions. The Mollom API is XML-RPC based. So the class will not run unless you pass
- * it an instance of class which implements the XML-RPC protocol and adheres to the 
- * MollomRPCClient interface.
- * You'll need to signup with Mollom and receive a public/private key before you get access
- * to the API.
+ * functions. The API is based on XML-RPC. The class itself doesn't make any assumptions 
+ * about the way XML-RPC is implemented in your context. If you want to use the class, you
+ * need to extend it into your own specific class, implementing the MollomXMLRPC interface.
+ *
+ *  i.e. Wordpress
+ *    class WPMollom extends Mollom implements MollomXMLRPC
+ *  i.e. Drupal
+ *    class DrupalMollom extends Mollom implements MollomXMLRPC
+ *
+ * You'll need to signup with {@link http://mollom.com Mollom} and obtain a public/private 
+ * key before you get access to the API.
  * This class only makes the API available. Correctly implementing a fully fledged client for
  * your application, still requires the developer to follow the {@link http://mollom.com/api documentation}
  * thoroughly.
@@ -60,7 +67,6 @@ interface MollomRPCClient {
 class Mollom {
   private $public_key;
   private $private_key;
-  private $mollom_rpcclient;
   private $mollom_servers;
   private $mollom_errors;
   private $mollom_response;
@@ -74,7 +80,7 @@ class Mollom {
    * @param String private_key The Private Key (HMAC-SHA1) registered with the Mollom account
    * @param MollomRPCClient rpc_client An instance of a class which implements the XML-RPC protocol
    */
-  function __construct($public_key = NULL, $private_key = NULL, MollomRPCClient $rpc_client = NULL) {
+  function __construct($public_key = NULL, $private_key = NULL) {
     $this->public_key = $public_key;
     $this->private_key = $private_key;
     $this->mollom_errors = FALSE;
@@ -83,34 +89,24 @@ class Mollom {
     $this->mollom_response = NULL;
     $this->session_id = NULL;
     $this->reverse_proxy_addressses = NULL;
-    $this->mollom_rpcclient = $rpc_client;
-  }
-
-  /**
-   * Sets an instance of a class which implements the XML-RPC protocol
-   *
-   * @param MollomRPCClient rpc_client
-   */
-  public function setRPCClient(MollomRPCClient $rpc_client) {
-    $this->mollom_rpcclient = $rpc_client;
   }
 
   /**
    * Sets the public key which the application manager receives after registering with Mollom
    *
-   * @param String public_key The public key provided by Mollom
+   * @param String public_key The public key you receive when you sign up with Mollom
    */
   public function setPublicKey($public_key = NULL) {
-	  $this->public_key = $public_key;
+    $this->public_key = $public_key;
   }
 
   /**
    * Sets the private key which the application manager receives after registering with Mollom
    *
-   * @param String private_key The private key provided by Mollom
+   * @param String private_key The private key you receive when you sign up with Mollom
    */
   public function setPrivateKey($private_key = NULL) {
-	  $this->pirvate_key = $private_key;
+    $this->pirvate_key = $private_key;
   }
 
   /**
@@ -131,7 +127,7 @@ class Mollom {
    * @return array An array of reachable Mollom servers
    */
   public function getServerList() {
-	  return $this->mollom_servers;
+    return $this->mollom_servers;
   }
 
   /**
@@ -175,10 +171,10 @@ class Mollom {
    */
   public function verifyKey() {
     if ($this->query('mollom.verifyKey')) {
-	    return $this->mollom_response;
-	  }
-		
-  	return FALSE;
+      return $this->mollom_response;
+    }
+
+    return FALSE;
   }
 
   /**
@@ -188,9 +184,9 @@ class Mollom {
    * @return array|boolean Either an array containing pairs of language and confidence values or FALSE if the query failed
    */
   public function detectLanguage($text = NULL) {
-  	$data = array('text' => $text);
+    $data = array('text' => $text);
 
-	  if ($languages = $this->query('mollom.detectLanguage', $data)) {
+    if ($languages = $this->query('mollom.detectLanguage', $data)) {
       return $languages;
     }
     
@@ -202,21 +198,21 @@ class Mollom {
    * 
    * @param String $text Up to 100 characters of text to be blacklisted on your site, in lowercase, with all leading and trailing spaces trimmed
    * @param String $context The information to search for the text, either "everything" for the entire post, "links" for link URLs and link titles only or "author" for all author related information
-   * @param String $reason 	One of the following reasons the text is blacklisted: "spam", "profanity", "low-quality", "unwanted"
+   * @param String $reason One of the following reasons the text is blacklisted: "spam", "profanity", "low-quality", "unwanted"
    * @return boolean Always returns TRUE unless the query failed in which case FALSE was returned.
    */
   public function addBlacklistText($text = NULL, $context = 'everything', $reason = 'spam') {
-  	$data = array(
-	    'text'    => $text,
-	    'context'   => $context,
-	    'reason'  => $reason,
-	  );
+    $data = array(
+      'text'    => $text,
+      'context'   => $context,
+      'reason'  => $reason,
+    );
 
-  	if ($result = $this->query('mollom.addBlacklistText', $data)) {
-	    return TRUE;
-	  }
+    if ($result = $this->query('mollom.addBlacklistText', $data)) {
+      return TRUE;
+    }
 
-    return FALSE;	
+    return FALSE;
   }
 
   /**
@@ -224,19 +220,19 @@ class Mollom {
    *
    * @param String $text Up to 100 characters of text to be blacklisted on your site, in lowercase, with all leading and trailing spaces trimmed
    * @param String $context The information to search for the text, either "everything" for the entire post, "links" for link URLs and link titles only or "author" for all author related information
-   * @param String $reason 	One of the following reasons the text is blacklisted: "spam", "profanity", "low-quality", "unwanted"
+   * @param String $reason One of the following reasons the text is blacklisted: "spam", "profanity", "low-quality", "unwanted"
    * @return boolean Always returns TRUE unless the query failed in which case FALSE was returned.
    */   
   public function removeBlacklistText($text = NULL) {
-	  $data = array(
-	    'text' => $text,
-	  );
-	
-	  if ($result = $this->query('mollom.removeBlacklistText', $data)) {
-	    return TRUE;
-	  }
-	
-	  return FALSE;
+    $data = array(
+      'text' => $text,
+    );
+
+    if ($result = $this->query('mollom.removeBlacklistText', $data)) {
+      return TRUE;
+    }
+
+    return FALSE;
   }
 
   /**
@@ -248,8 +244,8 @@ class Mollom {
   * @return boolean|array Either an array with the response or FALSE if the query failed
   */
   public function listBlacklistText() {
-	  if ($blacklist = $this->query('mollom.listBlacklistText')) {
-  	  return $blacklist;
+    if ($blacklist = $this->query('mollom.listBlacklistText')) {
+      return $blacklist;
     }
 
     return FALSE;
@@ -263,14 +259,14 @@ class Mollom {
    */
   public function addBlacklistURL($url = NULL) {
     $data = array(
-	    'url' => $url,
+      'url' => $url,
     );
 
     if ($result = $this->query('mollom.addBlacklistURL', $url)) {
       return TRUE;
     }
 
-	  return FALSE;
+    return FALSE;
   }
 
   /**
@@ -280,15 +276,15 @@ class Mollom {
    * @return boolean Always returns TRUE unless the query failed in which case FALSE was returned.
    */
   public function removeBlacklistURL($url = NULL) {
-  	$data = array(
-	    'url' => $url,
-  	);
-	
-  	if ($result = $this->query('mollom.removeBlacklistURL', $data)) {
-	    return TRUE;
-	  }
-	
-    return FALSE;	
+    $data = array(
+      'url' => $url,
+    );
+
+    if ($result = $this->query('mollom.removeBlacklistURL', $data)) {
+      return TRUE;
+    }
+
+    return FALSE;
   }
 
   /**
@@ -301,10 +297,10 @@ class Mollom {
   */
   public function listBlacklistURL() {
     if ($blacklist = $this->query('mollom.listBlacklistURL')) {
-	    return $blacklist;
-	  }
+      return $blacklist;
+    }
 
-	  return FALSE;
+    return FALSE;
   }
 
   /**
@@ -326,41 +322,41 @@ class Mollom {
    */
   public function getStatistics($type = 'total_days') {
     $types = array('total_days',
-								 'total_accepted',
-								 'total_rejected',
-								 'yesterday_accepted',
-								 'yesterday_rejected',
-								 'today_accepted',
-								 'today_rejected',
-	        );
-	 
-	  if (in_array($type, $types)) {
-		  $this->query('mollom.getStatistics', array('type' => $type));
-		  return $this->mollom_response;
-	  }
-	
-	  return FALSE;
+                   'total_accepted',
+                   'total_rejected',
+                   'yesterday_accepted',
+                   'yesterday_rejected',
+                   'today_accepted',
+                   'today_rejected',
+                  );
+ 
+    if (in_array($type, $types)) {
+      $this->query('mollom.getStatistics', array('type' => $type));
+      return $this->mollom_response;
+    }
+
+    return FALSE;
   }
 
   // @todo: make these arguments compulsory or not?
   public function checkContent($message = array()) {
     // set data in an array we'll pass along with the call
     $data = array('session_id'     => (!is_null($message['session_id'])) ? $message['session_id'] : $this->session_id,
-	              'post_title'     => $message['post_title'],
-	              'post_body'      => $message['post_body'],
-	              'author_name'    => $message['author_name'],
-	              'author_url'     => $message['author_url'],
-	              'author_mail'    => $message['author_mail'],
-	              'author_openid'  => $message['author_openid'],
-	              'author_ip'      => (!is_null($message['author_ip'])) ? $message['author_ip'] : $this->get_author_ip(),
-	              'author_id'      => $message['author_id'],
-	        );
-	
-	  if ($this->query('mollom.checkContent', $data)) {
-	    $this->session_id = $this->mollom_response['session_id'];
+                  'post_title'     => $message['post_title'],
+                  'post_body'      => $message['post_body'],
+                  'author_name'    => $message['author_name'],
+                  'author_url'     => $message['author_url'],
+                  'author_mail'    => $message['author_mail'],
+                  'author_openid'  => $message['author_openid'],
+                  'author_ip'      => (!is_null($message['author_ip'])) ? $message['author_ip'] : $this->get_author_ip(),
+                  'author_id'      => $message['author_id'],
+                 );
+
+    if ($this->query('mollom.checkContent', $data)) {
+      $this->session_id = $this->mollom_response['session_id'];
       return $this->mollom_response;
-	  }
-	
+    }
+
     return FALSE;
   }
 
@@ -377,12 +373,12 @@ class Mollom {
   public function checkCaptcha($session_id = NULL, $captcha_solution) {
     $data = array('session_id'     => (!is_null($sesion_id)) ? $session_id : $this->session_id,
                   'solution'       => $captcha_solution,
-            );
+                 );
 
-	  if ($this->query('mollom.checkCaptcha', $data)) {
-	    $this->session_id = $this->mollom_response['session_id'];
+    if ($this->query('mollom.checkCaptcha', $data)) {
+      $this->session_id = $this->mollom_response['session_id'];
       return $this->mollom_response;
-	  }
+    }
 
     return FALSE;
   }
@@ -398,15 +394,15 @@ class Mollom {
   */
   public function getImageCaptcha($session_id = NULL, $author_ip = NULL) {
     $data = array('session_id'     => (!is_null($sesion_id)) ? $session_id : $this->session_id,
-	              'author_ip'      => (!is_null($author_ip)) ? $author_ip : $this->get_author_ip(),
-            );
+                  'author_ip'      => (!is_null($author_ip)) ? $author_ip : $this->get_author_ip(),
+                 );
 
-	  if ($this->query('mollom.getImageCaptcha', $data)) {
-	    $this->session_id = $this->mollom_response['session_id'];
+    if ($this->query('mollom.getImageCaptcha', $data)) {
+      $this->session_id = $this->mollom_response['session_id'];
       return $this->mollom_response;
-	  }
+    }
 
-	  return FALSE;
+    return FALSE;
   }
 
   /**
@@ -420,13 +416,13 @@ class Mollom {
   */
   public function getAudioCaptcha($session_id = NULL, $author_ip = NULL) {
     $data = array('session_id'     => (!is_null($sesion_id)) ? $session_id : $this->session_id,
-	                'author_ip'      => (!is_null($author_ip)) ? $author_ip : $this->get_author_ip(),
-            );
+                  'author_ip'      => (!is_null($author_ip)) ? $author_ip : $this->get_author_ip(),
+                 );
 
     if ($this->query('mollom.getAudioCaptcha', $data)) {
-	    $this->session_id = $this->mollom_response['session_id'];
+      $this->session_id = $this->mollom_response['session_id'];
       return $this->mollom_response;
-	  }
+    }
 
     return FALSE;
   }
@@ -448,40 +444,40 @@ class Mollom {
       }
     }
 
-	  // fail-over/loadbalancing act
+    // fail-over/loadbalancing act
     foreach ($this->mollom_servers as $server) {
-     	$this->mollom_rpcclient->setServer($server . '/' . MOLLOM_API_VERSION);
-      $result = $this->mollom_rpcclient->query($method, $data + $this->authenticate());
+      $this->setServer($server . '/' . MOLLOM_API_VERSION);
+      $result = $this->xmlrpc($method, $data + $this->authenticate());
 
-      if ($this->mollom_rpcclient->getErrorCode()) {
-	      // refresh the server list and try again
-        if ($this->mollom_rpcclient->getErrorCode() == MOLLOM_REFRESH) {
-	        if (!$this->refresh_server_list()) {
-	          return FALSE;
-	        }
+      if ($this->getErrorCode()) {
+        // refresh the server list and try again
+        if ($this->getErrorCode() == MOLLOM_REFRESH) {
+          if (!$this->refresh_server_list()) {
+            return FALSE;
+          }
         }
 
         // redirect to a different server
-        else if ($this->mollom_rpcclient->getErrorCode() == MOLLOM_REDIRECT) {
+        else if ($this->getErrorCode() == MOLLOM_REDIRECT) {
           // $server is overloaded, let's try the next one
           // do nothing, travel through the loop again and try the next server in the list
         }
 
         // Mollom triggered an error
-        else if ($this->mollom_rpcclient->getErrorCode() == MOLLOM_ERROR) {
+        else if ($this->getErrorCode() == MOLLOM_ERROR) {
           // The Mollom API triggered an error
-          $this->mollom_errors[$this->mollom_rpcclient->getErrorCode()] = $this->mollom_rpcclient->getErrorMessage();
+          $this->mollom_errors[$this->getErrorCode()] = $this->getErrorMessage();
           return FALSE;
         } 
 
         else {
           // Something went dead wrong!
-          $this->mollom_errors[$this->mollom_rpcclient->getErrorCode()] = $this->mollom_rpcclient->getErrorMessage();
-          return FALSE;	
+          $this->mollom_errors[$this->getErrorCode()] = $this->getErrorMessage();
+          return FALSE;
         }
       } else {
         // return a response if all went well
-        $this->mollom_response = $this->mollom_rpcclient->getResponse();
+        $this->mollom_response = $this->getResponse();
         return true;
       }
     }
@@ -501,24 +497,23 @@ class Mollom {
   **/
   public function refresh_server_list() {
     // hard coded list cfr API documentation, section 9
-	  $servers = array(
-                 'http://xmlrpc1.mollom.com/',
-                 'http://xmlrpc2.mollom.com/',
-                 'http://xmlrpc3.mollom.com/'
-               );
+    $servers = array(
+                     'http://xmlrpc1.mollom.com/',
+                     'http://xmlrpc2.mollom.com/',
+                     'http://xmlrpc3.mollom.com/'
+                    );
 
-    foreach($servers as $server) {
-	    $this->mollom_rpcclient->setServer($server . MOLLOM_API_VERSION);
-      if(!$this->mollom_rpcclient->query('mollom.getServerList', $this->authenticate())) {
-        // Something went wrong! Let's try the next one in the list
-      } else {
-        $this->mollom_servers = $this->mollom_rpcclient->getResponse();
+    foreach ($servers as $server) {
+      $this->setServer($server . MOLLOM_API_VERSION);
+      if (!$this->xmlrpc('mollom.getServerList', $this->authenticate())) {
+        // Something went wrong! Let's try the next one in the list       } else {
+        $this->mollom_servers = $this->getResponse();
         $this->mollom_servers_refreshed = TRUE; // raise a flag to indicate a refresh occured
         return TRUE;
       }
     }
 
-    $this->mollom_errors[$this->mollom_rpcclient->getErrorCode()] = $this->mollom_rpcclient->getErrorMessage();
+    $this->mollom_errors[$this->getErrorCode()] = $this->getErrorMessage();
     return FALSE;
   }
 
@@ -533,13 +528,13 @@ class Mollom {
     $time = gmdate("Y-m-d\TH:i:s.\\0\\0\\0O", time());
 
     // generate a random nonce
-  	$nonce = $this->nonce();
+    $nonce = $this->nonce();
 
     // Calculate a HMAC-SHA1 according to RFC2104 (http://www.ietf.org/rfc/rfc2104.txt):
-	  $hash =  base64_encode(
-	  pack("H*", sha1((str_pad($this->private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x5c), 64))) .
+    $hash =  base64_encode(
+      pack("H*", sha1((str_pad($this->private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x5c), 64))) .
       pack("H*", sha1((str_pad($this->private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x36), 64))) . 
-   	  $time . ':' . $nonce . ':' . $this->private_key))))
+      $time . ':' . $nonce . ':' . $this->private_key))))
     );
 
     // Store everything in an array. Elsewhere in the code, we'll add the
@@ -590,8 +585,8 @@ class Mollom {
           // recently added one, ie the last one.
           $ip_address = array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
         }
-	    }
-  	}
+      }
+    }
 
     // If WP is run in a clustered environment
     if (array_key_exists('HTTP_X_CLUSTER_CLIENT_IP', $_SERVER)) {
@@ -601,6 +596,3 @@ class Mollom {
     return $ip_address;
   }
 }
-
-
-?>

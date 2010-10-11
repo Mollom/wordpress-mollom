@@ -48,9 +48,8 @@ class WP_Mollom {
 	private $mollom;
 	
   function __construct() {
-	  // load functions
 	  require_once(ABSPATH . '/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/includes/common.inc.php');
-	  require_once(ABSPATH . '/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/includes/templates.inc.php');
+    require_once(ABSPATH . '/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/includes/templates.inc.php');
 		
     // load an instance of type Mollom
     $this->mollom = WP_Mollom::factory();
@@ -129,18 +128,13 @@ class WP_Mollom {
   }
 
   static function factory() {
-		require_once(ABSPATH . '/wp-includes/class-IXR.php');	
-    require_once(ABSPATH . '/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/includes/classes/mollom.class.php');	
-    require_once(ABSPATH . '/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/includes/classes/mollomrpcclientwrapper.class.php');	
-
-		$xmlrpc_instance =& new MollomRPCClientWrapper('0.0.0.0', false, 80, 10);
-		$xmlrpc_instance->user_agent = MOLLOM_USER_AGENT;
-
-		$mollom =& new Mollom(get_option('mollom_public_key'), get_option('mollom_private_key'), $xmlrpc_instance);
+    require_once(ABSPATH . '/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/includes/classes/wpmollom.class.php');
+		
+		$mollom =& new WPMollom(get_option('mollom_public_key'), get_option('mollom_private_key'));
 		
 		$mollom_servers = get_option('mollom_servers', NULL);
 		$mollom->setServerList($mollom_servers);
-				
+						
 		return $mollom;
   }
 
