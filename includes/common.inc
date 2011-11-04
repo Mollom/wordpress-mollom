@@ -58,3 +58,64 @@ function _mollom_render_template($template_file, $variables) {
 function mollom_nonce_field($action = -1) {
 	return wp_nonce_field($action);
 }
+
+/**
+ * Install Mollom tables
+ *
+ * Installer function which helps with the installation of tables. Registers
+ * the version of the table with get_option in the {prefix}-options table.
+ * tableversions are tracked each time a change is made.
+ *
+ * @param string $table_name Name of the table you want to install
+ * @param string $table_version The version of the table. This can be be a string, but it's advised to use a number
+ * @param string $sql The definition of the different tablefields which populate the table
+ */
+function mollom_table_install($table_name, $table_version, $sql) {
+  global $wpdb;
+
+  if ( ! empty($wpdb->charset) ) {
+    $charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
+  }
+
+  if ( ! empty($wpdb->collate) ) {
+    $charset_collate .= " COLLATE $wpdb->collate";
+  }
+
+  $wp_table_name = $wpdb->prefix . $table_name;
+
+  if ($wpdb->get_var("SHOW TABLES LIKE '" . $wp_table_name."'") != $wp_table_name) {
+    $sql_create_table = "CREATE TABLE " . $wp_table_name . " ( " . $sql . " ) " . $charset_collate . ";";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql_create_table);
+
+    //create option for table version
+    $option_name = $table_name.'_tbl_version';
+    $newvalue = $table_version;
+    if ( get_option($option_name) ) {
+      update_option($option_name, $newvalue);
+    }
+    // @todo do we need this?
+    /* else {
+		  add_option($option_name, $newvalue, '', 'no');
+	  }*/
+
+    //create option for table name
+    $option_name = $table_name.'_tbl';
+    $newvalue = $wp_table_name;
+
+    if ( get_option($option_name) ) {
+      update_option($option_name, $newvalue);
+    } else {
+      add_option($option_name, $newvalue, '', 'no');
+	  }
+  }
+
+  // Code here with new database upgrade info/table Must change version number to work.
+  $installed_ver = get_option( $table_name.'_tbl_version' );
+  if( $installed_ver != $table_version ) {
+    $sql_create_table = "CREATE TABLE " . $wp_table_name . " ( " . $sql . " ) " . $charset_collate . ";";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql_create_table);
+    update_option( $table_name.'_tbl_version', $table_version );
+  }
+}

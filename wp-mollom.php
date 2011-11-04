@@ -53,6 +53,7 @@ class WPMollom {
     load_plugin_textdomain(MOLLOM_I18N, false, dirname(plugin_basename(__FILE__)));
     // register the administration page
     add_action('admin_menu',array(&$this, 'register_administration_pages'));
+    register_activation_hook(__FILE__, array(&$this, 'activate'));
   }
 
   /**
@@ -94,7 +95,15 @@ class WPMollom {
   static private function mollom_include($file) {
     require_once(MOLLOM_BASE_PATH . '/includes/' . $file);
   }
-	
+
+  /**
+   * Callback. Called on activation of the plugin.
+   */
+  function activate() {
+    self::mollom_include('common.inc');
+    mollom_table_install();
+  }
+
   /**
    * Register the administration pages
    *
