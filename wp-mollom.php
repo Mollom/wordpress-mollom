@@ -135,7 +135,6 @@ class WPMollom {
     $mollom = new MollomWordpress();
 
     $m = $mollom->verifyKeys();
-    var_dump($m);
 		
     if ( isset($_POST['submit']) ) {
       if ( function_exists('current_user_can') && !current_user_can('manage_options') ) {
