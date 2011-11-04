@@ -101,9 +101,10 @@ class WPMollom {
    * Register new pages so to get displayed in /wp-admin
    */
   public function register_administration_pages() {
-    add_submenu_page('options-general.php', __('Mollom', MOLLOM_I18N), __('Mollom', MOLLOM_I18N), 'manage_options', 'mollom-key-config', array(&$this, 'configuration_page'));
-    add_submenu_page('edit-comments.php', __('Mollom', MOLLOM_I18N), __('Mollom', MOLLOM_I18N), 'manage_options', 'mollom-key-config', array(&$this, 'moderation_page'));
-    add_action('admin_init', array(&$this, 'register_configuration_options'));
+    add_submenu_page( 'options-general.php', __('Mollom', MOLLOM_I18N), __('Mollom', MOLLOM_I18N), 'manage_options', 'mollom-key-config', array(&$this, 'configuration_page') );
+    add_action( 'admin_init', array(&$this, 'register_configuration_options') );
+    add_action( 'manage_comments_custom_column', array(&$this, 'mollom_comment_column_row'), 10, 2 );
+    add_filter( 'manage_edit-comments_columns', array(&$this, 'mollom_comments_columns') );
   }
 	
   /**
@@ -159,22 +160,42 @@ class WPMollom {
     $vars['mollom_public_key'] = ($mollom_public_key) ? $mollom_public_key : get_option('mollom_public_key');
     $vars['mollom_private_key'] = ($mollom_private_key) ? $mollom_private_key : get_option('mollom_private_key');
 
-    // Render the page		
+    // Render the output
     mollom_theme('configuration', $vars);
   }
-	
-  /**
-   * Page callback
-   *
-   * Handle the moderation page at edit-comments.php
-   */
-	public function moderation_page() {
-      $wp_list_table = _get_list_table('WP_Comments_List_Table');
-      $pagenum = $wp_list_table->get_pagenum();
 
-      // Render the page
-	  mollom_theme('moderation');
-    }
+  /**
+   * Callback. Show Mollom actions in the Comments table
+   *
+   * Show Mollom action links and status messages per commentinthe comments table.
+   *
+   * @param string $column The column name
+   * @param int $comment_id The comment ID
+   * @return string Rendered output
+   */
+  function mollom_comment_column_row($column, $comment_id) {
+    if ( $column != 'mollom' )
+		  return;
+
+    self::mollom_include('common.inc');
+
+    // Render the output
+    mollom_theme('comment_moderation', $vars);
+  }
+
+  /**
+   * Callback. Registers an extra column in the Comments table.
+   *
+   * Registers an extra column in the Comments section of wp-admin. This column
+   * is used to display Mollom specific status messages and actions per comment.
+   *
+   * @param array $columns an array of columns for a table
+   * @return array An array of columns for a table
+   */
+  function mollom_comments_columns( $columns ) {
+	  $columns[ 'mollom' ] = __( 'Mollom' );
+	  return $columns;
+  }
 }
 
 // Gone with the wind

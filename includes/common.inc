@@ -19,15 +19,19 @@ function mollom_theme() {
 	  'configuration' => array(
 		  'template' => 'configuration',
 		),
+    'comment_moderation' => array(
+      'template' => 'comment-moderation'
+    ),
 	);
 
   $args = func_get_args();
   $hook = array_shift($args);
 	$variables = array_shift($args);
 
+  $variables = ($variables) ? $variables : array();
+
   if (isset($registered_templates[$hook])) {
     $template_file = $registered_templates[$hook]['template'] . '.tpl.php';
-
     if (file_exists(MOLLOM_BASE_PATH . "/templates/$template_file")) {
       $output = _mollom_render_template($template_file, $variables);
     }
