@@ -187,6 +187,11 @@ class WPMollom {
 
     self::mollom_include('common.inc');
 
+    // @todo add links:
+    // @todo add spaminess indicator
+    // @todo add had a captcha indicator
+    // @todo add status messages (showstopper?)
+
     // Render the output
     mollom_theme('comment_moderation', $vars);
   }
