@@ -53,6 +53,9 @@ class WPMollom {
     // register the administration page
     add_action('admin_menu',array(&$this, 'register_administration_pages'));
     register_activation_hook(__FILE__, array(&$this, 'activate'));
+		// pass comments through Mollom during processing
+		add_filter('preprocess_comment', array(&$this, 'check_comment'));
+
   }
 
   /**
@@ -204,10 +207,48 @@ class WPMollom {
    * @param array $columns an array of columns for a table
    * @return array An array of columns for a table
    */
-  function mollom_comments_columns( $columns ) {
+  public function mollom_comments_columns( $columns ) {
 	  $columns[ 'mollom' ] = __( 'Mollom' );
 	  return $columns;
   }
+
+	/**
+	 * Callback. Perform the actual Mollom check on a new comment
+	 *
+	 * This function hooks onto the comment preprocessing. It will pass the comment
+	 * to Mollom. Depending on the result, it will either pass the comment to WP as ham,
+	 * block it as spam or show captcha if unsure. Trackbacks are also passed to Mollom.
+	 *
+	 * @param array $comment The preprocessed comment
+	 * @return array The comment if it passed the check, or void to block it from the database
+	 */
+	public function check_comment($comment) {
+
+		// Handle trackbacks
+		if ($comment['comment_type'] == 'trackback') {
+			check_trackback($comment);
+			return $comment;
+		}
+
+
+
+		return $comment;
+	}
+
+	/**
+	 * Perform the actual Mollom check on a new trackback.
+	 *
+	 * This function performs a check on trackbacks. Since a trackback can't answer a
+	 * CAPTCHA, the 'spam' and 'unsure' modifiers are being treated the same and get blocked.
+	 *
+	 * @todo Handle trackbacks
+	 *
+	 * @param type $trackback
+	 * @return type
+	 */
+	public function check_trackback(&$trackback) {
+		return $trackback;
+	}
 }
 
 // Gone with the wind
