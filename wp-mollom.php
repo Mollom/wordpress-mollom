@@ -178,6 +178,11 @@ class WPMollom {
    * Callback. Show Mollom actions in the Comments table
    *
    * Show Mollom action links and status messages per commentinthe comments table.
+	 *
+	 * @todo add links
+	 * @todo add spaminess indicator
+	 * @todo add a had a captcha indicator
+	 * @todo add status messages
    *
    * @param string $column The column name
    * @param int $comment_id The comment ID
@@ -188,11 +193,6 @@ class WPMollom {
 		  return;
 
     self::mollom_include('common.inc');
-
-    // @todo add links:
-    // @todo add spaminess indicator
-    // @todo add had a captcha indicator
-    // @todo add status messages (showstopper?)
 
     // Render the output
     mollom_theme('comment_moderation', $vars);
