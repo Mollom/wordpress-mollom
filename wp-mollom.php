@@ -67,8 +67,9 @@ class WPMollom {
   public function getInstance() {
     if (!self::$instance) {
       self::$instance = new WPMollom();
-      return self::$instance;
     }
+		
+		return self::$instance;
   }
 
   /**
