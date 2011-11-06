@@ -32,7 +32,7 @@ function mollom_theme() {
 
   if (isset($registered_templates[$hook])) {
     $template_file = $registered_templates[$hook]['template'] . '.tpl.php';
-    if (file_exists(MOLLOM_BASE_PATH . "/templates/$template_file")) {
+    if (file_exists(MOLLOM_PLUGIN_PATH . "/templates/$template_file")) {
       $output = _mollom_render_template($template_file, $variables);
     }
   }
@@ -49,7 +49,7 @@ function mollom_theme() {
 function _mollom_render_template($template_file, $variables) {
   extract($variables, EXTR_SKIP); // Extract the variables to a local namespace
   ob_start(); // Start output buffering
-  include MOLLOM_BASE_PATH . "/templates/$template_file"; // Include the template file
+  include MOLLOM_PLUGIN_PATH . "/templates/$template_file"; // Include the template file
   $contents = ob_get_contents(); // Get the contents of the buffer
   ob_end_clean(); // End buffering and discard
   print $contents; // Return the contents

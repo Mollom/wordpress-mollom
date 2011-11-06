@@ -32,8 +32,7 @@ define( 'MOLLOM_PLUGIN_VERSION', '2.x-dev' );
 define( 'MOLLOM_I18N', 'wp-mollom' );
 
 /* define a few paths */
-define( 'MOLLOM_PLUGIN_PATH', 'wp-content/plugins/' . dirname(plugin_basename(__FILE__)) );
-define( 'MOLLOM_BASE_PATH', ABSPATH . MOLLOM_PLUGIN_PATH );
+define( 'MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__) );
 
 class WPMollom {
 
@@ -93,7 +92,7 @@ class WPMollom {
    *  The file name of an existing file in the includes/ folder
    */
   static private function mollom_include($file) {
-    require_once(MOLLOM_BASE_PATH . '/includes/' . $file);
+    require_once(MOLLOM_PLUGIN_PATH . '/includes/' . $file);
   }
 
   /**
