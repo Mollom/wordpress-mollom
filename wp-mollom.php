@@ -10,7 +10,7 @@ Author URI: http://www.colada.be
 Email: matthias@colada.be
 */
 
-/* 
+/*
   Copyright 2008, 2009, 2010, 2011 Matthias Vandermaesen (email : matthias@colada.be)
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ class WPMollom {
   static private $instance = NULL;
   static private $mollom = NULL;
   private $mollom_nonce = 'mollom-configuration';
-	
+
   /**
   * Constructor
   *
@@ -81,11 +81,11 @@ class WPMollom {
   public function getMollomInstance() {
     self::mollom_include('mollom.class.inc');
     self::mollom_include('mollom.wordpress.inc');
-	
+
     if (!self::$mollom) {
       self::$mollom = new MollomWordpress();
       return self::$mollom;
-    }		
+    }
   }
 
   /**
@@ -118,7 +118,7 @@ class WPMollom {
     add_action( 'manage_comments_custom_column', array(&$this, 'mollom_comment_column_row'), 10, 2 );
     add_filter( 'manage_edit-comments_columns', array(&$this, 'mollom_comments_columns') );
   }
-	
+
   /**
    * Register settings with Wordpress
    *
@@ -132,7 +132,7 @@ class WPMollom {
     register_setting('mollom_settings', 'mollom_reverse_proxy');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
   }
-	
+
   /**
    * Page callback
    *
@@ -140,26 +140,26 @@ class WPMollom {
    */
   public function configuration_page() {
     self::mollom_include('common.inc');
-	
+
     $mollom_public_key = NULL;
     $mollom_private_key = NULL;
     $mollom = self::getMollomInstance();
     $mollom = new MollomWordpress();
 
     $m = $mollom->verifyKeys();
-		
+
     if ( isset($_POST['submit']) ) {
       if ( function_exists('current_user_can') && !current_user_can('manage_options') ) {
         die(__('Cheatin&#8217; uh?'));
       }
-			
+
       check_admin_referer( $this->mollom_nonce );
-			
+
       if ( $_POST['mollom_public_key'] ) {
         $mollom_public_key = preg_replace( '/[^a-z0-9]/i', '', $_POST['mollom_public_key'] );
         update_option('mollom_public_key', $mollom_public_key);
       }
-			
+
       if ( $_POST['mollom_private_key'] ) {
         $mollom_private_key = preg_replace( '/[^a-z0-9]/i', '', $_POST['mollom_private_key'] );
         update_option('mollom_private_key', $mollom_private_key);
