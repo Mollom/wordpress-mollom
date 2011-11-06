@@ -188,7 +188,7 @@ class WPMollom {
    * @param int $comment_id The comment ID
    * @return string Rendered output
    */
-  function mollom_comment_column_row($column, $comment_id) {
+  public function mollom_comment_column_row($column, $comment_id) {
     if ( $column != 'mollom' )
 		  return;
 
