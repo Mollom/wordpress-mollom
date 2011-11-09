@@ -1,9 +1,9 @@
 <?php
 
 /*
-Plugin Name: WP Mollom
+Plugin Name: Mollom
 Plugin URI: http://wordpress.org/extend/plugins/wp-mollom/
-Description: Enable <a href="http://www.mollom.com">Mollom</a> on your wordpress blog. This plugin provides Mollom core functionality.
+Description: Protect your site from spam and unwanted posts with <a href="http://mollom.com">Mollom</a>.
 Author: Matthias Vandermaesen
 Version: 2.x-dev
 Author URI: http://www.colada.be
@@ -51,7 +51,7 @@ class WPMollom {
     // load the text domain for localization
     load_plugin_textdomain(MOLLOM_I18N, false, dirname(plugin_basename(__FILE__)));
     // register the administration page
-    add_action('admin_menu',array(&$this, 'register_administration_pages'));
+    add_action('admin_menu', array(&$this, 'register_administration_pages'));
     register_activation_hook(__FILE__, array(&$this, 'activate'));
 		// pass comments through Mollom during processing
 		add_filter('preprocess_comment', array(&$this, 'check_comment'));
@@ -79,13 +79,12 @@ class WPMollom {
    * @return MollomWordpress
    */
   public function getMollomInstance() {
-    self::mollom_include('mollom.class.inc');
-    self::mollom_include('mollom.wordpress.inc');
-
-    if (!self::$mollom) {
+    if (!isset(self::$mollom)) {
+      self::mollom_include('mollom.class.inc');
+      self::mollom_include('mollom.wordpress.inc');
       self::$mollom = new MollomWordpress();
-      return self::$mollom;
     }
+    return self::$mollom;
   }
 
   /**
@@ -125,8 +124,11 @@ class WPMollom {
    * The register_setting() function registers a setting for easy handling through option_get/update/delete.
    */
   public function register_configuration_options() {
-    register_setting('mollom_settings', 'mollom_public_key');
-    register_setting('mollom_settings', 'mollom_private_key');
+    // Mollom class configuration.
+    register_setting('mollom_settings', 'mollom_publicKey');
+    register_setting('mollom_settings', 'mollom_privateKey');
+    register_setting('mollom_settings', 'mollom_servers');
+
     register_setting('mollom_settings', 'mollom_roles');
     register_setting('mollom_settings', 'mollom_site_policy');
     register_setting('mollom_settings', 'mollom_reverse_proxy');
@@ -141,37 +143,35 @@ class WPMollom {
   public function configuration_page() {
     self::mollom_include('common.inc');
 
-    $mollom_public_key = NULL;
-    $mollom_private_key = NULL;
     $mollom = self::getMollomInstance();
-    $mollom = new MollomWordpress();
-
-    $m = $mollom->verifyKeys();
 
     if ( isset($_POST['submit']) ) {
       if ( function_exists('current_user_can') && !current_user_can('manage_options') ) {
         die(__('Cheatin&#8217; uh?'));
       }
-
       check_admin_referer( $this->mollom_nonce );
 
-      if ( $_POST['mollom_public_key'] ) {
-        $mollom_public_key = preg_replace( '/[^a-z0-9]/i', '', $_POST['mollom_public_key'] );
-        update_option('mollom_public_key', $mollom_public_key);
+      if ( $_POST['publicKey'] ) {
+        $mollom->publicKey = preg_replace( '/[^a-z0-9]/i', '', $_POST['publicKey'] );
+        update_option('mollom_public_key', $mollom->publicKey);
       }
-
-      if ( $_POST['mollom_private_key'] ) {
-        $mollom_private_key = preg_replace( '/[^a-z0-9]/i', '', $_POST['mollom_private_key'] );
-        update_option('mollom_private_key', $mollom_private_key);
+      if ( $_POST['privateKey'] ) {
+        $mollom->privateKey = preg_replace( '/[^a-z0-9]/i', '', $_POST['privateKey'] );
+        update_option('mollom_private_key', $mollom->privateKey);
       }
     }
 
-    // set variables used to render the page
-    $vars['mollom_nonce'] = $this->mollom_nonce;
-    $vars['mollom_public_key'] = ($mollom_public_key) ? $mollom_public_key : get_option('mollom_public_key');
-    $vars['mollom_private_key'] = ($mollom_private_key) ? $mollom_private_key : get_option('mollom_private_key');
+    // When requesting the page, and after updating the settings, verify the
+    // API keys.
+    $result = $mollom->verifyKeys();
 
-    // Render the output
+    // Set variables used to render the page.
+    $vars['messages'] = '';
+    $vars['mollom_nonce'] = $this->mollom_nonce;
+    $vars['publicKey'] = $mollom->publicKey;
+    $vars['privateKey'] = $mollom->privateKey;
+
+    // Render the page.
     mollom_theme('configuration', $vars);
   }
 
@@ -224,32 +224,53 @@ class WPMollom {
 	 * @return array The comment if it passed the check, or void to block it from the database
 	 */
 	public function check_comment($comment) {
+    $map = array(
+      'postTitle' => NULL,
+      'postBody' => 'comment_content',
+      'authorName' => 'comment_author',
+      'authorMail' => 'comment_author_email',
+      'authorUrl' => 'comment_author_url',
+      'authorId' => 'user_ID',
+    );
+    $data = array();
+    foreach ($map as $param => $key) {
+      if (isset($comment[$key]) && $comment[$key] !== '') {
+        $data[$param] = $comment[$key];
+      }
+    }
+    // @todo WP doesn't provide any core function for reverse proxy support.
+    $data['authorIp'] = $_SERVER['REMOTE_ADDR'];
+    // Add contextual information for the commented on post.
+    $data['contextUrl'] = get_permalink();
+    $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
+    // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
+    // whether a 'unsure' response asking for a CAPTCHA is possible.
+    $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
 
-		// Handle trackbacks
-		if ($comment['comment_type'] == 'trackback') {
-			check_trackback($comment);
-			return $comment;
-		}
+    $mollom = self::getMollomInstance();
+    $result = $mollom->checkContent($data);
 
+    // Trigger global fallback behavior if there is a unexpected result.
+    if (!is_array($result) || !isset($result['id'])) {
+      // @todo Implement option to configure fallback behavior when Mollom
+      //   service is unavailable.
+      //return _mollom_fallback();
+      return $comment;
+    }
 
+    if ($result['spamClassification'] == 'spam') {
+      // @todo Output an error message.
+      return;
+    }
+    elseif ($result['spamClassification'] == 'unsure') {
+      // @todo Retrieve and check CAPTCHA.
+    }
+    elseif ($result['spamClassification'] == 'ham') {
+      return $comment;
+    }
 
-		return $comment;
-	}
-
-	/**
-	 * Perform the actual Mollom check on a new trackback.
-	 *
-	 * This function performs a check on trackbacks. Since a trackback can't answer a
-	 * CAPTCHA, the 'spam' and 'unsure' modifiers are being treated the same and get blocked.
-	 *
-	 * @todo Handle trackbacks
-	 *
-	 * @param type $trackback
-	 * @return type
-	 */
-	public function check_trackback(&$trackback) {
-		return $trackback;
-	}
+    return $comment;
+  }
 }
 
 // Gone with the wind

@@ -9,84 +9,61 @@
  * Wordpress Mollom client implementation.
  */
 class MollomWordpress extends Mollom {
-
-	  /**
-   * Mapping of configuration names to Wordpress variables.
-   *
-   * @see Mollom::loadConfiguration()
-   */
-  private $configuration_map = array(
-    'publicKey' => 'mollom_public_key',
-    'privateKey' => 'mollom_private_key',
-    'servers' => 'mollom_servers',
-  );
-
   /**
    * Implements Mollom::loadConfiguration().
    */
   public function loadConfiguration($name) {
-    $name = $this->configuration_map[$name];
-    return get_option($name);
+    return get_option('mollom_' . $name);
   }
 
   /**
    * Implements Mollom::saveConfiguration().
    */
   public function saveConfiguration($name, $value) {
-    $name = $this->configuration_map[$name];
-    return update_option($name, $value);
+    return update_option('mollom_' . $name, $value);
   }
 
   /**
    * Implements Mollom::deleteConfiguration().
    */
   public function deleteConfiguration($name) {
-    $name = $this->configuration_map[$name];
-    return delete_option($name);
+    return delete_option('mollom_' . $name);
   }
 
   /**
    * Implements Mollom::getClientInformation().
    */
   public function getClientInformation() {
-		global $wp_version;
+    global $wp_version;
 
-		$data = array(
-		  'platformName' => 'Wordpress',
-		  'platformVersion' => $wp_version,
-	    'clientName' => 'WP Mollom',
-			'clientVersion' => MOLLOM_PLUGIN_VERSION,
-		);
+    $data = array(
+      'platformName' => 'Wordpress',
+      'platformVersion' => $wp_version,
+      'clientName' => 'WP Mollom',
+      'clientVersion' => MOLLOM_PLUGIN_VERSION,
+    );
 
-		return $data;
+    return $data;
   }
-	
+
   /**
    * Implements Mollom::request().
    */
   protected function request($method, $server, $path, $query = NULL, array $headers = array()) {
-		if ($method == 'GET') {
-			$function = 'wp_remote_get';
-		} elseif ($method == 'POST') {
-			$function = 'wp_remote_post';			
-		}
-
-		$data = array(
-			'body' => $query,
-		  'headers' => $headers,
-		);
-
-		$res = $function($server . '/' . $path, $data);
-		var_dump($server . '/' . $path);
-	var_dump($res['response']);
-    $response = (object) array(
-      'code' => $res['response']['code'],
-      'message' => isset($res['response']['message']) ? $res['response']['message'] : NULL,
-      'headers' => isset($res['headers']) ? $res['headers'] : array(),
-      'body' => $res['body'],
+    $function = ($method == 'GET' ? 'wp_remote_get' : 'wp_remote_post');
+    $data = array(
+      'headers' => $headers,
+      'body' => $query,
     );
+    $result = $function($server . '/' . $path, $data);
 
+    $response = (object) array(
+      'code' => $result['response']['code'],
+      'message' => isset($result['response']['message']) ? $result['response']['message'] : NULL,
+      'headers' => isset($result['headers']) ? $result['headers'] : array(),
+      'body' => $result['body'],
+    );
     return $response;
-	}
-	
+  }
+
 }
