@@ -167,6 +167,7 @@ class WPMollom {
     }
 
     // set variables used to render the page
+    $vars['messages'] = '';
     $vars['mollom_nonce'] = $this->mollom_nonce;
     $vars['mollom_public_key'] = ($mollom_public_key) ? $mollom_public_key : get_option('mollom_public_key');
     $vars['mollom_private_key'] = ($mollom_private_key) ? $mollom_private_key : get_option('mollom_private_key');

@@ -1,11 +1,11 @@
 <div class="wrap">
-  <h2><?php _e('Mollom Flightdeck', MOLLOM_I18N); ?></h2>
+  <h2><?php _e('Mollom Settings', MOLLOM_I18N); ?></h2>
 
   <div class="narrow">
     <?php print $messages; ?>
   <div class="column-left">
 
-    <p><?php _e('Mollom is a web service that helps you identify content quality and, more importantly, helps you stop comment and contact form spam. When moderation becomes easier, you can spend more time and energy to interact with your web community.', MOLLOM_I8N); ?></p>
+    <p><?php _e('Mollom is a web service that helps you identify content quality and, more importantly, helps you stop comment and contact form spam. When moderation becomes easier, you can spend more time and energy to interact with your web community.', MOLLOM_I18N); ?></p>
 	 
     <form action="options-general.php?page=mollom-key-config" method="post" id="mollom_configuration" style="margin: auto;">
       <?php settings_fields( 'mollom_configuration_settings' ); ?>
