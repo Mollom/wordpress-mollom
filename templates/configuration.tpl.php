@@ -13,14 +13,15 @@
       <p><?php _e('You need a public and a private key before you can make use of Mollom. <a href="http://mollom.com/user/register">Register</a> with Mollom to get your keys.', MOLLOM_I18N); ?></p>
  
       <h3><label><?php _e('Public key', MOLLOM_I18N); ?></label></h3>
-      <input type="text" size="50" maxlength="32" name="mollom_public_key" class="mollom-public-key<?php print ' ' . $fault['mollom-public-key']; ?>" value="<?php print $mollom_public_key; ?>" />
+      <input type="text" size="50" maxlength="32" name="publicKey" class="mollom-public-key" value="<?php print $publicKey; ?>" />
 
       <h3><label><?php _e('Private key', MOLLOM_I18N); ?></label></h3>
-      <input type="text" size="50" maxlength="32" name="mollom_private_key" id="mollom-private-key" value="<?php print $mollom_private_key; ?>" />
+      <input type="text" size="50" maxlength="32" name="privateKey" id="mollom-private-key" value="<?php print $privateKey; ?>" />
 
-			<?php mollom_nonce_field($mollom_nonce); ?>
+      <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
     </form>
-  </div> 
-  
+  </div>
+  </div>
+
 </div>
