@@ -1,9 +1,9 @@
 <?php
 
 /*
-Plugin Name: WP Mollom
+Plugin Name: Mollom
 Plugin URI: http://wordpress.org/extend/plugins/wp-mollom/
-Description: Enable <a href="http://www.mollom.com">Mollom</a> on your wordpress blog. This plugin provides Mollom core functionality.
+Description: Protect your site from spam and unwanted posts with <a href="http://mollom.com">Mollom</a>.
 Author: Matthias Vandermaesen
 Version: 2.x-dev
 Author URI: http://www.colada.be
