@@ -240,14 +240,20 @@ class WPMollom {
     }
     // @todo WP doesn't provide any core function for reverse proxy support.
     $data['authorIp'] = $_SERVER['REMOTE_ADDR'];
-    $data['contextUrl'] = the_permalink();
+    // Add contextual information for the commented on post.
+    $data['contextUrl'] = get_permalink();
     $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
+    // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
+    // whether a 'unsure' response asking for a CAPTCHA is possible.
+    $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
 
     $mollom = self::getMollomInstance();
     $result = $mollom->checkContent($data);
-    echo "<pre>"; var_dump($result); echo "</pre>\n";
+
     // Trigger global fallback behavior if there is a unexpected result.
     if (!is_array($result) || !isset($result['id'])) {
+      // @todo Implement option to configure fallback behavior when Mollom
+      //   service is unavailable.
       //return _mollom_fallback();
       return $comment;
     }
@@ -263,31 +269,8 @@ class WPMollom {
       return $comment;
     }
 
-		// Handle trackbacks
-		if ($comment['comment_type'] == 'trackback') {
-			check_trackback($comment);
-			return $comment;
-		}
-
-
-
-		return $comment;
-	}
-
-	/**
-	 * Perform the actual Mollom check on a new trackback.
-	 *
-	 * This function performs a check on trackbacks. Since a trackback can't answer a
-	 * CAPTCHA, the 'spam' and 'unsure' modifiers are being treated the same and get blocked.
-	 *
-	 * @todo Handle trackbacks
-	 *
-	 * @param type $trackback
-	 * @return type
-	 */
-	public function check_trackback(&$trackback) {
-		return $trackback;
-	}
+    return $comment;
+  }
 }
 
 // Gone with the wind

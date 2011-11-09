@@ -56,8 +56,6 @@ class MollomWordpress extends Mollom {
       'body' => $query,
     );
     $result = $function($server . '/' . $path, $data);
-    echo "<pre>"; var_dump($server . '/' . $path); echo "</pre>\n";
-    echo "<pre>"; var_dump($result); echo "</pre>\n";
 
     $response = (object) array(
       'code' => $result['response']['code'],
