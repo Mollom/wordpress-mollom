@@ -309,7 +309,9 @@ abstract class Mollom {
         continue;
       }
 
-      if (isset($result) && $this->lastResponseCode === TRUE) {
+      // Otherwise, we should have a result. Since the server list value is
+      // crucial and processed elsewhere, ensure that it is a non-empty array.
+      if ($this->lastResponseCode === TRUE && !empty($result['site']['servers']) && is_array($result['site']['servers'])) {
         $servers = $result['site']['servers'];
         break;
       }
@@ -1018,6 +1020,10 @@ abstract class Mollom {
   /**
    * Updates a site.
    *
+   * Note that most Mollom clients want to use Mollom::verifyKeys() only. This
+   * method is primarily used by Mollom resellers, who are provisioning sites
+   * and may need to set other site properties.
+   *
    * @param array $data
    *   An associative array of properties to set for the site. See
    *   Mollom::getSite() for details.
@@ -1040,6 +1046,11 @@ abstract class Mollom {
 
   /**
    * Updates a site to verify API keys and send client information.
+   *
+   * Mollom API keys are validated in all API calls already. This method should
+   * be used when the API keys of a Mollom client are configured for a site. It
+   * should be invoked at least once for a site, to send client and version
+   * information to Mollom in order to aid with Mollom support requests.
    *
    * @return mixed
    *   TRUE on success. On failure, the error response code returned by the
