@@ -16,17 +16,17 @@
 function mollom_theme() {
   // Template register
 	$registered_templates = array(
-	  'configuration' => array(
-		  'template' => 'configuration',
-		),
+    'configuration' => array(
+      'template' => 'configuration',
+    ),
     'comment_moderation' => array(
       'template' => 'comment-moderation'
     ),
-	);
+  );
 
   $args = func_get_args();
   $hook = array_shift($args);
-	$variables = array_shift($args);
+  $variables = array_shift($args);
 
   $variables = ($variables) ? $variables : array();
 
@@ -36,8 +36,8 @@ function mollom_theme() {
       $output = _mollom_render_template($template_file, $variables);
     }
   }
-	
-	return $output;
+
+  return $output;
 }
 
 /**
@@ -56,7 +56,7 @@ function _mollom_render_template($template_file, $variables) {
 }
 
 function mollom_nonce_field($action = -1) {
-	return wp_nonce_field($action);
+  return wp_nonce_field($action);
 }
 
 /**
