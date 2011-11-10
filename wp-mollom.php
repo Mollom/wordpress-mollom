@@ -131,7 +131,6 @@ class WPMollom {
 
     register_setting('mollom_settings', 'mollom_roles');
     register_setting('mollom_settings', 'mollom_site_policy');
-    register_setting('mollom_settings', 'mollom_reverse_proxy');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
   }
 
