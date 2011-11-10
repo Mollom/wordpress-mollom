@@ -160,6 +160,9 @@ class WPMollom {
       }
     }
 
+    // @todo Process roles which can skip the check
+    // @todo Process reverse proxy IP's
+
     // When requesting the page, and after updating the settings, verify the
     // API keys.
     $result = $mollom->verifyKeys();
