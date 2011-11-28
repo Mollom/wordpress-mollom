@@ -18,6 +18,10 @@
       <h3><label><?php _e('Private key', MOLLOM_I18N); ?></label></h3>
       <input type="text" size="50" maxlength="32" name="privateKey" id="mollom-private-key" value="<?php print $privateKey; ?>" />
 
+      <h3><label><?php _e('Roles', MOLLOM_I18N); ?></label></h3>
+      <p><?php _e('Select the roles you want to exclude from the mandatory Mollom check. Default: all roles are exempt.', MOLLOM_I18N); ?></p>
+      <?php print $mollom_roles; ?>
+
       <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
     </form>

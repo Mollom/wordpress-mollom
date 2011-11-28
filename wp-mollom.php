@@ -158,6 +158,10 @@ class WPMollom {
         $mollom->privateKey = preg_replace( '/[^a-z0-9]/i', '', $_POST['privateKey'] );
         update_option('mollom_private_key', $mollom->privateKey);
       }
+      if ( $_POST['mollomroles'] ) {
+        $mollom->roles = $_POST['mollomroles'];
+        update_option('mollom_roles', $mollom->roles);
+      }
     }
 
     // @todo Process roles which can skip the check
@@ -172,9 +176,36 @@ class WPMollom {
     $vars['mollom_nonce'] = $this->mollom_nonce;
     $vars['publicKey'] = $mollom->publicKey;
     $vars['privateKey'] = $mollom->privateKey;
+    $vars['mollom_roles'] = $this->mollom_roles_element();
 
     // Render the page.
     mollom_theme('configuration', $vars);
+  }
+
+  /**
+   * Helper function. Generate an <ul> list of roles
+   *
+   * @global type $wp_roles
+   * @return string
+   */
+  private function mollom_roles_element() {
+    global $wp_roles;
+    $mollom_roles = get_option('mollom_roles', array());
+    $checked = '';
+
+    $element = "<ul>";
+
+    foreach ($wp_roles->get_names() as $role => $name) {
+      $name = translate_user_role( $name );
+      if ($mollom_roles) {
+        $checked = (in_array($role, $mollom_roles)) ? "checked" : "";
+      }
+      $element .= "<li><input type=\"checkbox\" name=\"mollomroles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
+    }
+
+    $element .= "</ul>";
+
+    return $element;
   }
 
   /**
