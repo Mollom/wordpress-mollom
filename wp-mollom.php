@@ -68,7 +68,7 @@ class WPMollom {
     if (!self::$instance) {
       self::$instance = new WPMollom();
     }
-		
+
 		return self::$instance;
   }
 
@@ -128,7 +128,6 @@ class WPMollom {
     register_setting('mollom_settings', 'mollom_publicKey');
     register_setting('mollom_settings', 'mollom_privateKey');
     register_setting('mollom_settings', 'mollom_servers');
-
     register_setting('mollom_settings', 'mollom_roles');
     register_setting('mollom_settings', 'mollom_site_policy');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
