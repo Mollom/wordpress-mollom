@@ -281,7 +281,7 @@ class WPMollom {
         $data[$param] = $comment[$key];
       }
     }
-    // @todo WP doesn't provide any core function for reverse proxy support.
+    // Add the author IP, support for reverse proxy
     $data['authorIp'] = self::fetch_author_ip();
     // Add contextual information for the commented on post.
     $data['contextUrl'] = get_permalink();
@@ -330,15 +330,18 @@ class WPMollom {
    *   The IP of the host from which the request originates
    */
   private function fetch_author_ip() {
-    $reverse_proxy_addresses = explode(get_option('mollom_reverseproxy_addresses', array()), ',');
+    $reverse_proxy_option = get_option('mollom_reverseproxy_addresses', array());
 	  $ip_address = $_SERVER['REMOTE_ADDR'];
 
-	  if (!empty($reverse_proxy_addresses)) {
-		  if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-			  if (in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
-          // If there are several arguments, we need to check the most
-          // recently added one, ie the last one.
-          $ip_address = array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
+	  if (!empty($reverse_proxy_option)) {
+      $reverse_proxy_addresses = explode($reverse_proxy_option, ',');
+      if (!empty($reverse_proxy_addresses)) {
+  		  if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
+	  		  if (in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
+            // If there are several arguments, we need to check the most
+            // recently added one, ie the last one.
+            $ip_address = array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
+          }
         }
       }
     }
