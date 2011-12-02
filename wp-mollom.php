@@ -256,6 +256,17 @@ class WPMollom {
 	 * @return array The comment if it passed the check, or void to block it from the database
 	 */
 	public function check_comment($comment) {
+    // If a logged in user exists check if the role is exempt from a Mollom check
+		// non-registered visitors don't have a role so their submissions are always checked
+		$user = wp_get_current_user();
+		if ($user->ID) {
+			$mollom_roles = get_option('mollom_roles');
+			$detected = array_intersect($user->roles, $mollom_roles);
+			if (count($detected) > 0) {
+				return $comment;
+			}
+		}
+
     $map = array(
       'postTitle' => NULL,
       'postBody' => 'comment_content',
