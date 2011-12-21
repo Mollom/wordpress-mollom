@@ -157,6 +157,9 @@ class WPMollom {
         $mollom->privateKey = preg_replace( '/[^a-z0-9]/i', '', $_POST['privateKey'] );
         update_option('mollom_private_key', $mollom->privateKey);
       }
+      if ( $_POST['proxyAddresses'] ) {
+        update_option('mollom_reverseproxy_addresses', '');
+      }
       if ( $_POST['mollomroles'] ) {
         $mollom->roles = $_POST['mollomroles'];
         update_option('mollom_roles', $mollom->roles);

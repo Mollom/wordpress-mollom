@@ -22,6 +22,10 @@
       <p><?php _e('Select the roles you want to exclude from the mandatory Mollom check. Default: all roles are exempt.', MOLLOM_I18N); ?></p>
       <?php print $mollom_roles; ?>
 
+      <h3><label><?php _e('Reverse proxy addresses', MOLLOM_I18N); ?></label></h3>
+      <p><?php _e('If your site resides behind a (series of) reverse proxy(ies), you\'ll need to fill out their ip addresses as a comma separated list below.'); ?></p>
+      <input type="text" size="50" maxlength="32" name="proxyAddresses" id="mollom-proxy-addresses" value="<?php print $proxyAddresses; ?>" />
+
       <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
     </form>
