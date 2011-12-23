@@ -26,6 +26,9 @@
       <p><?php _e('If your site resides behind a (series of) reverse proxy(ies), you\'ll need to fill out their ip addresses as a comma separated list below.'); ?></p>
       <input type="text" size="50" maxlength="32" name="proxyAddresses" id="mollom-proxy-addresses" value="<?php print $proxyAddresses; ?>" />
 
+      <h3><label><?php _e('Policy mode', MOLLOM_I18N); ?></label></h3>
+      <p><input type="checkbox" name="policyMode" value="on" <?php echo $mollom_site_policy; ?> />&nbsp;&nbsp;<?php _e('When Mollom services are down, comments from roles which are not exempt, are blocked by default.', MOLLOM_I18N); ?></p>
+
       <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
     </form>

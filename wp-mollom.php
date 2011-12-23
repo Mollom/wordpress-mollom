@@ -160,6 +160,11 @@ class WPMollom {
       if ( $_POST['proxyAddresses'] ) {
         update_option('mollom_reverseproxy_addresses', '');
       }
+      if ( $_POST['policyMode'] ) {
+        update_option('mollom_site_policy', TRUE);
+      } else {
+        update_option('mollom_site_policy', FAlSE);
+      }
       if ( $_POST['mollomroles'] ) {
         $mollom->roles = $_POST['mollomroles'];
         update_option('mollom_roles', $mollom->roles);
@@ -179,6 +184,7 @@ class WPMollom {
     $vars['publicKey'] = $mollom->publicKey;
     $vars['privateKey'] = $mollom->privateKey;
     $vars['mollom_roles'] = $this->mollom_roles_element();
+    $vars['mollom_site_policy'] = (get_option('mollom_site_policy', TRUE)) ? ' checked' : '';
 
     // Render the page.
     mollom_theme('configuration', $vars);
@@ -298,10 +304,7 @@ class WPMollom {
 
     // Trigger global fallback behavior if there is a unexpected result.
     if (!is_array($result) || !isset($result['id'])) {
-      // @todo Implement option to configure fallback behavior when Mollom
-      //   service is unavailable.
-      //return _mollom_fallback();
-      return $comment;
+      return self::mollomFallback($comment);
     }
 
     if ($result['spamClassification'] == 'spam') {
@@ -313,6 +316,23 @@ class WPMollom {
     }
     elseif ($result['spamClassification'] == 'ham') {
       return $comment;
+    }
+
+    return $comment;
+  }
+
+  /**
+   * Handles the fallback scenarios when the Mollom service is not available.
+   *
+   * @param type $comment
+   * @return type
+   */
+  private function mollomFallback($comment) {
+    $title = __('Your comment was blocked', MOLLOM_I18N);
+    $msg = __('We could not post your comment because Mollom blocked it. Please contact the administrator.', MOLLOM_I18N);
+
+    if ( get_option('mollom_site_policy', TRUE) ) {
+      wp_die($msg, $title);
     }
 
     return $comment;
