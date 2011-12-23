@@ -168,16 +168,22 @@ class WPMollom {
         $mollom->roles = $_POST['mollomroles'];
         update_option('mollom_roles', $mollom->roles);
       }
+
+      // When requesting the page, and after updating the settings, verify the
+      // API keys.
+      $result = $mollom->verifyKeys();
+      if ($result == MOLLOM::AUTH_ERROR) {
+        $messages[] = '<div class="error"><p>' . __('The keys failed verification with Mollom. Please enter the keys for this site and try again.', MOLLOM_I18N) . '</p></div>';
+      }
+      if ($result == MOLLOM::NETWORK_ERROR) {
+        $messages[] = '<div class="error"><p>' . __('The Mollom service could not be contacted due to a network error.', MOLLOM_I18N) . '</p></div>';
+      }
+
+      $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
     }
 
-    // @todo Process roles which can skip the check
-    // @todo Process reverse proxy IP's
-    // When requesting the page, and after updating the settings, verify the
-    // API keys.
-    $result = $mollom->verifyKeys();
-
     // Set variables used to render the page.
-    $vars['messages'] = '';
+    $vars['messages'] = (!empty($messages)) ? '<div class="messages">' . implode("<br/>\n", $messages) . '</div>' : '';
     $vars['mollom_nonce'] = $this->mollom_nonce;
     $vars['publicKey'] = $mollom->publicKey;
     $vars['privateKey'] = $mollom->privateKey;
