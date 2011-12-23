@@ -63,7 +63,7 @@ class WPMollom {
    * Instantiates WPMollom as a singleton.
    * @return WPMollom
    */
-  public function getInstance() {
+  public function get_instance() {
     if (!self::$instance) {
       self::$instance = new WPMollom();
     }
@@ -77,7 +77,7 @@ class WPMollom {
    * Instantiates MollomWordpress as a singleton.
    * @return MollomWordpress
    */
-  public function getMollomInstance() {
+  public function get_mollom_instance() {
     if (!isset(self::$mollom)) {
       self::mollom_include('mollom.class.inc');
       self::mollom_include('mollom.wordpress.inc');
@@ -140,7 +140,7 @@ class WPMollom {
   public function configuration_page() {
     self::mollom_include('common.inc');
 
-    $mollom = self::getMollomInstance();
+    $mollom = self::get_mollom_instance();
 
     if (isset($_POST['submit'])) {
       if (function_exists('current_user_can') && !current_user_can('manage_options')) {
@@ -297,12 +297,12 @@ class WPMollom {
     // whether a 'unsure' response asking for a CAPTCHA is possible.
     $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
 
-    $mollom = self::getMollomInstance();
+    $mollom = self::get_mollom_instance();
     $result = $mollom->checkContent($data);
 
     // Trigger global fallback behavior if there is a unexpected result.
     if (!is_array($result) || !isset($result['id'])) {
-      return self::mollomFallback($comment);
+      return self::mollom_fallback($comment);
     }
 
     if ($result['spamClassification'] == 'spam') {
@@ -323,7 +323,7 @@ class WPMollom {
    * @param type $comment
    * @return type
    */
-  private function mollomFallback($comment) {
+  private function mollom_fallback($comment) {
     $title = __('Your comment was blocked', MOLLOM_I18N);
     $msg = __('We could not post your comment because Mollom blocked it. Please contact the administrator.', MOLLOM_I18N);
 
@@ -376,4 +376,4 @@ class WPMollom {
 }
 
 // Gone with the wind
-WPMollom::getInstance();
+WPMollom::get_instance();
