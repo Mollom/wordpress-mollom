@@ -1,14 +1,14 @@
 <?php
 
 /*
-Plugin Name: Mollom
-Plugin URI: http://wordpress.org/extend/plugins/wp-mollom/
-Description: Protect your site from spam and unwanted posts with <a href="http://mollom.com">Mollom</a>.
-Author: Matthias Vandermaesen
-Version: 2.x-dev
-Author URI: http://www.colada.be
-Email: matthias@colada.be
-*/
+  Plugin Name: Mollom
+  Plugin URI: http://wordpress.org/extend/plugins/wp-mollom/
+  Description: Protect your site from spam and unwanted posts with <a href="http://mollom.com">Mollom</a>.
+  Author: Matthias Vandermaesen
+  Version: 2.x-dev
+  Author URI: http://www.colada.be
+  Email: matthias@colada.be
+ */
 
 /*
   Copyright 2008, 2009, 2010, 2011 Matthias Vandermaesen (email : matthias@colada.be)
@@ -23,16 +23,16 @@ Email: matthias@colada.be
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*/
+ */
 
 /* define this version of the plugin */
-define( 'MOLLOM_PLUGIN_VERSION', '2.x-dev' );
+define('MOLLOM_PLUGIN_VERSION', '2.x-dev');
 
 /* define WP Mollom's i18n namespace */
-define( 'MOLLOM_I18N', 'wp-mollom' );
+define('MOLLOM_I18N', 'wp-mollom');
 
 /* define a few paths */
-define( 'MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__) );
+define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
 class WPMollom {
 
@@ -42,20 +42,19 @@ class WPMollom {
   private $mollom_nonce = 'mollom-configuration';
 
   /**
-  * Constructor
-  *
-  * Upon instantiation, we'll hook up the base methods of this class to actions as
-  * callbacks. Lazyload anything extra in the methods themselves.
-  */
+   * Constructor
+   *
+   * Upon instantiation, we'll hook up the base methods of this class to actions as
+   * callbacks. Lazyload anything extra in the methods themselves.
+   */
   private function __construct() {
     // load the text domain for localization
     load_plugin_textdomain(MOLLOM_I18N, false, dirname(plugin_basename(__FILE__)));
     // register the administration page
     add_action('admin_menu', array(&$this, 'register_administration_pages'));
     register_activation_hook(__FILE__, array(&$this, 'activate'));
-		// pass comments through Mollom during processing
-		add_filter('preprocess_comment', array(&$this, 'check_comment'));
-
+    // pass comments through Mollom during processing
+    add_filter('preprocess_comment', array(&$this, 'check_comment'));
   }
 
   /**
@@ -69,7 +68,7 @@ class WPMollom {
       self::$instance = new WPMollom();
     }
 
-		return self::$instance;
+    return self::$instance;
   }
 
   /**
@@ -112,10 +111,10 @@ class WPMollom {
    * Register new pages so to get displayed in /wp-admin
    */
   public function register_administration_pages() {
-    add_submenu_page( 'options-general.php', __('Mollom', MOLLOM_I18N), __('Mollom', MOLLOM_I18N), 'manage_options', 'mollom-key-config', array(&$this, 'configuration_page') );
-    add_action( 'admin_init', array(&$this, 'register_configuration_options') );
-    add_action( 'manage_comments_custom_column', array(&$this, 'mollom_comment_column_row'), 10, 2 );
-    add_filter( 'manage_edit-comments_columns', array(&$this, 'mollom_comments_columns') );
+    add_submenu_page('options-general.php', __('Mollom', MOLLOM_I18N), __('Mollom', MOLLOM_I18N), 'manage_options', 'mollom-key-config', array(&$this, 'configuration_page'));
+    add_action('admin_init', array(&$this, 'register_configuration_options'));
+    add_action('manage_comments_custom_column', array(&$this, 'mollom_comment_column_row'), 10, 2);
+    add_filter('manage_edit-comments_columns', array(&$this, 'mollom_comments_columns'));
   }
 
   /**
@@ -143,29 +142,29 @@ class WPMollom {
 
     $mollom = self::getMollomInstance();
 
-    if ( isset($_POST['submit']) ) {
-      if ( function_exists('current_user_can') && !current_user_can('manage_options') ) {
+    if (isset($_POST['submit'])) {
+      if (function_exists('current_user_can') && !current_user_can('manage_options')) {
         die(__('Cheatin&#8217; uh?'));
       }
-      check_admin_referer( $this->mollom_nonce );
+      check_admin_referer($this->mollom_nonce);
 
-      if ( $_POST['publicKey'] ) {
-        $mollom->publicKey = preg_replace( '/[^a-z0-9]/i', '', $_POST['publicKey'] );
+      if ($_POST['publicKey']) {
+        $mollom->publicKey = preg_replace('/[^a-z0-9]/i', '', $_POST['publicKey']);
         update_option('mollom_public_key', $mollom->publicKey);
       }
-      if ( $_POST['privateKey'] ) {
-        $mollom->privateKey = preg_replace( '/[^a-z0-9]/i', '', $_POST['privateKey'] );
+      if ($_POST['privateKey']) {
+        $mollom->privateKey = preg_replace('/[^a-z0-9]/i', '', $_POST['privateKey']);
         update_option('mollom_private_key', $mollom->privateKey);
       }
-      if ( $_POST['proxyAddresses'] ) {
+      if ($_POST['proxyAddresses']) {
         update_option('mollom_reverseproxy_addresses', '');
       }
-      if ( $_POST['policyMode'] ) {
+      if ($_POST['policyMode']) {
         update_option('mollom_site_policy', TRUE);
       } else {
         update_option('mollom_site_policy', FAlSE);
       }
-      if ( $_POST['mollomroles'] ) {
+      if ($_POST['mollomroles']) {
         $mollom->roles = $_POST['mollomroles'];
         update_option('mollom_roles', $mollom->roles);
       }
@@ -173,7 +172,6 @@ class WPMollom {
 
     // @todo Process roles which can skip the check
     // @todo Process reverse proxy IP's
-
     // When requesting the page, and after updating the settings, verify the
     // API keys.
     $result = $mollom->verifyKeys();
@@ -204,7 +202,7 @@ class WPMollom {
     $element = "<ul>";
 
     foreach ($wp_roles->get_names() as $role => $name) {
-      $name = translate_user_role( $name );
+      $name = translate_user_role($name);
       if ($mollom_roles) {
         $checked = (in_array($role, $mollom_roles)) ? "checked" : "";
       }
@@ -220,19 +218,19 @@ class WPMollom {
    * Callback. Show Mollom actions in the Comments table
    *
    * Show Mollom action links and status messages per commentinthe comments table.
-	 *
-	 * @todo add links
-	 * @todo add spaminess indicator
-	 * @todo add a had a captcha indicator
-	 * @todo add status messages
+   *
+   * @todo add links
+   * @todo add spaminess indicator
+   * @todo add a had a captcha indicator
+   * @todo add status messages
    *
    * @param string $column The column name
    * @param int $comment_id The comment ID
    * @return string Rendered output
    */
   public function mollom_comment_column_row($column, $comment_id) {
-    if ( $column != 'mollom' )
-		  return;
+    if ($column != 'mollom')
+      return;
 
     self::mollom_include('common.inc');
 
@@ -249,40 +247,40 @@ class WPMollom {
    * @param array $columns an array of columns for a table
    * @return array An array of columns for a table
    */
-  public function mollom_comments_columns( $columns ) {
-	  $columns[ 'mollom' ] = __( 'Mollom' );
-	  return $columns;
+  public function mollom_comments_columns($columns) {
+    $columns['mollom'] = __('Mollom');
+    return $columns;
   }
 
-	/**
-	 * Callback. Perform the actual Mollom check on a new comment
-	 *
-	 * This function hooks onto the comment preprocessing. It will pass the comment
-	 * to Mollom. Depending on the result, it will either pass the comment to WP as ham,
-	 * block it as spam or show captcha if unsure. Trackbacks are also passed to Mollom.
-	 *
-	 * @param array $comment The preprocessed comment
-	 * @return array The comment if it passed the check, or void to block it from the database
-	 */
-	public function check_comment($comment) {
+  /**
+   * Callback. Perform the actual Mollom check on a new comment
+   *
+   * This function hooks onto the comment preprocessing. It will pass the comment
+   * to Mollom. Depending on the result, it will either pass the comment to WP as ham,
+   * block it as spam or show captcha if unsure. Trackbacks are also passed to Mollom.
+   *
+   * @param array $comment The preprocessed comment
+   * @return array The comment if it passed the check, or void to block it from the database
+   */
+  public function check_comment($comment) {
     // If a logged in user exists check if the role is exempt from a Mollom check
-		// non-registered visitors don't have a role so their submissions are always checked
-		$user = wp_get_current_user();
-		if ($user->ID) {
-			$mollom_roles = get_option('mollom_roles');
-			$detected = array_intersect($user->roles, $mollom_roles);
-			if (count($detected) > 0) {
-				return $comment;
-			}
-		}
+    // non-registered visitors don't have a role so their submissions are always checked
+    $user = wp_get_current_user();
+    if ($user->ID) {
+      $mollom_roles = get_option('mollom_roles');
+      $detected = array_intersect($user->roles, $mollom_roles);
+      if (count($detected) > 0) {
+        return $comment;
+      }
+    }
 
     $map = array(
-      'postTitle' => NULL,
-      'postBody' => 'comment_content',
-      'authorName' => 'comment_author',
-      'authorMail' => 'comment_author_email',
-      'authorUrl' => 'comment_author_url',
-      'authorId' => 'user_ID',
+        'postTitle' => NULL,
+        'postBody' => 'comment_content',
+        'authorName' => 'comment_author',
+        'authorMail' => 'comment_author_email',
+        'authorUrl' => 'comment_author_url',
+        'authorId' => 'user_ID',
     );
     $data = array();
     foreach ($map as $param => $key) {
@@ -310,11 +308,9 @@ class WPMollom {
     if ($result['spamClassification'] == 'spam') {
       // @todo Output an error message.
       return;
-    }
-    elseif ($result['spamClassification'] == 'unsure') {
+    } elseif ($result['spamClassification'] == 'unsure') {
       // @todo Retrieve and check CAPTCHA.
-    }
-    elseif ($result['spamClassification'] == 'ham') {
+    } elseif ($result['spamClassification'] == 'ham') {
       return $comment;
     }
 
@@ -331,7 +327,7 @@ class WPMollom {
     $title = __('Your comment was blocked', MOLLOM_I18N);
     $msg = __('We could not post your comment because Mollom blocked it. Please contact the administrator.', MOLLOM_I18N);
 
-    if ( get_option('mollom_site_policy', TRUE) ) {
+    if (get_option('mollom_site_policy', TRUE)) {
       wp_die($msg, $title);
     }
 
@@ -354,13 +350,13 @@ class WPMollom {
    */
   private function fetch_author_ip() {
     $reverse_proxy_option = get_option('mollom_reverseproxy_addresses', array());
-	  $ip_address = $_SERVER['REMOTE_ADDR'];
+    $ip_address = $_SERVER['REMOTE_ADDR'];
 
-	  if (!empty($reverse_proxy_option)) {
+    if (!empty($reverse_proxy_option)) {
       $reverse_proxy_addresses = explode($reverse_proxy_option, ',');
       if (!empty($reverse_proxy_addresses)) {
-  		  if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-	  		  if (in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
+        if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
+          if (in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
             // If there are several arguments, we need to check the most
             // recently added one, ie the last one.
             $ip_address = array_pop(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
@@ -376,6 +372,7 @@ class WPMollom {
 
     return $ip_address;
   }
+
 }
 
 // Gone with the wind
