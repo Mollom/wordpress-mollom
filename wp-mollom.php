@@ -169,14 +169,22 @@ class WPMollom {
         update_option('mollom_roles', $mollom->roles);
       }
 
-      // When requesting the page, and after updating the settings, verify the
-      // API keys.
-      $result = $mollom->verifyKeys();
-      if ($result == MOLLOM::AUTH_ERROR) {
-        $messages[] = '<div class="error"><p>' . __('The keys failed verification with Mollom. Please enter the keys for this site and try again.', MOLLOM_I18N) . '</p></div>';
-      }
-      if ($result == MOLLOM::NETWORK_ERROR) {
-        $messages[] = '<div class="error"><p>' . __('The Mollom service could not be contacted due to a network error.', MOLLOM_I18N) . '</p></div>';
+      if (empty($_POST['privateKey']) || empty($_POST['publicKey'])) {
+        $messages[] = '<div class="error"><p>' . __('You haven\'t configured the Mollom keys.', MOLLOM_I18N) . '</p></div>';
+      } else {
+        // When requesting the page, and after updating the settings, verify the
+        // API keys.
+        $result = $mollom->verifyKeys();
+
+        if ($result === TRUE) {
+          $messages[] = '<div class="updated"><p>' . __('The public key succesfully verified with Mollom. Your site is now protected by Mollom.', MOLLOM_I18N) . '</p></div>';
+        }
+        else if ($result == MOLLOM::AUTH_ERROR) {
+          $messages[] = '<div class="error"><p>' . __('The public key failed verification with Mollom. Please enter the keys for this site and try again.', MOLLOM_I18N) . '</p></div>';
+        }
+        else if ($result == MOLLOM::NETWORK_ERROR) {
+          $messages[] = '<div class="error"><p>' . __('The Mollom service could not be contacted due to a network error.', MOLLOM_I18N) . '</p></div>';
+        }
       }
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
@@ -185,8 +193,8 @@ class WPMollom {
     // Set variables used to render the page.
     $vars['messages'] = (!empty($messages)) ? '<div class="messages">' . implode("<br/>\n", $messages) . '</div>' : '';
     $vars['mollom_nonce'] = $this->mollom_nonce;
-    $vars['publicKey'] = $mollom->publicKey;
-    $vars['privateKey'] = $mollom->privateKey;
+    $vars['publicKey'] = get_option('mollom_public_key', '');
+    $vars['privateKey'] = get_option('mollom_private_key', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
     $vars['mollom_site_policy'] = (get_option('mollom_site_policy', TRUE)) ? ' checked' : '';
 
