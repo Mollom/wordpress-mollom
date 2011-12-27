@@ -76,14 +76,30 @@ class MollomWordpress extends Mollom {
       'headers' => $headers,
       'body' => $query,
     );
+
     $result = $function($server . '/' . $path, $data);
 
-    $response = (object) array(
-      'code' => $result['response']['code'],
-      'message' => isset($result['response']['message']) ? $result['response']['message'] : NULL,
-      'headers' => isset($result['headers']) ? $result['headers'] : array(),
-      'body' => $result['body'],
-    );
+    /**
+     *  @todo refactor this
+     *    Wordpress throws an WP_Error object with terse information. No HTTP error codes.
+     */
+    if (is_wp_error($result)) {
+      $err_code = $result->get_error_code();
+      $response = (object) array(
+        'code' => ($err_code == 'http_request_failed') ? MOLLOM::NETWORK_ERROR : NULL,
+        'message' => $result->get_error_message(),
+        'headers' => array(),
+        'body' => NULL,
+      );
+    } else {
+      $response = (object) array(
+        'code' => $result['response']['code'],
+        'message' => $result['response']['message'],
+        'headers' => $result['headers'],
+        'body' => $result['body'],
+      );
+    }
+
     return $response;
   }
 
