@@ -339,7 +339,7 @@ class WPMollom {
    */
   private function mollom_fallback($comment) {
     $title = __('Your comment was blocked', MOLLOM_I18N);
-    $msg = __('We could not post your comment because Mollom blocked it. Please contact the administrator.', MOLLOM_I18N);
+    $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
 
     if (get_option('mollom_site_policy', TRUE)) {
       wp_die($msg, $title);
