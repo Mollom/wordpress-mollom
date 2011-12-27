@@ -9,25 +9,32 @@
  * Wordpress Mollom client implementation.
  */
 class MollomWordpress extends Mollom {
+
+  public $configuration_map = array(
+    'publicKey' => 'mollom_public_key',
+    'privateKey' => 'mollom_private_key',
+  );
+
   /**
    * Implements Mollom::loadConfiguration().
    */
   public function loadConfiguration($name) {
-    return get_option('mollom_' . $name);
+    $name = (isset($this->configuration_map[$name])) ? $this->configuration_map[$name] : $name;
+    return get_option($name);
   }
 
   /**
    * Implements Mollom::saveConfiguration().
    */
   public function saveConfiguration($name, $value) {
-    return update_option('mollom_' . $name, $value);
+    return update_option($name, $value);
   }
 
   /**
    * Implements Mollom::deleteConfiguration().
    */
   public function deleteConfiguration($name) {
-    return delete_option('mollom_' . $name);
+    return delete_option($name);
   }
 
   /**
