@@ -316,7 +316,7 @@ class WPMollom {
 
     // Trigger global fallback behavior if there is a unexpected result.
     if (!is_array($result) || !isset($result['id'])) {
-      return self::mollom_fallback($comment);
+      self::mollom_fallback();
     }
 
     if ($result['spamClassification'] == 'spam') {
