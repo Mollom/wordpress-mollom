@@ -63,7 +63,7 @@ class WPMollom {
    * Instantiates WPMollom as a singleton.
    * @return WPMollom
    */
-  public function get_instance() {
+  public static function get_instance() {
     if (!self::$instance) {
       self::$instance = new WPMollom();
     }
@@ -77,7 +77,7 @@ class WPMollom {
    * Instantiates MollomWordpress as a singleton.
    * @return MollomWordpress
    */
-  public function get_mollom_instance() {
+  public static function get_mollom_instance() {
     if (!isset(self::$mollom)) {
       self::mollom_include('mollom.class.inc');
       self::mollom_include('mollom.wordpress.inc');
@@ -301,7 +301,7 @@ class WPMollom {
       }
     }
     // Add the author IP, support for reverse proxy
-    $data['authorIp'] = self::fetch_author_ip();
+    $data['authorIp'] = $this->fetch_author_ip();
     // Add contextual information for the commented on post.
     $data['contextUrl'] = get_permalink();
     $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
@@ -314,7 +314,7 @@ class WPMollom {
 
     // Trigger global fallback behavior if there is a unexpected result.
     if (!is_array($result) || !isset($result['id'])) {
-      return self::mollom_fallback($comment);
+      return $this->mollom_fallback($comment);
     }
 
     if ($result['spamClassification'] == 'spam') {
