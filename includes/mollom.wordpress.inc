@@ -9,7 +9,11 @@
  * Wordpress Mollom client implementation.
  */
 class MollomWordpress extends Mollom {
-
+  /**
+   * Mapping of configuration names to Wordpress variables.
+   *
+   * @see Mollom::loadConfiguration()
+   */
   public $configuration_map = array(
     'publicKey' => 'mollom_public_key',
     'privateKey' => 'mollom_private_key',
@@ -19,8 +23,7 @@ class MollomWordpress extends Mollom {
    * Implements Mollom::loadConfiguration().
    */
   public function loadConfiguration($name) {
-    $name = (isset($this->configuration_map[$name])) ? $this->configuration_map[$name] : $name;
-    return get_option($name);
+    return get_option($this->configuration_map[$name]);
   }
 
   /**

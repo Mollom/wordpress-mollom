@@ -124,9 +124,8 @@ class WPMollom {
    */
   public function register_configuration_options() {
     // Mollom class configuration.
-    register_setting('mollom_settings', 'mollom_publicKey');
-    register_setting('mollom_settings', 'mollom_privateKey');
-    register_setting('mollom_settings', 'mollom_servers');
+    register_setting('mollom_settings', 'mollom_public_key');
+    register_setting('mollom_settings', 'mollom_private_key');
     register_setting('mollom_settings', 'mollom_roles');
     register_setting('mollom_settings', 'mollom_fallback_mode');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
