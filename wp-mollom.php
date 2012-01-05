@@ -360,11 +360,11 @@ class WPMollom {
    *   The IP of the host from which the request originates
    */
   private function fetch_author_ip() {
-    $reverse_proxy_option = get_option('mollom_reverseproxy_addresses', array());
+    $reverse_proxy_option = get_option('mollom_reverseproxy_addresses', '');
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
     if (!empty($reverse_proxy_option)) {
-      $reverse_proxy_addresses = explode($reverse_proxy_option, ',');
+      $reverse_proxy_addresses = explode(',', $reverse_proxy_option);
       if (!empty($reverse_proxy_addresses)) {
         if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
           if (in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
