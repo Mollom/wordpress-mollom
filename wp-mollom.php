@@ -149,6 +149,7 @@ class WPMollom {
       }
       check_admin_referer($this->mollom_nonce);
 
+      // API keys.
       if ($_POST['publicKey']) {
         $mollom->publicKey = preg_replace('/[^a-z0-9]/i', '', $_POST['publicKey']);
         update_option('mollom_public_key', $mollom->publicKey);
@@ -157,12 +158,7 @@ class WPMollom {
         $mollom->privateKey = preg_replace('/[^a-z0-9]/i', '', $_POST['privateKey']);
         update_option('mollom_private_key', $mollom->privateKey);
       }
-      if ($_POST['proxyAddresses']) {
-        update_option('mollom_reverseproxy_addresses', '');
-      }
-
-      update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
-
+      // Excluded roles.
       if (!empty($_POST['mollom_roles'])) {
         $mollom->roles = $_POST['mollom_roles'];
         update_option('mollom_roles', $mollom->roles);
@@ -170,6 +166,12 @@ class WPMollom {
       else {
         delete_option('mollom_roles');
       }
+      // Reverse proxy addresses.
+      if ($_POST['proxyAddresses']) {
+        update_option('mollom_reverseproxy_addresses', '');
+      }
+      // Fallback mode.
+      update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
     }
