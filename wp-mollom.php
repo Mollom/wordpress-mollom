@@ -141,6 +141,7 @@ class WPMollom {
     self::mollom_include('common.inc');
 
     $mollom = self::get_mollom_instance();
+    $messages = array();
 
     if (isset($_POST['submit'])) {
       if (function_exists('current_user_can') && !current_user_can('manage_options')) {
@@ -167,32 +168,35 @@ class WPMollom {
         update_option('mollom_roles', $mollom->roles);
       }
 
-      if (empty($_POST['privateKey']) || empty($_POST['publicKey'])) {
-        $messages[] = '<div class="error"><p>' . __('You haven\'t configured the Mollom keys.', MOLLOM_I18N) . '</p></div>';
-      } else {
-        // When requesting the page, and after updating the settings, verify the
-        // API keys.
-        $result = $mollom->verifyKeys();
-
-        if ($result === TRUE) {
-          $messages[] = '<div class="updated"><p>' . __('The public key succesfully verified with Mollom. Your site is now protected by Mollom.', MOLLOM_I18N) . '</p></div>';
-        }
-        else if ($result == MOLLOM::AUTH_ERROR) {
-          $messages[] = '<div class="error"><p>' . __('The public key failed verification with Mollom. Please enter the keys for this site and try again.', MOLLOM_I18N) . '</p></div>';
-        }
-        else if ($result == MOLLOM::NETWORK_ERROR) {
-          $messages[] = '<div class="error"><p>' . __('The Mollom service could not be contacted due to a network error.', MOLLOM_I18N) . '</p></div>';
-        }
-      }
-
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
+    }
+
+    // When requesting the page, and after updating the settings, verify the
+    // API keys (unless empty).
+    if (empty($mollom->publicKey) || empty($mollom->privateKey)) {
+      $messages[] = '<div class="error"><p>' . __('The Mollom API keys are not configured yet.', MOLLOM_I18N) . '</p></div>';
+    } else {
+      $result = $mollom->verifyKeys();
+
+      if ($result === TRUE) {
+        $messages[] = '<div class="updated"><p>' . __('Mollom servers verified your keys. The services are operating correctly.', MOLLOM_I18N) . '</p></div>';
+      }
+      else if ($result === MOLLOM::AUTH_ERROR) {
+        $messages[] = '<div class="error"><p>' . __('The configured Mollom API keys are invalid.', MOLLOM_I18N) . '</p></div>';
+      }
+      else if ($result === MOLLOM::NETWORK_ERROR) {
+        $messages[] = '<div class="error"><p>' . __('The Mollom servers could not be contacted. Please make sure that your web server can make outgoing HTTP requests.', MOLLOM_I18N) . '</p></div>';
+      }
+      else {
+        $messages[] = '<div class="error"><p>' . __('The Mollom servers could be contacted, but the Mollom API keys could not be verified.', MOLLOM_I18N) . '</p></div>';
+      }
     }
 
     // Set variables used to render the page.
     $vars['messages'] = (!empty($messages)) ? '<div class="messages">' . implode("<br/>\n", $messages) . '</div>' : '';
     $vars['mollom_nonce'] = $this->mollom_nonce;
-    $vars['publicKey'] = get_option('mollom_public_key', '');
-    $vars['privateKey'] = get_option('mollom_private_key', '');
+    $vars['publicKey'] = $mollom->publicKey;
+    $vars['privateKey'] = $mollom->privateKey;
     $vars['mollom_roles'] = $this->mollom_roles_element();
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
 
