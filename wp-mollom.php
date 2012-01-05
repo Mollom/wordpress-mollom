@@ -167,9 +167,7 @@ class WPMollom {
         delete_option('mollom_roles');
       }
       // Reverse proxy addresses.
-      if ($_POST['proxyAddresses']) {
-        update_option('mollom_reverseproxy_addresses', '');
-      }
+      update_option('mollom_reverseproxy_addresses', $_POST['mollom_reverseproxy_addresses']);
       // Fallback mode.
       update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
 
@@ -202,6 +200,7 @@ class WPMollom {
     $vars['mollom_nonce'] = $this->mollom_nonce;
     $vars['publicKey'] = $mollom->publicKey;
     $vars['privateKey'] = $mollom->privateKey;
+    $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
 
