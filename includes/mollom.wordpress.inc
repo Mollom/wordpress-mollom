@@ -61,14 +61,14 @@ class MollomWordpress extends Mollom {
    *
    * @todo Implement this
    */
-   function writeLog() {
-     foreach ($this->log as $key => $entry) {
-       // @todo: write log away
-     }
+  function writeLog() {
+    foreach ($this->log as $key => $entry) {
+      // @todo: write log away
+    }
 
-     // Purge the logs
-     $this->purgeLog();
-   }
+    // Purge the logs
+    $this->purgeLog();
+  }
 
   /**
    * Implements Mollom::request().
