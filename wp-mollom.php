@@ -128,7 +128,7 @@ class WPMollom {
     register_setting('mollom_settings', 'mollom_privateKey');
     register_setting('mollom_settings', 'mollom_servers');
     register_setting('mollom_settings', 'mollom_roles');
-    register_setting('mollom_settings', 'mollom_site_policy');
+    register_setting('mollom_settings', 'mollom_fallback_mode');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
   }
 
@@ -159,11 +159,9 @@ class WPMollom {
       if ($_POST['proxyAddresses']) {
         update_option('mollom_reverseproxy_addresses', '');
       }
-      if ($_POST['policyMode']) {
-        update_option('mollom_site_policy', TRUE);
-      } else {
-        update_option('mollom_site_policy', FAlSE);
-      }
+
+      update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
+
       if ($_POST['mollomroles']) {
         $mollom->roles = $_POST['mollomroles'];
         update_option('mollom_roles', $mollom->roles);
@@ -196,7 +194,7 @@ class WPMollom {
     $vars['publicKey'] = get_option('mollom_public_key', '');
     $vars['privateKey'] = get_option('mollom_private_key', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
-    $vars['mollom_site_policy'] = (get_option('mollom_site_policy', TRUE)) ? ' checked' : '';
+    $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
 
     // Render the page.
     mollom_theme('configuration', $vars);
@@ -334,18 +332,17 @@ class WPMollom {
   /**
    * Handles the fallback scenarios when the Mollom service is not available.
    *
-   * @param type $comment
-   * @return type
+   * @param array $comment
    */
   private function mollom_fallback($comment) {
-    $title = __('Your comment was blocked', MOLLOM_I18N);
-    $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
-
-    if (get_option('mollom_site_policy', TRUE)) {
-      wp_die($msg, $title);
+    // Do nothing if posts shall be accepted in case of a service outage.
+    if (get_option('mollom_fallback_mode', 'accept') == 'accept') {
+      return $comment;
     }
 
-    return $comment;
+    $title = __('Your comment was blocked', MOLLOM_I18N);
+    $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
+    wp_die($msg, $title);
   }
 
   /**
