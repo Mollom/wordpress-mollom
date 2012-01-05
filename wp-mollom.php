@@ -326,7 +326,7 @@ class WPMollom {
     }
 
     if ($result['spamClassification'] == 'spam') {
-      wp_die(__('Your comment was flagged as spam. Contact the site administrator if this is an error.'), __('Comment blocked'));
+      wp_die(__('Your submission has triggered the spam filter and will not be accepted.'), __('Comment blocked'));
       return;
     } elseif ($result['spamClassification'] == 'unsure') {
       // @todo Retrieve and check CAPTCHA.
