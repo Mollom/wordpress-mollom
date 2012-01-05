@@ -163,9 +163,12 @@ class WPMollom {
 
       update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
 
-      if ($_POST['mollomroles']) {
-        $mollom->roles = $_POST['mollomroles'];
+      if (!empty($_POST['mollom_roles'])) {
+        $mollom->roles = $_POST['mollom_roles'];
         update_option('mollom_roles', $mollom->roles);
+      }
+      else {
+        delete_option('mollom_roles');
       }
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
@@ -222,7 +225,7 @@ class WPMollom {
       if ($mollom_roles) {
         $checked = (in_array($role, $mollom_roles)) ? "checked" : "";
       }
-      $element .= "<li><input type=\"checkbox\" name=\"mollomroles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
+      $element .= "<li><input type=\"checkbox\" name=\"mollom_roles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
     }
 
     $element .= "</ul>";
