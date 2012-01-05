@@ -149,13 +149,19 @@ class WPMollom {
       check_admin_referer($this->mollom_nonce);
 
       // API keys.
-      if ($_POST['publicKey']) {
+      if (isset($_POST['publicKey'])) {
         $mollom->publicKey = preg_replace('/[^a-z0-9]/i', '', $_POST['publicKey']);
         update_option('mollom_public_key', $mollom->publicKey);
+        if (strlen($mollom->publicKey) != 32) {
+          $messages[] = '<div class="error"><p>' . __('The public API key must be 32 characters. Ensure you copied the key correctly.', MOLLOM_I18N) . '</p></div>';
+        }
       }
-      if ($_POST['privateKey']) {
+      if (isset($_POST['privateKey'])) {
         $mollom->privateKey = preg_replace('/[^a-z0-9]/i', '', $_POST['privateKey']);
         update_option('mollom_private_key', $mollom->privateKey);
+        if (strlen($mollom->privateKey) != 32) {
+          $messages[] = '<div class="error"><p>' . __('The private API key must be 32 characters. Ensure you copied the key correctly.', MOLLOM_I18N) . '</p></div>';
+        }
       }
       // Excluded roles.
       if (!empty($_POST['mollom_roles'])) {
