@@ -63,7 +63,7 @@ class WPMollom {
    * Instantiates WPMollom as a singleton.
    * @return WPMollom
    */
-  public function get_instance() {
+  public static function get_instance() {
     if (!self::$instance) {
       self::$instance = new WPMollom();
     }
@@ -77,7 +77,7 @@ class WPMollom {
    * Instantiates MollomWordpress as a singleton.
    * @return MollomWordpress
    */
-  public function get_mollom_instance() {
+  public static function get_mollom_instance() {
     if (!isset(self::$mollom)) {
       self::mollom_include('mollom.class.inc');
       self::mollom_include('mollom.wordpress.inc');
@@ -124,11 +124,10 @@ class WPMollom {
    */
   public function register_configuration_options() {
     // Mollom class configuration.
-    register_setting('mollom_settings', 'mollom_publicKey');
-    register_setting('mollom_settings', 'mollom_privateKey');
-    register_setting('mollom_settings', 'mollom_servers');
+    register_setting('mollom_settings', 'mollom_public_key');
+    register_setting('mollom_settings', 'mollom_private_key');
     register_setting('mollom_settings', 'mollom_roles');
-    register_setting('mollom_settings', 'mollom_site_policy');
+    register_setting('mollom_settings', 'mollom_fallback_mode');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
   }
 
@@ -141,6 +140,7 @@ class WPMollom {
     self::mollom_include('common.inc');
 
     $mollom = self::get_mollom_instance();
+    $messages = array();
 
     if (isset($_POST['submit'])) {
       if (function_exists('current_user_can') && !current_user_can('manage_options')) {
@@ -148,55 +148,66 @@ class WPMollom {
       }
       check_admin_referer($this->mollom_nonce);
 
-      if ($_POST['publicKey']) {
+      // API keys.
+      if (isset($_POST['publicKey'])) {
         $mollom->publicKey = preg_replace('/[^a-z0-9]/i', '', $_POST['publicKey']);
         update_option('mollom_public_key', $mollom->publicKey);
+        if (strlen($mollom->publicKey) != 32) {
+          $messages[] = '<div class="error"><p>' . __('The public API key must be 32 characters. Ensure you copied the key correctly.', MOLLOM_I18N) . '</p></div>';
+        }
       }
-      if ($_POST['privateKey']) {
+      if (isset($_POST['privateKey'])) {
         $mollom->privateKey = preg_replace('/[^a-z0-9]/i', '', $_POST['privateKey']);
         update_option('mollom_private_key', $mollom->privateKey);
+        if (strlen($mollom->privateKey) != 32) {
+          $messages[] = '<div class="error"><p>' . __('The private API key must be 32 characters. Ensure you copied the key correctly.', MOLLOM_I18N) . '</p></div>';
+        }
       }
-      if ($_POST['proxyAddresses']) {
-        update_option('mollom_reverseproxy_addresses', '');
-      }
-      if ($_POST['policyMode']) {
-        update_option('mollom_site_policy', TRUE);
-      } else {
-        update_option('mollom_site_policy', FAlSE);
-      }
-      if ($_POST['mollomroles']) {
-        $mollom->roles = $_POST['mollomroles'];
+      // Excluded roles.
+      if (!empty($_POST['mollom_roles'])) {
+        $mollom->roles = $_POST['mollom_roles'];
         update_option('mollom_roles', $mollom->roles);
       }
-
-      if (empty($_POST['privateKey']) || empty($_POST['publicKey'])) {
-        $messages[] = '<div class="error"><p>' . __('You haven\'t configured the Mollom keys.', MOLLOM_I18N) . '</p></div>';
-      } else {
-        // When requesting the page, and after updating the settings, verify the
-        // API keys.
-        $result = $mollom->verifyKeys();
-
-        if ($result === TRUE) {
-          $messages[] = '<div class="updated"><p>' . __('The public key succesfully verified with Mollom. Your site is now protected by Mollom.', MOLLOM_I18N) . '</p></div>';
-        }
-        else if ($result == MOLLOM::AUTH_ERROR) {
-          $messages[] = '<div class="error"><p>' . __('The public key failed verification with Mollom. Please enter the keys for this site and try again.', MOLLOM_I18N) . '</p></div>';
-        }
-        else if ($result == MOLLOM::NETWORK_ERROR) {
-          $messages[] = '<div class="error"><p>' . __('The Mollom service could not be contacted due to a network error.', MOLLOM_I18N) . '</p></div>';
-        }
+      else {
+        delete_option('mollom_roles');
       }
+      // Reverse proxy addresses.
+      update_option('mollom_reverseproxy_addresses', $_POST['mollom_reverseproxy_addresses']);
+      // Fallback mode.
+      update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
+    }
+
+    // When requesting the page, and after updating the settings, verify the
+    // API keys (unless empty).
+    if (empty($mollom->publicKey) || empty($mollom->privateKey)) {
+      $messages[] = '<div class="error"><p>' . __('The Mollom API keys are not configured yet.', MOLLOM_I18N) . '</p></div>';
+    } else {
+      $result = $mollom->verifyKeys();
+
+      if ($result === TRUE) {
+        $messages[] = '<div class="updated"><p>' . __('Mollom servers verified your keys. The services are operating correctly.', MOLLOM_I18N) . '</p></div>';
+      }
+      else if ($result === MOLLOM::AUTH_ERROR) {
+        $messages[] = '<div class="error"><p>' . __('The configured Mollom API keys are invalid.', MOLLOM_I18N) . '</p></div>';
+      }
+      else if ($result === MOLLOM::NETWORK_ERROR) {
+        $messages[] = '<div class="error"><p>' . __('The Mollom servers could not be contacted. Please make sure that your web server can make outgoing HTTP requests.', MOLLOM_I18N) . '</p></div>';
+      }
+      else {
+        $messages[] = '<div class="error"><p>' . __('The Mollom servers could be contacted, but the Mollom API keys could not be verified.', MOLLOM_I18N) . '</p></div>';
+      }
     }
 
     // Set variables used to render the page.
     $vars['messages'] = (!empty($messages)) ? '<div class="messages">' . implode("<br/>\n", $messages) . '</div>' : '';
     $vars['mollom_nonce'] = $this->mollom_nonce;
-    $vars['publicKey'] = get_option('mollom_public_key', '');
-    $vars['privateKey'] = get_option('mollom_private_key', '');
+    $vars['publicKey'] = $mollom->publicKey;
+    $vars['privateKey'] = $mollom->privateKey;
+    $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
-    $vars['mollom_site_policy'] = (get_option('mollom_site_policy', TRUE)) ? ' checked' : '';
+    $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
 
     // Render the page.
     mollom_theme('configuration', $vars);
@@ -220,7 +231,7 @@ class WPMollom {
       if ($mollom_roles) {
         $checked = (in_array($role, $mollom_roles)) ? "checked" : "";
       }
-      $element .= "<li><input type=\"checkbox\" name=\"mollomroles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
+      $element .= "<li><input type=\"checkbox\" name=\"mollom_roles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
     }
 
     $element .= "</ul>";
@@ -303,7 +314,7 @@ class WPMollom {
       }
     }
     // Add the author IP, support for reverse proxy
-    $data['authorIp'] = self::fetch_author_ip();
+    $data['authorIp'] = $this->fetch_author_ip();
     // Add contextual information for the commented on post.
     $data['contextUrl'] = get_permalink();
     $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
@@ -316,11 +327,11 @@ class WPMollom {
 
     // Trigger global fallback behavior if there is a unexpected result.
     if (!is_array($result) || !isset($result['id'])) {
-      return self::mollom_fallback($comment);
+      return $this->mollom_fallback($comment);
     }
 
     if ($result['spamClassification'] == 'spam') {
-      wp_die(__('Your comment was flagged as spam. Contact the site administrator if this is an error.'), __('Comment blocked'));
+      wp_die(__('Your submission has triggered the spam filter and will not be accepted.'), __('Comment blocked'));
       return;
     } elseif ($result['spamClassification'] == 'unsure') {
       // @todo Retrieve and check CAPTCHA.
@@ -334,18 +345,17 @@ class WPMollom {
   /**
    * Handles the fallback scenarios when the Mollom service is not available.
    *
-   * @param type $comment
-   * @return type
+   * @param array $comment
    */
   private function mollom_fallback($comment) {
-    $title = __('Your comment was blocked', MOLLOM_I18N);
-    $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
-
-    if (get_option('mollom_site_policy', TRUE)) {
-      wp_die($msg, $title);
+    // Do nothing if posts shall be accepted in case of a service outage.
+    if (get_option('mollom_fallback_mode', 'accept') == 'accept') {
+      return $comment;
     }
 
-    return $comment;
+    $title = __('Your comment was blocked', MOLLOM_I18N);
+    $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
+    wp_die($msg, $title);
   }
 
   /**
@@ -363,11 +373,11 @@ class WPMollom {
    *   The IP of the host from which the request originates
    */
   private function fetch_author_ip() {
-    $reverse_proxy_option = get_option('mollom_reverseproxy_addresses', array());
+    $reverse_proxy_option = get_option('mollom_reverseproxy_addresses', '');
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
     if (!empty($reverse_proxy_option)) {
-      $reverse_proxy_addresses = explode($reverse_proxy_option, ',');
+      $reverse_proxy_addresses = explode(',', $reverse_proxy_option);
       if (!empty($reverse_proxy_addresses)) {
         if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
           if (in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
