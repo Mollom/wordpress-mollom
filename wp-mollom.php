@@ -121,6 +121,8 @@ class WPMollom {
    * Register settings with Wordpress
    *
    * The register_setting() function registers a setting for easy handling through option_get/update/delete.
+   *
+   * @todo: add sanitization callbacks (do we need this?)
    */
   public function register_configuration_options() {
     // Mollom class configuration.
@@ -330,12 +332,24 @@ class WPMollom {
       return $this->mollom_fallback($comment);
     }
 
+    // Profanity check
+    if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
+      wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
+    }
+    
+    $result = array();
+    $result['spamClassification'] = 'unsure';
+
     if ($result['spamClassification'] == 'spam') {
       wp_die(__('Your submission has triggered the spam filter and will not be accepted.'), __('Comment blocked'));
       return;
     } elseif ($result['spamClassification'] == 'unsure') {
       // @todo Retrieve and check CAPTCHA.
+      $comment['mollom_session_id'] = $result['session_id'];
+      $comment['mollom_quality'] = $result['quality'];
+      self::mollom_show_captcha($comment);
     } elseif ($result['spamClassification'] == 'ham') {
+      // @todo Associate the Mollom session information with the comment
       return $comment;
     }
 
@@ -356,6 +370,27 @@ class WPMollom {
     $title = __('Your comment was blocked', MOLLOM_I18N);
     $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
     wp_die($msg, $title);
+  }
+    
+  /**
+   * Show the CAPTCHA form
+   */
+  private function mollom_show_captcha($comment) {
+    self::mollom_include('common.inc');
+    // 1. Set the audio and image captcha
+    // 2. Build the form fields
+    // 3. Cache the form (assign a unique form ID)
+    // 4. Show the rendered form
+    mollom_theme('show_captcha', $vars);
+    die();
+  }
+  
+  /**
+   * Retrieve a CAPTCHA
+   */
+  private function mollom_get_captcha($type, $comment) {
+    $mollom = self::get_mollom_instance();
+    $result = $mollom->createCaptcha(array('type' => $type));
   }
 
   /**

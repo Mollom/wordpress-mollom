@@ -20,7 +20,10 @@ function mollom_theme() {
       'template' => 'configuration',
     ),
     'comment_moderation' => array(
-      'template' => 'comment-moderation'
+      'template' => 'comment-moderation',
+    ),
+    'show_captcha' => array(
+      'template'=> 'show-captcha',
     ),
   );
 
