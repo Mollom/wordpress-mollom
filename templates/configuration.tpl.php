@@ -23,11 +23,19 @@
       <?php print $mollom_roles; ?>
 
       <h3><label><?php _e('Reverse proxy addresses', MOLLOM_I18N); ?></label></h3>
-      <p><?php _e('If your site resides behind a (series of) reverse proxy(ies), you\'ll need to fill out their ip addresses as a comma separated list below.'); ?></p>
-      <input type="text" size="50" maxlength="32" name="proxyAddresses" id="mollom-proxy-addresses" value="<?php print $proxyAddresses; ?>" />
+      <input type="text" size="50" name="mollom_reverseproxy_addresses" id="mollom-reverseproxy-addresses" value="<?php print $mollom_reverseproxy_addresses; ?>" />
+      <p class="description">
+      <?php _e('If your site resides behind one or more reverse proxies, enter their IP addresses as a comma separated list.'); ?>
+      </p>
 
-      <h3><label><?php _e('Policy mode', MOLLOM_I18N); ?></label></h3>
-      <p><input type="checkbox" name="policyMode" value="on" <?php echo $mollom_site_policy; ?> />&nbsp;&nbsp;<?php _e('When Mollom services are down, comments from roles which are not exempt, are blocked by default.', MOLLOM_I18N); ?></p>
+      <h3><label><?php _e('Fallback mode', MOLLOM_I18N); ?></label></h3>
+      <p><input type="checkbox" name="fallback_mode" value="block" <?php echo $mollom_fallback_mode; ?> />&nbsp;&nbsp;<?php _e('Block all posts when Mollom services are unavailable', MOLLOM_I18N); ?></p>
+      <p class="description">
+      <?php print strtr(__('In case the Mollom services are unreachable, no text analysis can be performed and no CAPTCHAs can be generated. Subscribers to <a href="@pricing-url">Mollom Plus</a> receive access to <a href="@sla-url">Mollom\'s high-availability backend infrastructure</a>, not available to free users, reducing potential downtime.', MOLLOM_I18N), array(
+        '@pricing-url' => 'http://mollom.com/pricing',
+        '@sla-url' => 'http://mollom.com/standard-service-level-agreement',
+      )); ?>
+      </p>
 
       <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
