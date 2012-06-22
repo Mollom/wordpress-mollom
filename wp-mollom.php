@@ -81,7 +81,11 @@ class WPMollom {
     if (!isset(self::$mollom)) {
       self::mollom_include('mollom.class.inc');
       self::mollom_include('mollom.wordpress.inc');
-      self::$mollom = new MollomWordpress();
+      if (get_option('mollom_developer_mode', 'off') == 'off') {
+        self::$mollom = new MollomWordpress();
+      } else {
+        self::$mollom = new MollomWordpressTest();
+      }
     }
     return self::$mollom;
   }
@@ -131,6 +135,7 @@ class WPMollom {
     register_setting('mollom_settings', 'mollom_roles');
     register_setting('mollom_settings', 'mollom_fallback_mode');
     register_setting('mollom_settings', 'mollom_reverse_proxy_addresses');
+    register_setting('mollom_settings', 'mollom_developer_mode');
   }
 
   /**
@@ -177,6 +182,8 @@ class WPMollom {
       update_option('mollom_reverseproxy_addresses', $_POST['mollom_reverseproxy_addresses']);
       // Fallback mode.
       update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
+      // Developer mode
+      update_option('mollom_developer_mode', !empty($_POST['developer_mode']) ? 'on' : 'off');
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
     }
@@ -209,6 +216,7 @@ class WPMollom {
     $vars['privateKey'] = $mollom->privateKey;
     $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
+    $vars['mollom_developer_mode'] = (get_option('mollom_developer_mode', 'on') == 'on') ? ' checked="checked"' : '';
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
 
     // Render the page.

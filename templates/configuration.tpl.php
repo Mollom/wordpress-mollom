@@ -37,6 +37,12 @@
       )); ?>
       </p>
 
+      <h3><label><?php _e('Developer mode', MOLLOM_I18N); ?></label></h3>
+      <p><input type="checkbox" name="developer_mode" value="on" <?php echo $mollom_developer_mode; ?> />&nbsp;&nbsp;<?php _e('Put your site in developer mode', MOLLOM_I18N); ?></p>
+      <p class="description">
+      <?php _e('When you are testing code against the Mollom API, you should switch to developer mode. API calls will be made against Molloms\'s testing API instead of the its\' production API'); ?>
+      </p>
+
       <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
     </form>
