@@ -250,11 +250,38 @@ class WPMollom {
   }
 
   /**
+   * Helper function. Generates a list of checkboxes with different analysis types.
+   *
+   * @return string
+   */
+  private function mollom_check_types_element() {
+    $map = array(
+      'spam' => __('Spam', MOLLOM_I18N),
+      'profanity' => __('Profanity', MOLLOM_I18N),
+      'sentiment' => __('Sentiment', MOLLOM_I18N),
+      'language' => __('Language', MOLLOM_I18N),
+      'quality' => __('Quality', MOLLOM_I18N),
+    );
+    $mollom_check_types = get_option('mollom_check_types', array());
+    $element = "<ul>";
+
+    foreach ($map as $key => $label) {
+      if ($mollom_check_types) {
+        $checked = (in_array($key, $mollom_check_types)) ? "checked" : "";
+      }
+      $element .= "<li><input type=\"checkbox\" name=\"mollom_check_types[]\" value=\"" . $key . "\" " . $checked . " /> " . $label . "</li>";
+    }
+
+    $element .= "</ul>";
+
+    return $element;
+  }
+
+  /**
    * Callback. Show Mollom actions in the Comments table
    *
    * Show Mollom action links and status messages per commentinthe comments table.
    *
-   * @todo add links
    * @todo add spaminess indicator
    * @todo add a had a captcha indicator
    * @todo add status messages
@@ -331,6 +358,8 @@ class WPMollom {
     // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
     // whether a 'unsure' response asking for a CAPTCHA is possible.
     $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
+    // A string denoting the check to perform.
+    $data['checks'] = get_option('mollom_check_types', array());
 
     $mollom = self::get_mollom_instance();
     $result = $mollom->checkContent($data);
