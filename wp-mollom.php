@@ -184,6 +184,14 @@ class WPMollom {
       update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
       // Developer mode
       update_option('mollom_developer_mode', !empty($_POST['developer_mode']) ? 'on' : 'off');
+      // Content analysis strategies
+      $analysis_types = $_POST['mollom_analysis_types'];
+      if (empty($analysis_types)) {
+        $analysis_types = array('spam');
+      } else {
+        $analysis_types + array('spam');
+      }
+      update_option('mollom_analysis_types', $analysis_types);
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
     }
@@ -216,6 +224,7 @@ class WPMollom {
     $vars['privateKey'] = $mollom->privateKey;
     $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
+    $vars['mollom_analysis_types'] = $this->mollom_analysis_types_element();
     $vars['mollom_developer_mode'] = (get_option('mollom_developer_mode', 'on') == 'on') ? ' checked="checked"' : '';
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
 
@@ -254,22 +263,19 @@ class WPMollom {
    *
    * @return string
    */
-  private function mollom_check_types_element() {
+  private function mollom_analysis_types_element() {
     $map = array(
       'spam' => __('Spam', MOLLOM_I18N),
       'profanity' => __('Profanity', MOLLOM_I18N),
-      'sentiment' => __('Sentiment', MOLLOM_I18N),
-      'language' => __('Language', MOLLOM_I18N),
-      'quality' => __('Quality', MOLLOM_I18N),
     );
-    $mollom_check_types = get_option('mollom_check_types', array());
+    $mollom_check_types = get_option('mollom_analysis_types', array());
     $element = "<ul>";
 
     foreach ($map as $key => $label) {
       if ($mollom_check_types) {
         $checked = (in_array($key, $mollom_check_types)) ? "checked" : "";
       }
-      $element .= "<li><input type=\"checkbox\" name=\"mollom_check_types[]\" value=\"" . $key . "\" " . $checked . " /> " . $label . "</li>";
+      $element .= "<li><input type=\"checkbox\" name=\"mollom_analysis_types[]\" value=\"" . $key . "\" " . $checked . " /> " . $label . "</li>";
     }
 
     $element .= "</ul>";
@@ -359,7 +365,7 @@ class WPMollom {
     // whether a 'unsure' response asking for a CAPTCHA is possible.
     $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
     // A string denoting the check to perform.
-    $data['checks'] = get_option('mollom_check_types', array());
+    $data['checks'] = get_option('mollom_analysis_types', array('spam'));
 
     $mollom = self::get_mollom_instance();
     $result = $mollom->checkContent($data);

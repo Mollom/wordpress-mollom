@@ -38,7 +38,7 @@
       </p>
 
       <h3><label><?php _e('Text analysis strategies', MOLLOM_I18N); ?></label></h3>
-      <?php print $mollom_check_types; ?>
+      <?php print $mollom_analysis_types; ?>
       <p class="description">
       <?php _e('Different content analysis strategies are available. You can enable one or combine several strategies when analysing content. Defaults: Spam'); ?>
       </p>
