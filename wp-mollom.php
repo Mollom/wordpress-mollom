@@ -34,6 +34,12 @@ define('MOLLOM_I18N', 'wp-mollom');
 /* define a few paths */
 define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
+/* define WP Mollom table where mollom data per comment gets stored */
+define( 'MOLLOM_TABLE', 'mollom' );
+
+/* Define the version of the mollom tables */
+define( 'MOLLOM_TABLE_VERSION', '2000');
+
 class WPMollom {
 
   // Static objects as singletons
@@ -102,11 +108,26 @@ class WPMollom {
   }
 
   /**
-   * Callback. Called on activation of the plugin.
+   * Callback.
+   *
+   * Called on activation of the plugin. This hook will install and register the
+   * Mollom tables in the database.
    */
   function activate() {
     self::mollom_include('common.inc');
-    mollom_table_install();
+
+    // Table definition for MOLLOM_TABLE
+    $tbl_definition = "
+      `comment_ID` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT '0',
+			`mollom_session_ID` VARCHAR( 40 ) NULL DEFAULT NULL,
+		  `mollom_had_captcha` INT ( 1 ) NOT NULL DEFAULT '0',
+			`mollom_spaminess` FLOAT NOT NULL DEFAULT '0.00',
+			UNIQUE (
+			  `comment_ID` ,
+				`mollom_session_ID`
+			)";
+
+    mollom_table_install(MOLLOM_TABLE, MOLLOM_TABLE_VERSION, $tbl_definition);
   }
 
   /**
