@@ -245,6 +245,7 @@ class WPMollom {
     $vars['privateKey'] = $mollom->privateKey;
     $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
     $vars['mollom_roles'] = $this->mollom_roles_element();
+    $vars['mollom_protection_mode'] = $this->mollom_protection_mode();
     $vars['mollom_analysis_types'] = $this->mollom_analysis_types_element();
     $vars['mollom_developer_mode'] = (get_option('mollom_developer_mode', 'on') == 'on') ? ' checked="checked"' : '';
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
@@ -302,6 +303,23 @@ class WPMollom {
     $element .= "</ul>";
 
     return $element;
+  }
+
+  private function mollom_protection_mode() {
+    $mollom_protection_mode = get_option('mollom_protection_mode', MOLLOM_MODE_ANALYSIS);
+    $mollom_parsed = array(
+      'analysis' => '',
+      'spam' => '',
+    );
+
+    if ($mollom_protection_mode['mode'] == MOLLOM_MODE_ANALYSIS) {
+      $mollom_parsed['analysis'] = ' checked="checked"';
+    }
+    elseif ($mollom_protection_mode['mode'] == MOLLOM_MODE_SPAM) {
+      $mollom_parsed['spam'] = ' checked="checked"';
+    }
+
+    return $mollom_parsed;
   }
 
   /**
