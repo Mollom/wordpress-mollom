@@ -473,14 +473,6 @@ class WPMollom {
   }
 
   /**
-   * Retrieve a CAPTCHA
-   */
-  private function mollom_get_captcha($type, $comment) {
-    $mollom = self::get_mollom_instance();
-    $result = $mollom->createCaptcha(array('type' => $type));
-  }
-
-  /**
    * This is a helper function. Get all the applicable comment fields from
    * $_POST and $comment and put them in one array before passing on to
    * show_captcha()
