@@ -457,17 +457,37 @@ class WPMollom {
   }
 
   /**
-   * Show the CAPTCHA form
+   * Helper function. This function preprocesses and renders the CAPTCHA form
+   * @param array $comment
+   *   The comment we're currently trying to clear with Mollom
    */
   private function mollom_show_captcha($comment) {
     self::mollom_include('common.inc');
-    // 1. Set the audio and image captcha
-    $variables['mollom_image_captcha'] = '';
-    $variables['mollom_audio_captcha'] = '';
+
+    // 1. Generate the audio and image captcha
+    $mollom = self::get_mollom_instance();
+    $data = array(
+      'contentId' => $comment['mollom_session_id'],
+      'ssl' => FALSE,
+    );
+
+    $data['type'] = 'image';
+    $image = $mollom->createCaptcha($data);
+
+    $data['type'] = 'audio';
+    $audio = $mollom->createCaptcha($data);
+
+    // The image id and the audio id are essentially the same. But we can't be
+    // sure that the API throws back something different. In that case, we'll go
+    // with the id returned from our last API call.
+    $comment['mollom_session_id'] = ($image['id'] == $audio['id']) ? $image['id'] : $audio['id'];
+    $variables['mollom_image_captcha'] = $image['url'];
+    $variables['mollom_audio_captcha'] = $audio['url'];
+
     // 2. Build the form fields
     $variables['attached_form_fields'] = self::mollom_get_fields($comment);
     // 3. Cache the form (assign a unique form ID)
-    // 4. Show the rendered form
+    // 4. Show the rendered form and kill any further processing of the comment
     mollom_theme('show_captcha', $variables);
     die();
   }
