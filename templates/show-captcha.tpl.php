@@ -64,10 +64,16 @@
 	<p><label><strong><?php _e('Image Captcha', MOLLOM_I18N); ?></strong></label></p>
 	<p><img src="<?php echo $mollom_image_captcha; ?>" alt="mollom captcha" title="mollom captcha" /></p>
 	<p><label><strong><?php _e('Audio Captcha', MOLLOM_I18N); ?></strong></label></p>
-	<object type="audio/mpeg" data="<?php echo $mollom_audio_captcha; ?>" width="50" height="16">
-      <param name="autoplay" value="false" />
-      <param name="controller" value="true" />
-    </object>
+  <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="//download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,0,0" width="110" height="50">
+    <param name="allowFullScreen" value="false" />
+    <param name="movie" value="<?php echo $mollom_audio_captcha; ?>" />
+    <param name="loop" value="false" />
+    <param name="menu" value="false" />
+    <param name="quality" value="high" />
+    <param name="wmode" value="transparent" />
+    <param name="bgcolor" value="#ffffff" />
+    <embed src="<?php echo $mollom_audio_captcha; ?>" loop="false" menu="false" quality="high" wmode="transparent" bgcolor="#ffffff" width="110" height="50" align="baseline" allowScriptAccess="sameDomain" allowFullScreen="false" type="application/x-shockwave-flash" pluginspage="http://www.adobe.com/go/getflashplayer_de" />
+  </object>
 	<p><small><a href="<?php echo $mollom_audio_captcha; ?>" title="mollom captcha"><?php _e('Download Audio Captcha', MOLLOM_I18N); ?></a></small></p>
 	<p><input type="text" length="15" maxlength="15" name="mollom_solution" /></p>
 	<?php echo $attached_form_fields; ?>

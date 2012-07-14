@@ -482,7 +482,7 @@ class WPMollom {
     // with the id returned from our last API call.
     $comment['mollom_session_id'] = ($image['id'] == $audio['id']) ? $image['id'] : $audio['id'];
     $variables['mollom_image_captcha'] = $image['url'];
-    $variables['mollom_audio_captcha'] = $audio['url'];
+    $variables['mollom_audio_captcha'] = WP_PLUGIN_URL . '/wp-mollom/mollom-captcha-player.swf?url=' . str_replace('%2F', '/', rawurlencode($audio['url']));
 
     // 2. Build the form fields
     $variables['attached_form_fields'] = self::mollom_get_fields($comment);
