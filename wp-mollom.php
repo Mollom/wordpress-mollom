@@ -418,19 +418,21 @@ class WPMollom {
     if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
       wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
     }
-    
-    $result = array();
-    $result['spamClassification'] = 'unsure';
 
+    // Spam check
     if ($result['spamClassification'] == 'spam') {
-      wp_die(__('Your submission has triggered the spam filter and will not be accepted.'), __('Comment blocked'));
+      wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
       return;
-    } elseif ($result['spamClassification'] == 'unsure') {
-      // @todo Retrieve and check CAPTCHA.
-      $comment['mollom_session_id'] = $result['session_id'];
-      $comment['mollom_quality'] = $result['quality'];
-      self::mollom_show_captcha($comment);
-    } elseif ($result['spamClassification'] == 'ham') {
+    }
+    elseif ($result['spamClassification'] == 'unsure') {
+      $mollom_comment = self::mollom_set_fields($_POST, $comment);
+      $mollom_comment = $comment;
+      $mollom_comment['mollom_session_id'] = $result['id'];
+      $mollom_comment['mollom_quality'] = $result['spamScore'];
+      self::mollom_show_captcha($mollom_comment);
+      die();
+    }
+    elseif ($result['spamClassification'] == 'ham') {
       // @todo Associate the Mollom session information with the comment
       return $comment;
     }
@@ -453,26 +455,96 @@ class WPMollom {
     $msg = __("The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.", MOLLOM_I18N);
     wp_die($msg, $title);
   }
-    
+
   /**
    * Show the CAPTCHA form
    */
   private function mollom_show_captcha($comment) {
     self::mollom_include('common.inc');
     // 1. Set the audio and image captcha
+    $variables['mollom_image_captcha'] = '';
+    $variables['mollom_audio_captcha'] = '';
     // 2. Build the form fields
+    $variables['attached_form_fields'] = self::mollom_get_fields($comment);
     // 3. Cache the form (assign a unique form ID)
     // 4. Show the rendered form
-    mollom_theme('show_captcha', $vars);
+    mollom_theme('show_captcha', $variables);
     die();
   }
-  
+
   /**
    * Retrieve a CAPTCHA
    */
   private function mollom_get_captcha($type, $comment) {
     $mollom = self::get_mollom_instance();
     $result = $mollom->createCaptcha(array('type' => $type));
+  }
+
+  /**
+   * This is a helper function. Get all the applicable comment fields from
+   * $_POST and $comment and put them in one array before passing on to
+   * show_captcha()
+   *
+   * @param array $post the $_POST array
+   * @param array $comment the $comment array which is passed through the add_action hook
+   */
+  private function mollom_set_fields($post = array(), $comment = array()) {
+    $mollom_comment = array(
+      'comment_post_ID' => $comment['comment_post_ID'],
+      'author' => $comment['comment_author'],
+      'url' => $comment['comment_author_url'],
+      'email' => $comment['comment_author_email'],
+      'comment' => $comment['comment_content'],
+      'comment_parent' => $comment['comment_parent']
+    );
+
+    // add possible extra fields to the $mollom_comment array
+    foreach ($post as $key => $value) {
+      if ((!array_key_exists($key, array_keys($mollom_comment))) && ($key != 'submit') && ($key != 'mollom_solution')) {
+        $mollom_comment[$key] = $value;
+      }
+    }
+
+    return $mollom_comment;
+  }
+
+  /**
+   * Generate HTML hidden fields from an array.
+   *
+   * This is a helper function. A comment yield extra data attached by other
+   * plugins. We don't want to lose that information. We generate the data as a
+   * a set of hidden fields and display them in the CAPTCHA form. All fields
+   * except email/url are sanitized against non-western encoding sets.
+   *
+   * @param array $comment
+   *   an array with fields where key is the name of the field and value is the
+   *   value of the field
+   *
+   * @return string
+   *   A string containing the rendered hidden fields.
+   */
+  private function mollom_get_fields($comment = array()) {
+    $output = '';
+
+    foreach ($comment as $key => $value) {
+      // sanitize for non-western encoding sets. Only URL and e-mail adress are
+      // exempted. Extra non-wp fields are included.
+      switch ($key) {
+        case 'url':
+        case 'email':
+          break;
+        default: {
+          $charset = get_option('blog_charset');
+          $value = htmlspecialchars(stripslashes($value), ENT_COMPAT, $charset);
+          break;
+        }
+      }
+
+      // output the value to a hidden field
+      $output .= '<input type="hidden" name= "' . $key . '" value = "' . $value . '" />';
+    }
+
+    return $output;
   }
 
   /**
