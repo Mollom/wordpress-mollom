@@ -61,6 +61,31 @@ class WPMollom {
     register_activation_hook(__FILE__, array(&$this, 'activate'));
     // pass comments through Mollom during processing
     add_filter('preprocess_comment', array(&$this, 'check_comment'));
+    // Enqueue our scripts
+    add_action('wp_enqueue_scripts', array(&$this, 'wp_enqueue_scripts'));
+    add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
+    //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
+  }
+
+  /**
+   * Enqueues files for inclusion in the head of a page
+   *
+   * This function is called through the wp_enqueue_scripts action hook.
+   */
+  public function wp_enqueue_scripts() {
+    // Add jquery. We'll need it when we're on our CAPTCHA page
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('js/wp-mollom', plugins_url('js/wp-mollom.js', __FILE__), array('jquery'), '1.0', true);
+  }
+
+  /**
+   * Enqueues files for inclusion in the head of a page
+   *
+   * This function is called through the wp_enqueue_scripts action hook.
+   */
+  public function admin_enqueue_scripts() {
+    // Add an extra CSS file. But only on the wp-comments-edit.php page
+    wp_enqueue_style('wp-mollom', '/wp-content/plugins/wp-mollom/wp-mollom.css');
   }
 
   /**
