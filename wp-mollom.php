@@ -37,6 +37,9 @@ define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 /* define WP Mollom table where mollom data per comment gets stored */
 define( 'MOLLOM_TABLE', 'mollom' );
 
+/* define WP Mollom table where mollom cache data gets stored */
+define( 'MOLLOM_CACHE_TABLE', 'mollom_cache' );
+
 /* Define the version of the mollom tables */
 define( 'MOLLOM_TABLE_VERSION', '2000');
 
@@ -142,7 +145,7 @@ class WPMollom {
     self::mollom_include('common.inc');
 
     // Table definition for MOLLOM_TABLE
-    $tbl_definition = "
+    $mollom_tbl_definition = "
       `comment_ID` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT '0',
 			`mollom_session_ID` VARCHAR( 40 ) NULL DEFAULT NULL,
 		  `mollom_had_captcha` INT ( 1 ) NOT NULL DEFAULT '0',
@@ -152,7 +155,17 @@ class WPMollom {
 				`mollom_session_ID`
 			)";
 
-    mollom_table_install(MOLLOM_TABLE, MOLLOM_TABLE_VERSION, $tbl_definition);
+    // Tabel definition for MOLLOM_CACHE_TABLE
+    $mollom_cache_tbl_definition = "
+       `created` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT '0',
+       `mollom_form_ID` VARCHAR( 40 ) NULL DEFAULT NULL,
+       UNIQUE (
+         `created`,
+         `mollom_form_ID`
+       )";
+
+    mollom_table_install(MOLLOM_TABLE, MOLLOM_TABLE_VERSION, $mollom_tbl_definition);
+    mollom_table_install(MOLLOM_CACHE_TABLE, MOLLOM_TABLE_VERSION, $mollom_cache_tbl_definition);
   }
 
   /**
