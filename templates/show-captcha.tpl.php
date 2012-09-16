@@ -92,6 +92,7 @@
   <p><label><strong><?php _e('Solution', MOLLOM_I18N); ?></strong></label></p>
 	<p><input type="text" length="15" maxlength="15" name="mollom_solution" /></p>
 	<?php echo $attached_form_fields; ?>
+    <input type="hidden" id="mollom-form-id" name="form_id" value="<?php echo $form_id ?>" />
 	<p><input type="submit" value="<?php _e('Submit', MOLLOM_I18N); ?>" class="submit" /></p>
 </form>
 

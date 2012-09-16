@@ -419,6 +419,15 @@ class WPMollom {
       }
     }
 
+    // Wordpress strips off extra data sent with POST
+    $mollom_comment = self::mollom_set_fields($_POST, $comment);
+
+    // The CAPTCHA form was submitted.
+    if (isset($_POST['form_id'])) {
+      self::mollom_check_captcha($mollom_comment);
+      //return $comment;
+    }
+
     $map = array(
         'postTitle' => NULL,
         'postBody' => 'comment_content',
@@ -524,10 +533,76 @@ class WPMollom {
 
     // 2. Build the form fields
     $variables['attached_form_fields'] = self::mollom_get_fields($comment);
+
     // 3. Cache the form (assign a unique form ID)
+    $variables['form_id'] = self::mollom_form_id();
+
     // 4. Show the rendered form and kill any further processing of the comment
     mollom_theme('show_captcha', $variables);
     die();
+  }
+
+  function mollom_check_captcha($comment) {
+
+    // Replay attack validation
+    if (!isset($comment['form_id'])) {
+      return FALSE;
+    }
+
+    if (!self::mollom_check_form_id($comment['form_id'])) {
+       return FALSE;
+    }
+
+    return $comment;
+  }
+
+  /**
+   * Generates a form id.
+   *
+   * The form id is used as a hidden field for the captcha form. The id is stored
+   * server side with a timestamp. When the response comes back. Validation of the input
+   * includes checking if the id exists and the form was submitted within a reasonable
+   * timeframe. This prevents replay attacks.
+   *
+   * @return string A hash of the current time + a random number
+   */
+  private function mollom_form_id() {
+    self::mollom_include('cache.inc');
+
+    $form_id = wp_hash(microtime() . mt_rand());
+    $time = current_time('timestamp');
+
+    $cache = new MollomCache();
+    if (!$cache->create($time, $form_id)) {
+      return FALSE;
+    } 
+
+    return $form_id;
+  }
+
+  /** 
+   * Checks the form id
+   *
+   * This function performs to validation checks. First, the form id should be in the
+   * cache and second, the form id should not be older then an hour. If both criteria
+   * are satisfied, the form id is removed from the cache and the function returns TRUE
+   * Otherwise, it returns FALSE;
+   *
+   * @param string The form id to be checked
+   * @return boolean TRUE if valid, FALSE if invalid
+   */
+  private function mollom_check_form_id($form_id) {
+    self::mollom_include('cache.inc');
+
+    $cache = new MollomCache();
+    if ($data = $cache->exists($form_id)) {      
+      if (($data->created + 3600) >= current_time('timestamp')) {
+        $cache->delete($form_id);
+        return TRUE;
+      }
+    }
+
+    return FALSE;
   }
 
   /**
