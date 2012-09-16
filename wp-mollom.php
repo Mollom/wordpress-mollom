@@ -472,8 +472,6 @@ class WPMollom {
       return;
     }
     elseif ($result['spamClassification'] == 'unsure') {
-      $mollom_comment = self::mollom_set_fields($_POST, $comment);
-      $mollom_comment = $comment;
       $mollom_comment['mollom_session_id'] = $result['id'];
       $mollom_comment['mollom_quality'] = $result['spamScore'];
       self::mollom_show_captcha($mollom_comment);
