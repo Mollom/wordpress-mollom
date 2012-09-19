@@ -34,11 +34,11 @@ class MollomCache {
    * @param string form_id
    *   The form id which will be stored
    */
-  public function create($created, $form_id) {
+  public function create($created, $form_id, $key) {
     global $wpdb;
 
-    $data = array('created' => $created, 'mollom_form_id' => $form_id);
-    $result = $wpdb->insert($this->cache_table, $data, array('%d', '%s'));
+    $data = array('created' => $created, 'form_id' => $form_id, 'key' => $key);
+    $result = $wpdb->insert($this->cache_table, $data, array('%d', '%s', '%s'));
 
     return $result;
   }
@@ -56,7 +56,7 @@ class MollomCache {
   public function exists($form_id) {
      global $wpdb;
 
-     $result = $wpdb->get_row($wpdb->prepare("SELECT * FROM $this->cache_table WHERE mollom_form_id = %s", $form_id));
+     $result = $wpdb->get_row($wpdb->prepare("SELECT * FROM $this->cache_table WHERE form_id = %s", $form_id));
 
      if (is_null($result)) {
        return FALSE;
@@ -77,7 +77,7 @@ class MollomCache {
   public function delete($form_id) {
   	global $wpdb;
 
-    $count = $wpdb->query($wpdb->prepare("DELETE FROM $this->cache_table WHERE mollom_form_id = %s", $form_id));
+    $count = $wpdb->query($wpdb->prepare("DELETE FROM $this->cache_table WHERE form_id = %s", $form_id));
 
     if (!$count) {
       return FALSE;
@@ -89,9 +89,25 @@ class MollomCache {
   /**
    * Flush the cache
    *
-   * Flushes the cache table of entries which are older then $created.
+   * Flushes the cache table of entries which are older then a certain interval
+   * 
+   * @param int $time
+   *   A UNIX timestamp
+   * @param int $interval
+   *   The interval in seconds. Will be substracted from $time. All entries
+   *   older then $time - $intervall will be deleted
+   * @return boolean TRUE when succesfull, FALSE if not
    */
-  public function clear($created) {
-  	// @todo To be implemented
+  public function clear($time, $interval) {
+    global $wpdb;
+
+    $limit = $time - $interval;
+    $count = $wpdb->query($wpdb->prepare("DELETE FROM $this->cache_table WHERE created < %d", $limit));
+
+    if (!$count) {
+      return FALSE;
+    }
+
+    return TRUE;
   }
 }

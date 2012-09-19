@@ -43,6 +43,9 @@ define( 'MOLLOM_CACHE_TABLE', 'mollom_cache' );
 /* Define the version of the mollom tables */
 define( 'MOLLOM_TABLE_VERSION', '2000');
 
+/* Define the life time a cached form. */
+define( 'MOLLOM_FORM_ID_LIFE_TIME', 300);
+
 class WPMollom {
 
   // Static objects as singletons
@@ -158,10 +161,11 @@ class WPMollom {
     // Tabel definition for MOLLOM_CACHE_TABLE
     $mollom_cache_tbl_definition = "
        `created` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT '0',
-       `mollom_form_ID` VARCHAR( 40 ) NULL DEFAULT NULL,
+       `form_id` VARCHAR( 40 ) NULL DEFAULT NULL,
+       `key` VARCHAR( 128 ) NULL DEFAULT NULL,
        UNIQUE (
          `created`,
-         `mollom_form_ID`
+         `form_id`
        )";
 
     mollom_table_install(MOLLOM_TABLE, MOLLOM_TABLE_VERSION, $mollom_tbl_definition);
@@ -533,7 +537,7 @@ class WPMollom {
     $variables['attached_form_fields'] = self::mollom_get_fields($comment);
 
     // 3. Cache the form (assign a unique form ID)
-    $variables['form_id'] = self::mollom_form_id();
+    $variables['form_id'] = self::mollom_form_id($comment);
 
     // 4. Show the rendered form and kill any further processing of the comment
     mollom_theme('show_captcha', $variables);
@@ -547,7 +551,7 @@ class WPMollom {
       return FALSE;
     }
 
-    if (!self::mollom_check_form_id($comment['form_id'])) {
+    if (!self::mollom_check_form_id($comment)) {
        return FALSE;
     }
 
@@ -564,14 +568,19 @@ class WPMollom {
    *
    * @return string A hash of the current time + a random number
    */
-  private function mollom_form_id() {
+  private function mollom_form_id($comment) {
     self::mollom_include('cache.inc');
 
-    $form_id = wp_hash(microtime() . mt_rand());
     $time = current_time('timestamp');
 
+    // Calculate the HMAC. The key is a random generated salted hash
+    $key = wp_hash(mt_rand() . current_time('timestamp'), 'nonce');
+    $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['comment'] . '|' . $key;
+    $form_id = hash_hmac('sha1', $data, $key);
+
+    // Store it in the cache
     $cache = new MollomCache();
-    if (!$cache->create($time, $form_id)) {
+    if (!$cache->create($time, $form_id, $key)) {
       return FALSE;
     } 
 
@@ -589,13 +598,22 @@ class WPMollom {
    * @param string The form id to be checked
    * @return boolean TRUE if valid, FALSE if invalid
    */
-  private function mollom_check_form_id($form_id) {
+  private function mollom_check_form_id($comment) {
     self::mollom_include('cache.inc');
 
     $cache = new MollomCache();
-    if ($data = $cache->exists($form_id)) {      
-      if (($data->created + 3600) >= current_time('timestamp')) {
-        $cache->delete($form_id);
+
+    // Clear the cache table of older entries first
+    // Acts as a sort of Poormans cron to keep things clean
+    $time = current_time('timestamp');
+    $cache->clear($time, MOLLOM_FORM_ID_LIFE_TIME);
+
+    // Perform the check
+    if ($cached_data = $cache->exists($comment['form_id'])) {
+      $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['comment'] . '|' . $cached_data->key;
+      $hmac = hash_hmac('sha1', $data, $cached_data->key);
+      if (($cached_data->created + MOLLOM_FORM_ID_LIFE_TIME) >= current_time('timestamp') && ($cached_data->form_id == $hmac)) {
+        $cache->delete($cached_data->form_id);
         return TRUE;
       }
     }
