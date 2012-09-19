@@ -575,7 +575,7 @@ class WPMollom {
 
     // Calculate the HMAC. The key is a random generated salted hash
     $key = wp_hash(mt_rand() . current_time('timestamp'), 'nonce');
-    $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['comment'] . '|' . $key;
+    $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['url'] . '|' . $comment['comment'] . '|' . $key;
     $form_id = hash_hmac('sha1', $data, $key);
 
     // Store it in the cache
@@ -610,7 +610,7 @@ class WPMollom {
 
     // Perform the check
     if ($cached_data = $cache->exists($comment['form_id'])) {
-      $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['comment'] . '|' . $cached_data->key;
+      $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['url'] . '|' . $comment['comment'] . '|' . $key;
       $hmac = hash_hmac('sha1', $data, $cached_data->key);
       if (($cached_data->created + MOLLOM_FORM_ID_LIFE_TIME) >= current_time('timestamp') && ($cached_data->form_id == $hmac)) {
         $cache->delete($cached_data->form_id);
