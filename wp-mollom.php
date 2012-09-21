@@ -46,6 +46,9 @@ define( 'MOLLOM_TABLE_VERSION', '2000');
 /* Define the life time a cached form. */
 define( 'MOLLOM_FORM_ID_LIFE_TIME', 300);
 
+/* Seconds that must have passed by for the same author to post again. */
+define( 'MOLLOM_CAPTCHA_RATE_LIMIT', 15);
+
 class WPMollom {
 
   // Static objects as singletons
@@ -428,8 +431,9 @@ class WPMollom {
 
     // The CAPTCHA form was submitted.
     if (isset($_POST['form_id'])) {
-      self::mollom_check_captcha($mollom_comment);
-      //return $comment;
+      if (!self::mollom_check_captcha($mollom_comment)) {
+        return $comment;
+      }
     }
 
     $map = array(
@@ -544,18 +548,58 @@ class WPMollom {
     die();
   }
 
-  function mollom_check_captcha($comment) {
+  /**
+   * Validates the submitteded CAPTCHA solution
+   *
+   * The CAPTCHA solution is send back to Mollom for validation. Depending
+   * on the result, the comment will be rejected or admitted. This function
+   * works in two stages:
+   *  - Validation against replay attacks and CSFR
+   *  - Validation of the CAPTCHA solution
+   *
+   * @param array $comment
+   *   The entire comment array with the CAPTCHA solution and Form ID
+   * @return Boolean
+   *   TRUE of valid, FALSE if invalid
+   */
+  private function mollom_check_captcha($comment) {
 
-    // Replay attack validation
+    // Replay attack and CSRF validation
     if (!isset($comment['form_id'])) {
       return FALSE;
     }
 
     if (!self::mollom_check_form_id($comment)) {
-       return FALSE;
+      return FALSE;
     }
 
-    return $comment;
+    // Check the solution with Mollom
+    self::mollom_include('common.inc');
+    $mollom = self::get_mollom_instance();
+
+    $data = array(
+      'id' =>
+      'solution' => $comment['mollom_solution'],
+      'authorName' => $comment['author'],
+      'authorUrl' => $comment['url'],
+      'authorMail' =>$comment['email'],
+      'authorIp' => self::fetch_author_ip(),
+      'rateLimit' => MOLLOM_CAPTCHA_RATE_LIMIT,
+    );
+
+    $result = $mollom->checkCaptcha($data);
+
+    // No session id was specified
+    if ($result !== FALSE) {
+      if ($result['solved'] === 1) {
+        return TRUE;
+      } else {
+        // $result['reason']
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
   /**
@@ -582,12 +626,12 @@ class WPMollom {
     $cache = new MollomCache();
     if (!$cache->create($time, $form_id, $key)) {
       return FALSE;
-    } 
+    }
 
     return $form_id;
   }
 
-  /** 
+  /**
    * Checks the form id
    *
    * This function performs to validation checks. First, the form id should be in the
