@@ -686,7 +686,7 @@ class WPMollom {
       'comment_parent' => $comment['comment_parent']
     );
 
-    $omitted = array('submit', 'mollom_submitted');
+    $omitted = array('submit');
 
     // add possible extra fields to the $mollom_comment array
     foreach ($post as $key => $value) {
@@ -732,7 +732,8 @@ class WPMollom {
 
       // While processing, the old form_id will be processed again. We prevent
       // it from rendering here.
-      if ($key == 'form_id') {
+      $omitted = array('form_id', 'mollom_solution');
+      if (in_array($key, $omitted)) {
         continue;
       }
 
