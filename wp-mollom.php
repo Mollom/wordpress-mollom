@@ -426,13 +426,17 @@ class WPMollom {
       }
     }
 
-    // Wordpress strips off extra data sent with POST
+    // Wordpress doesn't expose the raw POST data to its API. It strips
+    // extra information off and only returns the comment fields. WE
+    // introduce the missing information back into the flow.
     $mollom_comment = self::mollom_set_fields($_POST, $comment);
 
     // The CAPTCHA form was submitted.
     if (isset($_POST['form_id'])) {
-      if (!self::mollom_check_captcha($mollom_comment)) {
-        return $comment;
+      $b = self::mollom_check_captcha($mollom_comment);
+      if ($b != FALSE) {
+        var_dump($b);
+        // return $comment;
       }
     }
 
@@ -578,7 +582,7 @@ class WPMollom {
     $mollom = self::get_mollom_instance();
 
     $data = array(
-      'id' =>
+      'id' => $comment['mollom_session_id'],
       'solution' => $comment['mollom_solution'],
       'authorName' => $comment['author'],
       'authorUrl' => $comment['url'],
@@ -586,7 +590,6 @@ class WPMollom {
       'authorIp' => self::fetch_author_ip(),
       'rateLimit' => MOLLOM_CAPTCHA_RATE_LIMIT,
     );
-
     $result = $mollom->checkCaptcha($data);
 
     // No session id was specified
@@ -654,7 +657,7 @@ class WPMollom {
 
     // Perform the check
     if ($cached_data = $cache->exists($comment['form_id'])) {
-      $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['url'] . '|' . $comment['comment'] . '|' . $key;
+      $data = $comment['author'] . '|' . $comment['email'] . '|' . $comment['url'] . '|' . $comment['comment'] . '|' . $cached_data->key;
       $hmac = hash_hmac('sha1', $data, $cached_data->key);
       if (($cached_data->created + MOLLOM_FORM_ID_LIFE_TIME) >= current_time('timestamp') && ($cached_data->form_id == $hmac)) {
         $cache->delete($cached_data->form_id);
@@ -683,9 +686,11 @@ class WPMollom {
       'comment_parent' => $comment['comment_parent']
     );
 
+    $omitted = array('submit', 'mollom_submitted');
+
     // add possible extra fields to the $mollom_comment array
     foreach ($post as $key => $value) {
-      if ((!array_key_exists($key, array_keys($mollom_comment))) && ($key != 'submit') && ($key != 'mollom_solution')) {
+      if ((!array_key_exists($key, array_keys($mollom_comment))) && (!in_array($key, $omitted))) {
         $mollom_comment[$key] = $value;
       }
     }
@@ -723,6 +728,12 @@ class WPMollom {
           $value = htmlspecialchars(stripslashes($value), ENT_COMPAT, $charset);
           break;
         }
+      }
+
+      // While processing, the old form_id will be processed again. We prevent
+      // it from rendering here.
+      if ($key == 'form_id') {
+        continue;
       }
 
       // output the value to a hidden field
