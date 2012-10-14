@@ -433,65 +433,64 @@ class WPMollom {
 
     // The CAPTCHA form was submitted.
     if (isset($_POST['form_id'])) {
-      $b = self::mollom_check_captcha($mollom_comment);
-      if ($b != FALSE) {
-        var_dump($b);
-        // return $comment;
+      if (!self::mollom_check_captcha($mollom_comment)) {
+        self::mollom_show_captcha($mollom_comment);
+        die();
       }
-    }
-
-    $map = array(
-        'postTitle' => NULL,
-        'postBody' => 'comment_content',
-        'authorName' => 'comment_author',
-        'authorMail' => 'comment_author_email',
-        'authorUrl' => 'comment_author_url',
-        'authorId' => 'user_ID',
-    );
-    $data = array();
-    foreach ($map as $param => $key) {
-      if (isset($comment[$key]) && $comment[$key] !== '') {
-        $data[$param] = $comment[$key];
+    } else {
+      $map = array(
+          'postTitle' => NULL,
+          'postBody' => 'comment_content',
+          'authorName' => 'comment_author',
+          'authorMail' => 'comment_author_email',
+          'authorUrl' => 'comment_author_url',
+          'authorId' => 'user_ID',
+      );
+      $data = array();
+      foreach ($map as $param => $key) {
+        if (isset($comment[$key]) && $comment[$key] !== '') {
+          $data[$param] = $comment[$key];
+        }
       }
-    }
-    // Add the author IP, support for reverse proxy
-    $data['authorIp'] = $this->fetch_author_ip();
-    // Add contextual information for the commented on post.
-    $data['contextUrl'] = get_permalink();
-    $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
-    // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
-    // whether a 'unsure' response asking for a CAPTCHA is possible.
-    $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
-    // A string denoting the check to perform.
-    $data['checks'] = get_option('mollom_analysis_types', array('spam'));
+      // Add the author IP, support for reverse proxy
+      $data['authorIp'] = $this->fetch_author_ip();
+      // Add contextual information for the commented on post.
+      $data['contextUrl'] = get_permalink();
+      $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
+      // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
+      // whether a 'unsure' response asking for a CAPTCHA is possible.
+      $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
+      // A string denoting the check to perform.
+      $data['checks'] = get_option('mollom_analysis_types', array('spam'));
 
-    $mollom = self::get_mollom_instance();
-    $result = $mollom->checkContent($data);
+      $mollom = self::get_mollom_instance();
+      $result = $mollom->checkContent($data);
 
-    // Trigger global fallback behavior if there is a unexpected result.
-    if (!is_array($result) || !isset($result['id'])) {
-      return $this->mollom_fallback($comment);
-    }
+      // Trigger global fallback behavior if there is a unexpected result.
+      if (!is_array($result) || !isset($result['id'])) {
+        return $this->mollom_fallback($comment);
+      }
 
-    // Profanity check
-    if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
-      wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
-    }
+      // Profanity check
+      if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
+        wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
+      }
 
-    // Spam check
-    if ($result['spamClassification'] == 'spam') {
-      wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
-      return;
-    }
-    elseif ($result['spamClassification'] == 'unsure') {
-      $mollom_comment['mollom_session_id'] = $result['id'];
-      $mollom_comment['mollom_quality'] = $result['spamScore'];
-      self::mollom_show_captcha($mollom_comment);
-      die();
-    }
-    elseif ($result['spamClassification'] == 'ham') {
-      // @todo Associate the Mollom session information with the comment
-      return $comment;
+      // Spam check
+      if ($result['spamClassification'] == 'spam') {
+        wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
+        return;
+      }
+      elseif ($result['spamClassification'] == 'unsure') {
+        $mollom_comment['mollom_session_id'] = $result['id'];
+        $mollom_comment['mollom_quality'] = $result['spamScore'];
+        self::mollom_show_captcha($mollom_comment);
+        die();
+      }
+      elseif ($result['spamClassification'] == 'ham') {
+        // @todo Associate the Mollom session information with the comment
+        return $comment;
+      }
     }
 
     return $comment;
@@ -567,7 +566,6 @@ class WPMollom {
    *   TRUE of valid, FALSE if invalid
    */
   private function mollom_check_captcha($comment) {
-
     // Replay attack and CSRF validation
     if (!isset($comment['form_id'])) {
       return FALSE;
@@ -594,7 +592,7 @@ class WPMollom {
 
     // No session id was specified
     if ($result !== FALSE) {
-      if ($result['solved'] === 1) {
+      if ($result['solved'] == TRUE) {
         return TRUE;
       } else {
         // $result['reason']
