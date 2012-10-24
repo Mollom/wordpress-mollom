@@ -55,6 +55,7 @@ class WPMollom {
   static private $instance = NULL;
   static private $mollom = NULL;
   private $mollom_nonce = 'mollom-configuration';
+  private $mollom_comment = array();
 
   /**
    * Constructor
@@ -429,69 +430,85 @@ class WPMollom {
     // Wordpress doesn't expose the raw POST data to its API. It strips
     // extra information off and only returns the comment fields. WE
     // introduce the missing information back into the flow.
-    $mollom_comment = self::mollom_set_fields($_POST, $comment);
+    $this->mollom_comment = array(
+      'captcha_passed' => FALSE,
+    );
+    $this->mollom_comment += self::mollom_set_fields($_POST, $comment);
 
-    // The CAPTCHA form was submitted.
-    if (isset($_POST['form_id'])) {
-      if (!self::mollom_check_captcha($mollom_comment)) {
-        self::mollom_show_captcha($mollom_comment);
-        die();
-      }
-    } else {
-      $map = array(
-          'postTitle' => NULL,
-          'postBody' => 'comment_content',
-          'authorName' => 'comment_author',
-          'authorMail' => 'comment_author_email',
-          'authorUrl' => 'comment_author_url',
-          'authorId' => 'user_ID',
-      );
-      $data = array();
-      foreach ($map as $param => $key) {
-        if (isset($comment[$key]) && $comment[$key] !== '') {
-          $data[$param] = $comment[$key];
-        }
-      }
-      // Add the author IP, support for reverse proxy
-      $data['authorIp'] = $this->fetch_author_ip();
-      // Add contextual information for the commented on post.
-      $data['contextUrl'] = get_permalink();
-      $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
-      // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
-      // whether a 'unsure' response asking for a CAPTCHA is possible.
-      $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
-      // A string denoting the check to perform.
-      $data['checks'] = get_option('mollom_analysis_types', array('spam'));
-
-      $mollom = self::get_mollom_instance();
-      $result = $mollom->checkContent($data);
-
-      // Trigger global fallback behavior if there is a unexpected result.
-      if (!is_array($result) || !isset($result['id'])) {
-        return $this->mollom_fallback($comment);
-      }
-
-      // Profanity check
-      if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
-        wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
-      }
-
-      // Spam check
-      if ($result['spamClassification'] == 'spam') {
-        wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
-        return;
-      }
-      elseif ($result['spamClassification'] == 'unsure') {
-        $mollom_comment['mollom_session_id'] = $result['id'];
-        $mollom_comment['mollom_quality'] = $result['spamScore'];
-        self::mollom_show_captcha($mollom_comment);
-        die();
-      }
-      elseif ($result['spamClassification'] == 'ham') {
-        // @todo Associate the Mollom session information with the comment
-        return $comment;
+    $map = array(
+        'postTitle' => NULL,
+        'postBody' => 'comment_content',
+        'authorName' => 'comment_author',
+        'authorMail' => 'comment_author_email',
+        'authorUrl' => 'comment_author_url',
+        'authorId' => 'user_ID',
+    );
+    $data = array();
+    foreach ($map as $param => $key) {
+      if (isset($comment[$key]) && $comment[$key] !== '') {
+        $data[$param] = $comment[$key];
       }
     }
+    // If the contentId exists, the data is merely rechecked.
+    if (isset($this->mollom_comment['contentId'])) {
+      $data['contentId'] = $this->mollom_comment['contentId'];
+    }
+    // Add the author IP, support for reverse proxy
+    $data['authorIp'] = $this->fetch_author_ip();
+    // Add contextual information for the commented on post.
+    $data['contextUrl'] = get_permalink();
+    $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
+    // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
+    // whether a 'unsure' response asking for a CAPTCHA is possible.
+    $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
+    // A string denoting the check to perform.
+    $data['checks'] = get_option('mollom_analysis_types', array('spam'));
+
+    $mollom = self::get_mollom_instance();
+    $result = $mollom->checkContent($data);
+
+    // Hook Mollom data to our mollom comment
+    $this->mollom_comment['analysis'] = $result;
+
+    // Trigger global fallback behavior if there is a unexpected result.
+    if (!is_array($result) || !isset($result['id'])) {
+      return $this->mollom_fallback($comment);
+    }
+
+    // Profanity check
+    if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
+      wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
+    }
+
+    // Spam check
+    if ($result['spamClassification'] == 'spam') {
+      wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
+      return;
+    }
+    elseif ($result['spamClassification'] == 'unsure') {
+      if ($this->mollom_comment['captchaId']) {
+        $this->mollom_check_captcha();
+      }
+      if (!$this->mollom_comment['captcha_passed']) {
+        $this->mollom_show_captcha();
+      }
+    }
+    elseif ($result['spamClassification'] == 'ham') {
+      // Fall through
+    }
+
+    add_action('comment_post', array(&$this, 'mollom_save_comment'), 1, 1);
+
+    return $comment;
+  }
+
+  /**
+   * Save the comment to the database
+   *
+   * @param  $comment_ID
+   * @return array The comment
+   */
+  public function mollom_save_comment($comment_ID) {
 
     return $comment;
   }
@@ -514,16 +531,14 @@ class WPMollom {
 
   /**
    * Helper function. This function preprocesses and renders the CAPTCHA form
-   * @param array $comment
-   *   The comment we're currently trying to clear with Mollom
    */
-  private function mollom_show_captcha($comment) {
+  private function mollom_show_captcha() {
     self::mollom_include('common.inc');
 
     // 1. Generate the audio and image captcha
     $mollom = self::get_mollom_instance();
     $data = array(
-      'contentId' => $comment['mollom_session_id'],
+      'contentId' => $this->mollom_comment['analysis']['id'],
       'ssl' => FALSE,
     );
 
@@ -536,15 +551,16 @@ class WPMollom {
     // The image id and the audio id are essentially the same. But we can't be
     // sure that the API throws back something different. In that case, we'll go
     // with the id returned from our last API call.
-    $comment['mollom_session_id'] = ($image['id'] == $audio['id']) ? $image['id'] : $audio['id'];
+    $this->mollom_comment['captchaId'] = ($image['id'] == $audio['id']) ? $image['id'] : $audio['id'];
     $variables['mollom_image_captcha'] = $image['url'];
     $variables['mollom_audio_captcha'] = WP_PLUGIN_URL . '/wp-mollom/assets/mollom-captcha-player.swf?url=' . str_replace('%2F', '/', rawurlencode($audio['url']));
 
-    // 2. Build the form fields
-    $variables['attached_form_fields'] = self::mollom_get_fields($comment);
+    // 2. Build the form
+    $this->mollom_comment['contentId'] = $this->mollom_comment['analysis']['id'];
+    $variables['attached_form_fields'] = self::mollom_get_fields($this->mollom_comment);
 
     // 3. Cache the form (assign a unique form ID)
-    $variables['form_id'] = self::mollom_form_id($comment);
+    $variables['form_id'] = self::mollom_form_id($this->mollom_comment);
 
     // 4. Show the rendered form and kill any further processing of the comment
     mollom_theme('show_captcha', $variables);
@@ -559,19 +575,14 @@ class WPMollom {
    * works in two stages:
    *  - Validation against replay attacks and CSFR
    *  - Validation of the CAPTCHA solution
-   *
-   * @param array $comment
-   *   The entire comment array with the CAPTCHA solution and Form ID
-   * @return Boolean
-   *   TRUE of valid, FALSE if invalid
    */
-  private function mollom_check_captcha($comment) {
+  private function mollom_check_captcha() {
     // Replay attack and CSRF validation
-    if (!isset($comment['form_id'])) {
+    if (!isset($this->mollom_comment['form_id'])) {
       return FALSE;
     }
 
-    if (!self::mollom_check_form_id($comment)) {
+    if (!self::mollom_check_form_id($this->mollom_comment)) {
       return FALSE;
     }
 
@@ -580,27 +591,26 @@ class WPMollom {
     $mollom = self::get_mollom_instance();
 
     $data = array(
-      'id' => $comment['mollom_session_id'],
-      'solution' => $comment['mollom_solution'],
-      'authorName' => $comment['author'],
-      'authorUrl' => $comment['url'],
-      'authorMail' =>$comment['email'],
+      'id' => $this->mollom_comment['contentId'],
+      'solution' => $this->mollom_comment['mollom_solution'],
+      'authorName' => $this->mollom_comment['author'],
+      'authorUrl' => $this->mollom_comment['url'],
+      'authorMail' =>$this->mollom_comment['email'],
       'authorIp' => self::fetch_author_ip(),
       'rateLimit' => MOLLOM_CAPTCHA_RATE_LIMIT,
     );
     $result = $mollom->checkCaptcha($data);
 
+    // Hook data to the comment
+    $this->mollom_comment['captcha'] = $result;
+    $this->mollom_comment['captchaId'] = $result['id'];
+
     // No session id was specified
     if ($result !== FALSE) {
       if ($result['solved'] == TRUE) {
-        return TRUE;
-      } else {
-        // $result['reason']
-        return FALSE;
+        $this->mollom_comment['captcha_passed'] = TRUE;
       }
     }
-
-    return TRUE;
   }
 
   /**
@@ -715,6 +725,13 @@ class WPMollom {
     $output = '';
 
     foreach ($comment as $key => $value) {
+      // While processing, the old form_id will be processed again. We prevent
+      // it from rendering here.
+      $omitted = array('analysis', 'form_id', 'mollom_solution');
+      if (in_array($key, $omitted)) {
+        continue;
+      }
+
       // sanitize for non-western encoding sets. Only URL and e-mail adress are
       // exempted. Extra non-wp fields are included.
       switch ($key) {
@@ -726,13 +743,6 @@ class WPMollom {
           $value = htmlspecialchars(stripslashes($value), ENT_COMPAT, $charset);
           break;
         }
-      }
-
-      // While processing, the old form_id will be processed again. We prevent
-      // it from rendering here.
-      $omitted = array('form_id', 'mollom_solution');
-      if (in_array($key, $omitted)) {
-        continue;
       }
 
       // output the value to a hidden field
