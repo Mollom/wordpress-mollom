@@ -645,7 +645,7 @@ class WPMollom {
     $mollom = self::get_mollom_instance();
 
     $data = array(
-      'id' => $this->mollom_comment['contentId'],
+      'id' => $this->mollom_comment['captchaId'],
       'solution' => $this->mollom_comment['mollom_solution'],
       'authorName' => $this->mollom_comment['author'],
       'authorUrl' => $this->mollom_comment['url'],
