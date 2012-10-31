@@ -468,7 +468,7 @@ class WPMollom {
 
     // Texta analysis is required. Depending on the outcome, appropriate action
     // is taken
-    if ($this->comment['require_analysis']) {
+    if ($this->mollom_comment['require_analysis']) {
       $map = array(
           'postTitle' => NULL,
           'postBody' => 'comment_content',
