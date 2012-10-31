@@ -49,6 +49,21 @@ define( 'MOLLOM_FORM_ID_LIFE_TIME', 300);
 /* Seconds that must have passed by for the same author to post again. */
 define( 'MOLLOM_CAPTCHA_RATE_LIMIT', 15);
 
+/**
+ * Form protection mode: no protection
+ */
+define( 'MOLLOM_MODE_DISABLED', 0);
+
+/**
+ * Form protection mode: text analysis with CAPTCHA fallback
+ */
+define ( 'MOLLOM_MODE_ANALYSIS', 1);
+
+/**
+ * Form protection mode: CAPTCHA only protection
+ */
+define( 'MOLLOM_MODE_CAPTCHA', 2);
+
 class WPMollom {
 
   // Static objects as singletons
@@ -251,6 +266,8 @@ class WPMollom {
       update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
       // Developer mode
       update_option('mollom_developer_mode', !empty($_POST['developer_mode']) ? 'on' : 'off');
+      // Protection mode
+      update_option('mollom_protection_mode', $_POST['mollom_protection_mode']['mode']);
       // Content analysis strategies
       $analysis_types = $_POST['mollom_analysis_types'];
       if (empty($analysis_types)) {
@@ -327,7 +344,9 @@ class WPMollom {
   }
 
   /**
-   * Helper function. Generates a list of checkboxes with different analysis types.
+   * Helper function. 
+   * 
+   * Generates a list of checkboxes with different analysis types.
    *
    * @return string
    */
@@ -351,6 +370,15 @@ class WPMollom {
     return $element;
   }
 
+  /**
+   * Helper function
+   * 
+   * Generate a checked=checked item for the captcha/analysis checkboxes on the configuration screen
+   * 
+   * @todo refactor this
+   * 
+   * @return string
+   */
   private function mollom_protection_mode() {
     $mollom_protection_mode = get_option('mollom_protection_mode', MOLLOM_MODE_ANALYSIS);
     $mollom_parsed = array(
@@ -361,7 +389,7 @@ class WPMollom {
     if ($mollom_protection_mode['mode'] == MOLLOM_MODE_ANALYSIS) {
       $mollom_parsed['analysis'] = ' checked="checked"';
     }
-    elseif ($mollom_protection_mode['mode'] == MOLLOM_MODE_SPAM) {
+    elseif ($mollom_protection_mode['mode'] == MOLLOM_MODE_CAPTCHA) {
       $mollom_parsed['spam'] = ' checked="checked"';
     }
 
@@ -430,71 +458,97 @@ class WPMollom {
     // Wordpress doesn't expose the raw POST data to its API. It strips
     // extra information off and only returns the comment fields. WE
     // introduce the missing information back into the flow.
+    $protection_mode = get_option('mollom_protection_mode', MOLLOM_MODE_ANALYSIS);
     $this->mollom_comment = array(
       'captcha_passed' => FALSE,
+      'require_analysis' => ($protection_mode == MOLLOM_MODE_ANALYSIS),
+      'require_captcha' => ($protection_mode == MOLLOM_MODE_CAPTCHA),
     );
     $this->mollom_comment += self::mollom_set_fields($_POST, $comment);
 
-    $map = array(
-        'postTitle' => NULL,
-        'postBody' => 'comment_content',
-        'authorName' => 'comment_author',
-        'authorMail' => 'comment_author_email',
-        'authorUrl' => 'comment_author_url',
-        'authorId' => 'user_ID',
-    );
-    $data = array();
-    foreach ($map as $param => $key) {
-      if (isset($comment[$key]) && $comment[$key] !== '') {
-        $data[$param] = $comment[$key];
+    // Texta analysis is required. Depending on the outcome, appropriate action
+    // is taken
+    if ($this->comment['require_analysis']) {
+      $map = array(
+          'postTitle' => NULL,
+          'postBody' => 'comment_content',
+          'authorName' => 'comment_author',
+          'authorMail' => 'comment_author_email',
+          'authorUrl' => 'comment_author_url',
+          'authorId' => 'user_ID',
+      );
+      $data = array();
+      foreach ($map as $param => $key) {
+        if (isset($comment[$key]) && $comment[$key] !== '') {
+          $data[$param] = $comment[$key];
+        }
+      }
+      // If the contentId exists, the data is merely rechecked.
+      // One case where this could happen is when a CAPTCHA is validated
+      // Rather then storing the analysis data clientside, we retrieve
+      // it again from the API since changes to the content must be
+      // validated again.
+      if (isset($this->mollom_comment['contentId'])) {
+        $data['contentId'] = $this->mollom_comment['contentId'];
+      }
+      // Add the author IP, support for reverse proxy
+      $data['authorIp'] = $this->fetch_author_ip();
+      // Add contextual information for the commented on post.
+      $data['contextUrl'] = get_permalink();
+      $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
+      // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
+      // whether a 'unsure' response asking for a CAPTCHA is possible.
+      $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
+      // A string denoting the check to perform.
+      $data['checks'] = get_option('mollom_analysis_types', array('spam'));
+      
+      $mollom = self::get_mollom_instance();
+      $result = $mollom->checkContent($data);
+      
+      // Hook Mollom data to our mollom comment
+      $this->mollom_comment['analysis'] = $result;
+      
+      // Trigger global fallback behavior if there is a unexpected result.
+      if (!is_array($result) || !isset($result['id'])) {
+        return $this->mollom_fallback($comment);
+      }
+      
+      // Profanity check
+      if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
+        wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
+      }
+      
+      // Spam check
+      if ($result['spamClassification'] == 'spam') {
+        wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
+        return;
+      }
+      elseif ($result['spamClassification'] == 'unsure') {
+        // If a captchaId exists, this was probably a POST request from the
+        // CAPTCHA form and we must validate the CAPTCHA
+        if ($this->mollom_comment['captchaId']) {
+          $this->mollom_check_captcha();
+        }
+        if (!$this->mollom_comment['captcha_passed']) {
+          $this->mollom_show_captcha();
+        }
+      }
+      elseif ($result['spamClassification'] == 'ham') {
+        // Fall through
       }
     }
-    // If the contentId exists, the data is merely rechecked.
-    if (isset($this->mollom_comment['contentId'])) {
-      $data['contentId'] = $this->mollom_comment['contentId'];
-    }
-    // Add the author IP, support for reverse proxy
-    $data['authorIp'] = $this->fetch_author_ip();
-    // Add contextual information for the commented on post.
-    $data['contextUrl'] = get_permalink();
-    $data['contextTitle'] = get_the_title($comment['comment_post_ID']);
-    // Trackbacks cannot handle CAPTCHAs; the 'unsure' parameter controls
-    // whether a 'unsure' response asking for a CAPTCHA is possible.
-    $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
-    // A string denoting the check to perform.
-    $data['checks'] = get_option('mollom_analysis_types', array('spam'));
 
-    $mollom = self::get_mollom_instance();
-    $result = $mollom->checkContent($data);
-
-    // Hook Mollom data to our mollom comment
-    $this->mollom_comment['analysis'] = $result;
-
-    // Trigger global fallback behavior if there is a unexpected result.
-    if (!is_array($result) || !isset($result['id'])) {
-      return $this->mollom_fallback($comment);
-    }
-
-    // Profanity check
-    if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
-      wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
-    }
-
-    // Spam check
-    if ($result['spamClassification'] == 'spam') {
-      wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
-      return;
-    }
-    elseif ($result['spamClassification'] == 'unsure') {
+    // The plugin runs in CAPTCHA mode. Text analysis is skipped and a CAPTCHA is always
+    // shown to the end user
+    if ($this->mollom_comment['require_captcha']) {
+      // If a captchaId exists, this was probably a POST request from the
+      // CAPTCHA form and we must validate the CAPTCHA
       if ($this->mollom_comment['captchaId']) {
         $this->mollom_check_captcha();
       }
       if (!$this->mollom_comment['captcha_passed']) {
         $this->mollom_show_captcha();
       }
-    }
-    elseif ($result['spamClassification'] == 'ham') {
-      // Fall through
     }
 
     add_action('comment_post', array(&$this, 'mollom_save_comment'), 1, 1);
