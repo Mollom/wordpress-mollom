@@ -73,6 +73,12 @@
       <?php _e('When you are testing code against the Mollom API, you should switch to developer mode. API calls will be made against Molloms\'s testing API instead of the its\' production API'); ?>
       </p>
 
+      <h3><label><?php _e('Remote moderation', MOLLOM_I18N); ?></label></h3>
+      <p><input type="checkbox" name="moderation_redirect" value="block" <?php echo $mollom_moderation_redirect; ?> />&nbsp;&nbsp;<?php print strtr(__('Redirect <a href="@local-moderation">local moderation pages</a> to the <a href="@remote-moderation">hosted Mollom moderation system</a>', MOLLOM_I18N), array(
+        '@local-moderation' => admin_url('edit-comments.php'),
+        '@remote-moderation' => 'http://my.mollom.com',
+      )); ?></p>
+      
       <?php mollom_nonce_field($mollom_nonce); ?>
       <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
     </form>

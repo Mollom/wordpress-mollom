@@ -81,6 +81,8 @@ class WPMollom {
   private function __construct() {
     // load the text domain for localization
     load_plugin_textdomain(MOLLOM_I18N, false, dirname(plugin_basename(__FILE__)));
+    // register the redirect to My Mollom
+    add_action('admin_init', array(&$this, 'moderation_redirect'));
     // register the administration page
     add_action('admin_menu', array(&$this, 'register_administration_pages'));
     register_activation_hook(__FILE__, array(&$this, 'activate'));
@@ -111,6 +113,18 @@ class WPMollom {
   public function admin_enqueue_scripts() {
     // Add an extra CSS file. But only on the wp-comments-edit.php page
     wp_enqueue_style('wp-mollom', '/wp-content/plugins/wp-mollom/wp-mollom.css');
+  }
+
+  /**
+   * Redirect the user to http://my.mollom.com to moderate comments instead of the regular
+   * Wordpress comment moderation system at edit-comments.php. The setting is "Remote moderation"
+   * is configurated at the Mollom tab under General options
+   */
+  public function moderation_redirect() {
+    $location = basename($_SERVER['PHP_SELF']);
+    if (($location == 'edit-comments.php') && (get_option('mollom_moderation_redirect', 'off') == 'on')) {
+      wp_redirect('http://my.mollom.com');
+    }
   }
 
   /**
@@ -267,7 +281,9 @@ class WPMollom {
       // Developer mode
       update_option('mollom_developer_mode', !empty($_POST['developer_mode']) ? 'on' : 'off');
       // Protection mode
-      update_option('mollom_protection_mode', $_POST['mollom_protection_mode']['mode']);
+      update_option('mollom_protection_mode', $_POST['protection_mode']['mode']);
+      // Redirect to http://my.mollom.com
+      update_option('mollom_moderation_redirect', !empty($_POST['moderation_redirect']) ? 'on' : 'off');
       // Content analysis strategies
       $analysis_types = $_POST['mollom_analysis_types'];
       if (empty($analysis_types)) {
@@ -312,6 +328,7 @@ class WPMollom {
     $vars['mollom_analysis_types'] = $this->mollom_analysis_types_element();
     $vars['mollom_developer_mode'] = (get_option('mollom_developer_mode', 'on') == 'on') ? ' checked="checked"' : '';
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
+    $vars['mollom_moderation_redirect'] = (get_option('mollom_moderation_redirect', 'on') == 'on') ? ' checked="checked"' : '';
 
     // Render the page.
     mollom_theme('configuration', $vars);
