@@ -36,21 +36,21 @@
         '@sla-url' => 'http://mollom.com/standard-service-level-agreement',
       )); ?>
       </p>
-
+      
       <h3><label><?php _e('Protection mode', MOLLOM_I18N); ?></label></h3>
 
       <div id="mollom-analysis-mode">
 
         <div id="form-element-mollom-mode-analysis">
           <label>
-            <input type="radio" id="edit-mollom-mode-2" name="mollom_protection_mode[mode]" value="1" <?php print $mollom_protection_mode['analysis']; ?> class="form-radio">
+            <input type="radio" id="edit-mollom-mode-2" name="protection_mode[mode]" value="1" <?php print $mollom_protection_mode['analysis']; ?> class="form-radio">
             <span>Text analysis</span>
           </label>
         </div>
 
         <div id="form-element-mollom-mode-spam">
           <label>
-            <input type="radio" id="edit-mollom-mode-2" name="mollom_protection_mode[mode]" value="2" <?php print $mollom_protection_mode['spam']; ?> class="form-radio">
+            <input type="radio" id="edit-mollom-mode-2" name="protection_mode[mode]" value="2" <?php print $mollom_protection_mode['spam']; ?> class="form-radio">
             <span>CAPTCHA</span>
           </label>
         </div>
