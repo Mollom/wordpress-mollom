@@ -518,18 +518,17 @@ class WPMollom {
       $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
       // A string denoting the check to perform.
       $data['checks'] = get_option('mollom_analysis_types', array('spam'));
-      
+
       $mollom = self::get_mollom_instance();
       $result = $mollom->checkContent($data);
-      
+
       // Hook Mollom data to our mollom comment
       $this->mollom_comment['analysis'] = $result;
-      
       // Trigger global fallback behavior if there is a unexpected result.
       if (!is_array($result) || !isset($result['id'])) {
         return $this->mollom_fallback($comment);
       }
-      
+
       // Profanity check
       if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
         wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
