@@ -25,28 +25,44 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* define this version of the plugin */
+/** 
+ * define this version of the plugin 
+ */
 define('MOLLOM_PLUGIN_VERSION', '2.x-dev');
 
-/* define WP Mollom's i18n namespace */
+/**
+ *  define WP Mollom's i18n namespace 
+ */
 define('MOLLOM_I18N', 'wp-mollom');
 
-/* define a few paths */
+/** define a few paths 
+ * 
+ */
 define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
-/* define WP Mollom table where mollom data per comment gets stored */
+/** 
+ * define WP Mollom table where mollom data per comment gets stored 
+ */
 define( 'MOLLOM_TABLE', 'mollom' );
 
-/* define WP Mollom table where mollom cache data gets stored */
+/** 
+ * define WP Mollom table where mollom cache data gets stored 
+ */
 define( 'MOLLOM_CACHE_TABLE', 'mollom_cache' );
 
-/* Define the version of the mollom tables */
+/** 
+ * Define the version of the mollom tables 
+ */
 define( 'MOLLOM_TABLE_VERSION', '2000');
 
-/* Define the life time a cached form. */
+/**
+ *  Define the life time a cached form. 
+ */
 define( 'MOLLOM_FORM_ID_LIFE_TIME', 300);
 
-/* Seconds that must have passed by for the same author to post again. */
+/** 
+ * Seconds that must have passed by for the same author to post again. 
+ */
 define( 'MOLLOM_CAPTCHA_RATE_LIMIT', 15);
 
 /**

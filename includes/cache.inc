@@ -45,9 +45,9 @@ class MollomCache {
 
   /**
    * Checks if the form id exists
-   * 
+   *
    * Checks if the form id exists and returns an object if it does.
-   * 
+   *
    * @param string form_id
    *   The form id which will be checked
    * @return mixed
@@ -67,7 +67,7 @@ class MollomCache {
 
   /**
    * Delete the form_id from the cache
-   * 
+   *
    * On cache invalidation, remove the entry from the cache
    *
    * @param string form_id
@@ -90,7 +90,7 @@ class MollomCache {
    * Flush the cache
    *
    * Flushes the cache table of entries which are older then a certain interval
-   * 
+   *
    * @param int $time
    *   A UNIX timestamp
    * @param int $interval
