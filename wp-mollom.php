@@ -107,6 +107,8 @@ class WPMollom {
     // Enqueue our scripts
     add_action('wp_enqueue_scripts', array(&$this, 'wp_enqueue_scripts'));
     add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
+    // register the comment feedback when managing comments
+    add_action('wp_set_comment_status', array(&$this, 'send_feedback');
     //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
   }
 
@@ -474,6 +476,19 @@ class WPMollom {
   public function mollom_comments_columns($columns) {
     $columns['mollom'] = __('Mollom');
     return $columns;
+  }
+  
+  /**
+   * Callback. Send feedback to Mollom on moderation
+   * 
+   * When moderating comments from edit-comments.php, this callback will send
+   * feedback if a comment status changes to 'trash', 'spam', 'hold', 'approve'.
+   * 
+   * @param unknown_type $comment_ID
+   * @param unknown_type $comment_status
+   */
+  public function send_feedback($comment_ID, $comment_status) {
+    
   }
 
   /**
