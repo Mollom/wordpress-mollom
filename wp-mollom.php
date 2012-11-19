@@ -132,6 +132,8 @@ class WPMollom {
   }
 
   /**
+   * Redirect the user when editing comments
+   * 
    * Redirect the user to http://my.mollom.com to moderate comments instead of the regular
    * Wordpress comment moderation system at edit-comments.php. The setting is "Remote moderation"
    * is configurated at the Mollom tab under General options
@@ -199,13 +201,21 @@ class WPMollom {
     // Table definition for MOLLOM_TABLE
     $mollom_tbl_definition = "
       `comment_ID` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT '0',
-			`mollom_session_ID` VARCHAR( 40 ) NULL DEFAULT NULL,
-		  `mollom_had_captcha` INT ( 1 ) NOT NULL DEFAULT '0',
-			`mollom_spaminess` FLOAT NOT NULL DEFAULT '0.00',
-			UNIQUE (
-			  `comment_ID` ,
-				`mollom_session_ID`
-			)";
+      `content_ID` VARCHAR( 128 ) NOT NULL DEFAULT '',
+      `captcha_ID` VARCHAR( 128 ) NOT NULL DEFAULT '',
+      `form_ID` VARCHAR( 255 ) NULL DEFAULT NULL,
+      `moderate` TINYINT ( 1 ) NOT NULL DEFAULT '0',
+      `changed` INT ( 10 ) NOT NULL DEFAULT '0',
+      `spamScore` FLOAT NULL DEFAULT '0.00',
+      `spamClassification` FLOAT NULL DEFAULT NULL,
+      `solved` TINYINT ( 1 ) NULL DEFAULT NULL,
+      `profanityScore` FLOAT NULL DEFAULT '0.00',
+      `reason` VARCHAR( 255 ) NULL DEFAULT NULL,
+      `languages` VARCHAR( 255 ) NULL DEFAULT NULL,
+      UNIQUE (
+        `comment_ID` ,
+        `content_ID`
+      )";
 
     // Tabel definition for MOLLOM_CACHE_TABLE
     $mollom_cache_tbl_definition = "
@@ -499,7 +509,10 @@ class WPMollom {
     );
     $this->mollom_comment += self::mollom_set_fields($_POST, $comment);
 
-    // Texta analysis is required. Depending on the outcome, appropriate action
+    // Get a mollom instance
+    $mollom = self::get_mollom_instance();
+
+    // Text analysis is required. Depending on the outcome, appropriate action
     // is taken
     if ($this->mollom_comment['require_analysis']) {
       $map = array(
@@ -535,7 +548,6 @@ class WPMollom {
       // A string denoting the check to perform.
       $data['checks'] = get_option('mollom_analysis_types', array('spam'));
 
-      $mollom = self::get_mollom_instance();
       $result = $mollom->checkContent($data);
 
       // Hook Mollom data to our mollom comment
@@ -595,6 +607,57 @@ class WPMollom {
    * @return array The comment
    */
   public function mollom_save_comment($comment_ID) {
+    
+    self::mollom_include('comment.inc');
+
+    /*
+     array(13) {
+    ["captcha_passed"]=> bool(true)
+    ["comment_post_ID"]=> string(1) "1"
+    ["author"]=> string(7) "zrtezre"
+    ["url"]=> string(0) ""
+    ["email"]=> string(19) "qsdfjkm@etrytey.com"
+    ["comment"]=> string(6) "unsure"
+    ["comment_parent"]=> string(1) "0"
+    ["mollom_solution"]=> string(7) "correct"
+    ["captchaId"]=> string(12) "1fxq7w7hbx0x"
+    ["contentId"]=> string(12) "1fxq7w7hbx0x"
+    ["form_id"]=> string(40) "a59f0c655cbd68646f296a47a4cefc9cb82915b1"
+    ["analysis"]=> array(8) {
+    ["id"]=> string(12) "1fxq7w7hbx0x"
+    ["spamScore"]=> string(3) "0.5"
+    ["reason"]=> string(18) "some secret reason"
+    ["postBody"]=> string(6) "unsure"
+    ["authorMail"]=> string(19) "qsdfjkm@etrytey.com"
+    ["authorIp"]=> string(9) "127.0.0.1"
+    ["authorId"]=> string(1) "0"
+    ["spamClassification"]=> string(6) "unsure"
+    }
+    ["captcha"]=> array(3) {
+    ["id"]=> string(12) "1fxq7w7hbx0x"
+    ["solved"]=> string(1) "1"
+    ["reason"]=> string(0) ""
+    }
+    }
+    */
+
+    $data = array(
+      'comment_ID' => $comment_ID,
+      'content_ID' => $this->mollom_comment['contentId'],
+      'captcha_ID' => $this->mollom_comment['captchaId'],
+      'form_ID' => $this->mollom_comment['form_id'],
+      'moderate' => 0,
+      'changed' => REQUEST_TIME,
+      'spamScore' => $this->mollom_comment['analysis']['spamScore'],
+      'spamClassification' => $this->mollom_comment['analysis']['spamClassification'],
+      'solved' => $this->mollom_comment['captcha']['solved'],
+      'profanityScore' => 0.0,
+      'reason' => '',
+      'languages' => '',
+    );
+
+    // Save the comment
+    mollom_comment_create($data);
 
     return $comment;
   }
