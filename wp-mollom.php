@@ -25,43 +25,43 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/** 
- * define this version of the plugin 
+/**
+ * define this version of the plugin
  */
 define('MOLLOM_PLUGIN_VERSION', '2.x-dev');
 
 /**
- *  define WP Mollom's i18n namespace 
+ *  define WP Mollom's i18n namespace
  */
 define('MOLLOM_I18N', 'wp-mollom');
 
-/** define a few paths 
- * 
+/** define a few paths
+ *
  */
 define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
-/** 
- * define WP Mollom table where mollom data per comment gets stored 
+/**
+ * define WP Mollom table where mollom data per comment gets stored
  */
 define( 'MOLLOM_TABLE', 'mollom' );
 
-/** 
- * define WP Mollom table where mollom cache data gets stored 
+/**
+ * define WP Mollom table where mollom cache data gets stored
  */
 define( 'MOLLOM_CACHE_TABLE', 'mollom_cache' );
 
-/** 
- * Define the version of the mollom tables 
+/**
+ * Define the version of the mollom tables
  */
 define( 'MOLLOM_TABLE_VERSION', '2000');
 
 /**
- *  Define the life time a cached form. 
+ *  Define the life time a cached form.
  */
 define( 'MOLLOM_FORM_ID_LIFE_TIME', 300);
 
-/** 
- * Seconds that must have passed by for the same author to post again. 
+/**
+ * Seconds that must have passed by for the same author to post again.
  */
 define( 'MOLLOM_CAPTCHA_RATE_LIMIT', 15);
 
@@ -108,7 +108,7 @@ class WPMollom {
     add_action('wp_enqueue_scripts', array(&$this, 'wp_enqueue_scripts'));
     add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
     // register the comment feedback when managing comments
-    add_action('wp_set_comment_status', array(&$this, 'send_feedback');
+    add_action('wp_set_comment_status', array(&$this, 'send_feedback'));
     //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
   }
 
@@ -135,7 +135,7 @@ class WPMollom {
 
   /**
    * Redirect the user when editing comments
-   * 
+   *
    * Redirect the user to http://my.mollom.com to moderate comments instead of the regular
    * Wordpress comment moderation system at edit-comments.php. The setting is "Remote moderation"
    * is configurated at the Mollom tab under General options
@@ -389,8 +389,8 @@ class WPMollom {
   }
 
   /**
-   * Helper function. 
-   * 
+   * Helper function.
+   *
    * Generates a list of checkboxes with different analysis types.
    *
    * @return string
@@ -417,11 +417,11 @@ class WPMollom {
 
   /**
    * Helper function
-   * 
+   *
    * Generate a checked=checked item for the captcha/analysis checkboxes on the configuration screen
-   * 
+   *
    * @todo refactor this
-   * 
+   *
    * @return string
    */
   private function mollom_protection_mode() {
@@ -477,18 +477,18 @@ class WPMollom {
     $columns['mollom'] = __('Mollom');
     return $columns;
   }
-  
+
   /**
    * Callback. Send feedback to Mollom on moderation
-   * 
+   *
    * When moderating comments from edit-comments.php, this callback will send
    * feedback if a comment status changes to 'trash', 'spam', 'hold', 'approve'.
-   * 
+   *
    * @param unknown_type $comment_ID
    * @param unknown_type $comment_status
    */
   public function send_feedback($comment_ID, $comment_status) {
-    
+
   }
 
   /**
@@ -576,7 +576,7 @@ class WPMollom {
       if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
         wp_die(__('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.'), __('Comment blocked'));
       }
-      
+
       // Spam check
       if ($result['spamClassification'] == 'spam') {
         wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
@@ -622,7 +622,7 @@ class WPMollom {
    * @return array The comment
    */
   public function mollom_save_comment($comment_ID) {
-    
+
     self::mollom_include('comment.inc');
 
     /*
