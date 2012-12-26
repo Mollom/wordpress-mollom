@@ -122,3 +122,14 @@ function mollom_table_install($table_name, $table_version, $sql) {
     update_option( $table_name.'_tbl_version', $table_version );
   }
 }
+
+/**
+ * Helper function
+ *
+ * Include files, take care of paths
+ * @param string $file
+ *   The file name of an existing file in the includes/ folder
+ */
+function mollom_include($file) {
+  require_once(MOLLOM_PLUGIN_PATH . '/includes/' . $file);
+}
