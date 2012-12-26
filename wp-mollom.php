@@ -320,6 +320,8 @@ class WPMollom {
         $analysis_types + array('spam');
       }
       update_option('mollom_analysis_types', $analysis_types);
+      // Show privacy notice
+      update_option('mollom_privacy_notice', !empty($_POST['privacy_notice']) ? 'on' : 'off');
 
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
     }
@@ -357,6 +359,7 @@ class WPMollom {
     $vars['mollom_developer_mode'] = (get_option('mollom_developer_mode', 'on') == 'on') ? ' checked="checked"' : '';
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
     $vars['mollom_moderation_redirect'] = (get_option('mollom_moderation_redirect', 'on') == 'on') ? ' checked="checked"' : '';
+    $vars['mollom_privacy_notice'] = (get_option('mollom_privacy_notice', 'on') == 'on') ? ' checked="checked"' : '';
 
     // Render the page.
     mollom_theme('configuration', $vars);
@@ -725,6 +728,8 @@ class WPMollom {
 
     // 3. Cache the form (assign a unique form ID)
     $variables['form_id'] = self::mollom_form_id($this->mollom_comment);
+
+    $variables['show_privacy_notice'] = (get_option('mollom_privacy_notice', 'on') == 'on') ? TRUE : FALSE;
 
     // 4. Show the rendered form and kill any further processing of the comment
     mollom_theme('show_captcha', $variables);

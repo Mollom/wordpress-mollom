@@ -67,6 +67,13 @@
       <?php _e('Different content analysis strategies are available. You can enable one or combine several strategies when analysing content. Defaults: Spam'); ?>
       </p>
 
+      <p><input type="checkbox" name="privacy_notice" value="on" <?php echo $mollom_privacy_notice; ?> />&nbsp;&nbsp;<?php _e('Link to Mollom\'s privacy policy on forms protected by textual analysis', MOLLOM_I18N); ?></p>
+      <p class="description">
+      <?php print strtr(__('Displays a link to the recommended <a href="@privacy-policy-url">privacy policy on mollom.com</a> on all forms that are protected via textual analysis. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="@terms-of-service-url">terms of service</a>.', MOLLOM_I18N), array(
+       '@privacy-policy-url' => 'http://mollom.com/web-service-privacy-policy',
+       '@terms-of-service-url' => 'http://mollom.com/terms-of-service',
+      )); ?></p>
+
       <h3><label><?php _e('Developer mode', MOLLOM_I18N); ?></label></h3>
       <p><input type="checkbox" name="developer_mode" value="on" <?php echo $mollom_developer_mode; ?> />&nbsp;&nbsp;<?php _e('Put your site in developer mode', MOLLOM_I18N); ?></p>
       <p class="description">

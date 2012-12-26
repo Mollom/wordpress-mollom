@@ -96,6 +96,12 @@
 	<p><input type="submit" value="<?php _e('Submit', MOLLOM_I18N); ?>" class="submit" /></p>
 </form>
 
+<?php if ($show_privacy_notice) : ?>
+<p><?php print strtr(__('By submitting this form, you accept the <a href="@privacy-policy-url" class="mollom-target">Mollom privacy policy</a>.', MOLLOM_I18N), array(
+     '@privacy-policy-url' => 'http://mollom.com/web-service-privacy-policy',
+    )); ?></p>
+<?php endif; ?>
+
 <p><?php _e('You want Mollom also on your own Wordpress blog? Register with <a href="http://mollom.com">Mollom</a>, download and install <a href="http://wordpress.org/extend/plugins/wp-mollom">the plugin</a>!', MOLLOM_I18N); ?></p>
 
 <?php wp_footer(); ?>
