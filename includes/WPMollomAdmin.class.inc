@@ -23,7 +23,7 @@ class WPMollomAdmin extends WPMollomBase {
     // Enqueue our scripts
     add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
     // register the comment feedback when managing comments
-    add_action('wp_set_comment_status', array(&$this, 'send_feedback'));
+    add_action('wp_set_comment_status', array(&$this, 'send_feedback'), 10, 2);
     add_action('delete_comment', array(&$this, 'delete_comment'));
     //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
   }
@@ -301,7 +301,7 @@ class WPMollomAdmin extends WPMollomBase {
     $columns['mollom'] = __('Mollom score', MOLLOM_I18N);
     return $columns;
   }
-  
+
   /**
    * Callback. Send feedback to Mollom on moderation
    *
