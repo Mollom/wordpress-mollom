@@ -25,6 +25,7 @@ class WPMollomAdmin extends WPMollomBase {
     add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
     // register the comment feedback when managing comments
     add_action('wp_set_comment_status', array(&$this, 'send_feedback'));
+    add_action('delete_comment', array(&$this, 'delete_comment'));
     //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
   }
 
@@ -306,6 +307,19 @@ class WPMollomAdmin extends WPMollomBase {
    * @param unknown_type $comment_status
    */
   public function send_feedback($comment_ID, $comment_status) {
+  }
 
+  /**
+   * Callback. Delete the comment record form the mollom table
+   *
+   * When a comment is deleted from the system, the corresponding record
+   * in the mollom table should be purged too.
+   *
+   * @param unknown_type $comment_ID
+   */
+  public function delete_comment($comment_ID) {
+    global $wpdb;
+
+    $count = $wpdb->query($wpdb->prepare("DELETE FROM " . $wpdb->prefix . MOLLOM_TABLE . " WHERE comment_ID = %d", $comment_ID));
   }
 }
