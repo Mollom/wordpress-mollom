@@ -214,7 +214,8 @@ class WPMollomContent extends WPMollomBase {
     );
 
     // Save the comment
-    mollom_comment_create($data);
+    $mollom_comment = new MollomComment();
+    $mollom_comment->create($data);
 
     return $comment;
   }

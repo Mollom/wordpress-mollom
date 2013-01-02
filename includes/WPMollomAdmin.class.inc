@@ -6,7 +6,6 @@
  * Contains all the functionality to administer and configure WP Mollom.
  */
 class WPMollomAdmin extends WPMollomBase {
-
   private $mollom_nonce = 'mollom-configuration';
 
   /**
@@ -279,6 +278,12 @@ class WPMollomAdmin extends WPMollomBase {
     if ($column != 'mollom')
       return;
 
+    mollom_include('comment.inc');
+    $mollom_comment = new MollomComment();
+    $object = $mollom_comment->get($comment_id);
+
+    $vars['spam_classification'] = ucfirst($object->spamClassification);
+
     // Render the output
     mollom_theme('comment_moderation', $vars);
   }
@@ -293,7 +298,7 @@ class WPMollomAdmin extends WPMollomBase {
    * @return array An array of columns for a table
    */
   public function mollom_comments_columns($columns) {
-    $columns['mollom'] = __('Mollom');
+    $columns['mollom'] = __('Mollom score', MOLLOM_I18N);
     return $columns;
   }
   
@@ -319,6 +324,7 @@ class WPMollomAdmin extends WPMollomBase {
    */
   public function delete_comment($comment_ID) {
     mollom_include('comment.inc');
-    mollom_comment_delete($comment_ID);
+    $mollom_comment = new MollomComment();
+    $mollom_comment->delete($comment_ID);
   }
 }

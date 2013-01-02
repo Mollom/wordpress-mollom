@@ -1,1 +1,1 @@
-test
+<?php print $spam_classification; ?>
