@@ -32,4 +32,6 @@ delete_option('mollom_servers');
 
 // delete MOLLOM_TABLE
 $mollom_table = $wpdb->prefix . MOLLOM_TABLE;
+$cache_table = $wpdb->prefix . MOLLOM_CACHE_TABLE;
 $wpdb->query('DROP TABLE IF EXISTS ' . $mollom_table);
+$wpdb->query('DROP TABLE IF EXISTS ' . $cache_table);
