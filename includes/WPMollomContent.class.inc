@@ -20,8 +20,6 @@ class WPMollomContent extends WPMollomBase {
     add_filter('preprocess_comment', array(&$this, 'check_comment'));
     // Enqueue our scripts
     add_action('wp_enqueue_scripts', array(&$this, 'wp_enqueue_scripts'));
-    // register the comment feedback when managing comments
-    add_action('wp_set_comment_status', array(&$this, 'send_feedback'));
   }
 
   /**
@@ -34,7 +32,6 @@ class WPMollomContent extends WPMollomBase {
     wp_enqueue_script('jquery');
     wp_enqueue_script('js/wp-mollom', plugins_url('js/wp-mollom.js', __FILE__), array('jquery'), '1.0', true);
   }
-
 
   /**
    * Callback. Perform the actual Mollom check on a new comment
