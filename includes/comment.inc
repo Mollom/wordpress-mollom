@@ -16,7 +16,7 @@ function _mollom_comment_schema() {
     'moderate' => '%d',
     'changed' => '%d',
     'spamScore' => '%f',
-    'spamClassification' => '%f',
+    'spamClassification' => '%s',
     'solved' => '%d',
     'qualityScore' => '%f',
     'profanityScore' => '%f',
