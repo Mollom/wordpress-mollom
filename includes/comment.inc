@@ -48,6 +48,7 @@ function mollom_comment_update($data, $placeholders, $comment_id) {
 
 }
 
-function mollom_comment_delete($comment_id) {
-
+function mollom_comment_delete($comment_ID) {
+  global $wpdb;
+  $count = $wpdb->query($wpdb->prepare("DELETE FROM " . $wpdb->prefix . MOLLOM_TABLE . " WHERE comment_ID = %d", $comment_ID));
 }

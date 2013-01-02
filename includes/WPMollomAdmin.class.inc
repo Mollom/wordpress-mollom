@@ -318,8 +318,7 @@ class WPMollomAdmin extends WPMollomBase {
    * @param unknown_type $comment_ID
    */
   public function delete_comment($comment_ID) {
-    global $wpdb;
-
-    $count = $wpdb->query($wpdb->prepare("DELETE FROM " . $wpdb->prefix . MOLLOM_TABLE . " WHERE comment_ID = %d", $comment_ID));
+    mollom_include('comment.inc');
+    mollom_comment_delete($comment_ID);
   }
 }
