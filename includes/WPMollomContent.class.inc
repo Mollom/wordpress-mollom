@@ -165,7 +165,7 @@ class WPMollomContent extends WPMollomBase {
    */
   public function mollom_save_comment($comment_ID) {
 
-    mollom_include('comment.inc');
+    mollom_include('comment.class.inc');
 
     /*
      array(13) {
@@ -330,7 +330,7 @@ class WPMollomContent extends WPMollomBase {
    * @return string A hash of the current time + a random number
    */
   private function mollom_form_id($comment) {
-    mollom_include('cache.inc');
+    mollom_include('cache.class.inc');
 
     $time = current_time('timestamp');
 
@@ -360,7 +360,7 @@ class WPMollomContent extends WPMollomBase {
    * @return boolean TRUE if valid, FALSE if invalid
    */
   private function mollom_check_form_id($comment) {
-    mollom_include('cache.inc');
+    mollom_include('cache.class.inc');
 
     $cache = new MollomCache();
 

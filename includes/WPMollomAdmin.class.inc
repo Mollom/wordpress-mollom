@@ -278,7 +278,7 @@ class WPMollomAdmin extends WPMollomBase {
     if ($column != 'mollom')
       return;
 
-    mollom_include('comment.inc');
+    mollom_include('comment.class.inc');
     $mollom_comment = new MollomComment();
     $object = $mollom_comment->get($comment_id);
 
@@ -323,7 +323,7 @@ class WPMollomAdmin extends WPMollomBase {
    * @param unknown_type $comment_ID
    */
   public function delete_comment($comment_ID) {
-    mollom_include('comment.inc');
+    mollom_include('comment.class.inc');
     $mollom_comment = new MollomComment();
     $mollom_comment->delete($comment_ID);
   }
