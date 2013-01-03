@@ -1,7 +1,7 @@
 Mollom for Wordpress
 ====================
 
-This plugin brings [Mollom](http://www.mollom.com) spam protection to the 
+This plugin brings [Mollom](http://www.mollom.com) spam protection to the
 [Wordpress](http://www.wordpress.org) platform. It's an alternative to the default
 AKismet plugin which ships with Wordpress.
 
@@ -44,7 +44,7 @@ See: LICENSE.md for more details
 
 Author
 ------
-Author: Matthias Vandermaesen  
-http://www.colada.be  
-http://www.netsensei.nl  
-matthias@colada.be  
+Author: Matthias Vandermaesen
+http://www.colada.be
+http://www.netsensei.nl
+matthias@colada.be
