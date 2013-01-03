@@ -282,7 +282,7 @@ class WPMollomAdmin extends WPMollomBase {
     $mollom_comment = new MollomComment();
     $object = $mollom_comment->get($comment_id);
 
-    $vars['spam_classification'] = ucfirst($object->spamClassification);
+    $vars['spam_classification'] = $object->spamClassification;
 
     // Render the output
     mollom_theme('comment_moderation', $vars);
@@ -298,7 +298,7 @@ class WPMollomAdmin extends WPMollomBase {
    * @return array An array of columns for a table
    */
   public function mollom_comments_columns($columns) {
-    $columns['mollom'] = __('Mollom score', MOLLOM_I18N);
+    $columns['mollom'] = __('Mollom analysis', MOLLOM_I18N);
     return $columns;
   }
 
