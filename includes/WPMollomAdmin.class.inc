@@ -24,8 +24,8 @@ class WPMollomAdmin extends WPMollomBase {
     add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
     // register the comment feedback when managing comments
     add_action('wp_set_comment_status', array(&$this, 'send_feedback'), 10, 2);
+    // Register callback to delete associated mollom information
     add_action('delete_comment', array(&$this, 'delete_comment'));
-    //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
   }
 
   /**
@@ -89,13 +89,13 @@ class WPMollomAdmin extends WPMollomBase {
   public function configuration_page() {
     $mollom = self::get_mollom_instance();
     $messages = array();
-  
+
     if (isset($_POST['submit'])) {
       if (function_exists('current_user_can') && !current_user_can('manage_options')) {
         die(__('Cheatin&#8217; uh?'));
       }
       check_admin_referer($this->mollom_nonce);
-  
+
       // API keys.
       if (isset($_POST['publicKey'])) {
         $mollom->publicKey = preg_replace('/[^a-z0-9]/i', '', $_POST['publicKey']);
@@ -139,17 +139,17 @@ class WPMollomAdmin extends WPMollomBase {
       update_option('mollom_analysis_types', $analysis_types);
       // Show privacy notice
       update_option('mollom_privacy_notice', !empty($_POST['privacy_notice']) ? 'on' : 'off');
-  
+
       $messages[] = '<div class="updated"><p>' . __('The configuration was saved.') . '</p></div>';
     }
-  
+
     // When requesting the page, and after updating the settings, verify the
     // API keys (unless empty).
     if (empty($mollom->publicKey) || empty($mollom->privateKey)) {
       $messages[] = '<div class="error"><p>' . __('The Mollom API keys are not configured yet.', MOLLOM_I18N) . '</p></div>';
     } else {
       $result = $mollom->verifyKeys();
-  
+
       if ($result === TRUE) {
         $messages[] = '<div class="updated"><p>' . __('Mollom servers verified your keys. The services are operating correctly.', MOLLOM_I18N) . '</p></div>';
       }
@@ -163,7 +163,7 @@ class WPMollomAdmin extends WPMollomBase {
         $messages[] = '<div class="error"><p>' . __('The Mollom servers could be contacted, but the Mollom API keys could not be verified.', MOLLOM_I18N) . '</p></div>';
       }
     }
-  
+
     // Set variables used to render the page.
     $vars['messages'] = (!empty($messages)) ? '<div class="messages">' . implode("<br/>\n", $messages) . '</div>' : '';
     $vars['mollom_nonce'] = $this->mollom_nonce;
@@ -177,11 +177,11 @@ class WPMollomAdmin extends WPMollomBase {
     $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
     $vars['mollom_moderation_redirect'] = (get_option('mollom_moderation_redirect', 'on') == 'on') ? ' checked="checked"' : '';
     $vars['mollom_privacy_notice'] = (get_option('mollom_privacy_notice', 'on') == 'on') ? ' checked="checked"' : '';
-  
+
     // Render the page.
     mollom_theme('configuration', $vars);
   }
-  
+
   /**
    * Helper function. Generate an <ul> list of roles
    *
@@ -192,9 +192,9 @@ class WPMollomAdmin extends WPMollomBase {
     global $wp_roles;
     $mollom_roles = get_option('mollom_roles', array());
     $checked = '';
-  
+
     $element = "<ul>";
-  
+
     foreach ($wp_roles->get_names() as $role => $name) {
       $name = translate_user_role($name);
       if ($mollom_roles) {
@@ -202,12 +202,12 @@ class WPMollomAdmin extends WPMollomBase {
       }
       $element .= "<li><input type=\"checkbox\" name=\"mollom_roles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
     }
-  
+
     $element .= "</ul>";
-  
+
     return $element;
   }
-  
+
   /**
    * Helper function.
    *
@@ -222,19 +222,19 @@ class WPMollomAdmin extends WPMollomBase {
     );
     $mollom_check_types = get_option('mollom_analysis_types', array());
     $element = "<ul>";
-  
+
     foreach ($map as $key => $label) {
       if ($mollom_check_types) {
         $checked = (in_array($key, $mollom_check_types)) ? "checked" : "";
       }
       $element .= "<li><input type=\"checkbox\" name=\"mollom_analysis_types[]\" value=\"" . $key . "\" " . $checked . " /> " . $label . "</li>";
     }
-  
+
     $element .= "</ul>";
-  
+
     return $element;
   }
-  
+
   /**
    * Helper function
    *
@@ -250,17 +250,17 @@ class WPMollomAdmin extends WPMollomBase {
         'analysis' => '',
         'spam' => '',
     );
-  
+
     if ($mollom_protection_mode['mode'] == MOLLOM_MODE_ANALYSIS) {
       $mollom_parsed['analysis'] = ' checked="checked"';
     }
     elseif ($mollom_protection_mode['mode'] == MOLLOM_MODE_CAPTCHA) {
       $mollom_parsed['spam'] = ' checked="checked"';
     }
-  
+
     return $mollom_parsed;
   }
-  
+
   /**
    * Callback. Show Mollom actions in the Comments table
    *
@@ -287,7 +287,7 @@ class WPMollomAdmin extends WPMollomBase {
     // Render the output
     mollom_theme('comment_moderation', $vars);
   }
-  
+
   /**
    * Callback. Registers an extra column in the Comments table.
    *
@@ -307,21 +307,38 @@ class WPMollomAdmin extends WPMollomBase {
    *
    * When moderating comments from edit-comments.php, this callback will send
    * feedback if a comment status changes to 'trash', 'spam', 'hold', 'approve'.
+   * 
+   * @todo The WP statusses don't line up with the Mollom feedback options. We need
+   *   to implement working matching functionality
    *
    * @param unknown_type $comment_ID
    * @param unknown_type $comment_status
    */
   public function send_feedback($comment_ID, $comment_status) {
+    if ($comment_status == 'spam') {
+      mollom_include('comment.class.inc');
+      $mollom_comment = new MollomComment();
+      $object = $mollom_comment->get($comment_ID);
+      if ($object) {
+        $data = array(
+          'reason' => 'spam',
+          'contentId' => $object->content_ID,
+        );
+        $mollom = self::get_mollom_instance();
+        $mollom->sendFeedback($data);
+        // @todo Find a way to display feedback as an admin notice in the interface.
+      }
+    }
   }
 
-  /**
+    /**
    * Callback. Delete the comment record form the mollom table
-   *
-   * When a comment is deleted from the system, the corresponding record
-   * in the mollom table should be purged too.
-   *
-   * @param unknown_type $comment_ID
-   */
+  *
+  * When a comment is deleted from the system, the corresponding record
+  * in the mollom table should be purged too.
+  *
+  * @param unknown_type $comment_ID
+  */
   public function delete_comment($comment_ID) {
     mollom_include('comment.class.inc');
     $mollom_comment = new MollomComment();
