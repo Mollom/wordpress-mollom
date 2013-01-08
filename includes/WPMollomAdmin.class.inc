@@ -35,7 +35,11 @@ class WPMollomAdmin extends WPMollomBase {
    */
   public function admin_enqueue_scripts() {
     // Add an extra CSS file. But only on the wp-comments-edit.php page
-    wp_enqueue_style('wp-mollom', '/wp-content/plugins/wp-mollom/wp-mollom.css');
+    $location = basename($_SERVER['PHP_SELF']);
+    if ($location == 'edit-comments.php') {
+      wp_register_style('wp-mollom', MOLLOM_PLUGIN_URL . 'css/mollom-admin.css');
+      wp_enqueue_style('wp-mollom');
+    }
   }
 
   /**
