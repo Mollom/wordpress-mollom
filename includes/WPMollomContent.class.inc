@@ -107,12 +107,13 @@ class WPMollomContent extends WPMollomBase {
 
       $result = $mollom->checkContent($data);
 
-      // Hook Mollom data to our mollom comment
-      $this->mollom_comment['analysis'] = $result;
       // Trigger global fallback behavior if there is a unexpected result.
       if (!is_array($result) || !isset($result['id'])) {
         return $this->mollom_fallback($comment);
       }
+
+      // Hook Mollom data to our mollom comment
+      $this->mollom_comment['analysis'] = $result;
 
       // Profanity check
       if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
