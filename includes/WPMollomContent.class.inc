@@ -434,7 +434,7 @@ class WPMollomContent extends WPMollomBase {
     foreach ($comment as $key => $value) {
       // While processing, the old form_id will be processed again. We prevent
       // it from rendering here.
-      $omitted = array('analysis', 'form_id', 'mollom_solution');
+      $omitted = array('analysis', 'form_id', 'mollom_solution', 'captcha');
       if (in_array($key, $omitted)) {
         continue;
       }
