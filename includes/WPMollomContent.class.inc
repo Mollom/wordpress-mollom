@@ -107,13 +107,12 @@ class WPMollomContent extends WPMollomBase {
 
       $result = $mollom->checkContent($data);
 
+      // Hook Mollom data to our mollom comment
+      $this->mollom_comment['analysis'] = $result;
       // Trigger global fallback behavior if there is a unexpected result.
       if (!is_array($result) || !isset($result['id'])) {
         return $this->mollom_fallback($comment);
       }
-
-      // Hook Mollom data to our mollom comment
-      $this->mollom_comment['analysis'] = $result;
 
       // Profanity check
       if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
@@ -166,7 +165,7 @@ class WPMollomContent extends WPMollomBase {
    */
   public function mollom_save_comment($comment_ID) {
 
-    mollom_include('comment.class.inc');
+    mollom_include('comment.inc');
 
     /*
      array(13) {
@@ -331,7 +330,7 @@ class WPMollomContent extends WPMollomBase {
    * @return string A hash of the current time + a random number
    */
   private function mollom_form_id($comment) {
-    mollom_include('cache.class.inc');
+    mollom_include('cache.inc');
 
     $time = current_time('timestamp');
 
@@ -361,7 +360,7 @@ class WPMollomContent extends WPMollomBase {
    * @return boolean TRUE if valid, FALSE if invalid
    */
   private function mollom_check_form_id($comment) {
-    mollom_include('cache.class.inc');
+    mollom_include('cache.inc');
 
     $cache = new MollomCache();
 
@@ -434,7 +433,7 @@ class WPMollomContent extends WPMollomBase {
     foreach ($comment as $key => $value) {
       // While processing, the old form_id will be processed again. We prevent
       // it from rendering here.
-      $omitted = array('analysis', 'form_id', 'mollom_solution', 'captcha');
+      $omitted = array('analysis', 'form_id', 'mollom_solution');
       if (in_array($key, $omitted)) {
         continue;
       }

@@ -26,6 +26,7 @@ class WPMollomAdmin extends WPMollomBase {
     add_action('wp_set_comment_status', array(&$this, 'send_feedback'), 10, 2);
     // Register callback to delete associated mollom information
     add_action('delete_comment', array(&$this, 'delete_comment'));
+    //add_filter('comment_row_actions', array(&$this, 'comment_actions'));
   }
 
   /**
@@ -35,11 +36,7 @@ class WPMollomAdmin extends WPMollomBase {
    */
   public function admin_enqueue_scripts() {
     // Add an extra CSS file. But only on the wp-comments-edit.php page
-    $location = basename($_SERVER['PHP_SELF']);
-    if ($location == 'edit-comments.php') {
-      wp_register_style('wp-mollom', MOLLOM_PLUGIN_URL . 'css/mollom-admin.css');
-      wp_enqueue_style('wp-mollom');
-    }
+    wp_enqueue_style('wp-mollom', '/wp-content/plugins/wp-mollom/wp-mollom.css');
   }
 
   /**
@@ -302,7 +299,7 @@ class WPMollomAdmin extends WPMollomBase {
    * @return array An array of columns for a table
    */
   public function mollom_comments_columns($columns) {
-    $columns['mollom'] = __('Mollom analysis', MOLLOM_I18N);
+    $columns['mollom'] = __('Mollom score', MOLLOM_I18N);
     return $columns;
   }
 
@@ -311,9 +308,6 @@ class WPMollomAdmin extends WPMollomBase {
    *
    * When moderating comments from edit-comments.php, this callback will send
    * feedback if a comment status changes to 'trash', 'spam', 'hold', 'approve'.
-   * 
-   * @todo The WP statusses don't line up with the Mollom feedback options. We need
-   *   to implement working matching functionality
    *
    * @param unknown_type $comment_ID
    * @param unknown_type $comment_status
@@ -335,14 +329,14 @@ class WPMollomAdmin extends WPMollomBase {
     }
   }
 
-    /**
+  /**
    * Callback. Delete the comment record form the mollom table
-  *
-  * When a comment is deleted from the system, the corresponding record
-  * in the mollom table should be purged too.
-  *
-  * @param unknown_type $comment_ID
-  */
+   *
+   * When a comment is deleted from the system, the corresponding record
+   * in the mollom table should be purged too.
+   *
+   * @param unknown_type $comment_ID
+   */
   public function delete_comment($comment_ID) {
     mollom_include('comment.class.inc');
     $mollom_comment = new MollomComment();
