@@ -93,6 +93,29 @@ define( 'MOLLOM_MODE_CAPTCHA', 2);
 require_once(MOLLOM_PLUGIN_PATH . '/includes/common.inc');
 
 /**
+ * Instantiates a new Mollom client (once).
+ */
+function mollom() {
+  static $instance;
+
+  require_once dirname(__FILE__) . '/lib/mollom.class.inc';
+
+  $class = 'MollomWordpress';
+  require_once dirname(__FILE__) . "/includes/$class.php";
+
+  if (get_option('mollom_developer_mode', FALSE)) {
+    $class = 'MollomWordpressTest';
+    require_once dirname(__FILE__) . "/includes/$class.php";
+  }
+  // If there is no instance yet or if it is not of the desired class, create a
+  // new one.
+  if (!isset($instance) || !($instance instanceof $class)) {
+    $instance = new $class();
+  }
+  return $instance;
+}
+
+/**
  * Factory class.
  * 
  * WP Mollom has a componentized architecture since not all the functionality
