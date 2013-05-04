@@ -1,0 +1,4 @@
+[subtree "lib"]
+	url = git://github.com/Mollom/MollomPHP.git
+	path = lib
+	branch = master
