@@ -86,6 +86,27 @@ define ( 'MOLLOM_MODE_ANALYSIS', 1);
  */
 define( 'MOLLOM_MODE_CAPTCHA', 2);
 
+spl_autoload_register('mollom_classloader');
+
+/**
+ * Loads Mollom* classes.
+ *
+ * @see spl_autoload_register()
+ */
+function mollom_classloader($class) {
+  if (strpos($class, 'Mollom') === 0) {
+    $dir = dirname(__FILE__);
+    // Literal classname as includes/MollomFoo.php.
+    if (file_exists($dir . "/includes/$class.php")) {
+      include_once $dir . "/includes/$class.php";
+    }
+    // Disambiguated classname as includes/Foo.php.
+    else {
+      include_once $dir . '/includes/' . substr($class, 5) . '.php';
+    }
+  }
+}
+
 /**
  * Common functions are stored in common.inc file. These are made available
  * throughout the entire plugin.
@@ -101,11 +122,9 @@ function mollom() {
   require_once dirname(__FILE__) . '/lib/mollom.class.inc';
 
   $class = 'MollomWordpress';
-  require_once dirname(__FILE__) . "/includes/$class.php";
 
   if (get_option('mollom_developer_mode', FALSE)) {
     $class = 'MollomWordpressTest';
-    require_once dirname(__FILE__) . "/includes/$class.php";
   }
   // If there is no instance yet or if it is not of the desired class, create a
   // new one.
