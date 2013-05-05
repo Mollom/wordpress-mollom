@@ -24,7 +24,7 @@ delete_option('mollom_developer_mode');
 delete_option('mollom_reverseproxy_addresses');
 delete_option('mollom_fallback_mode');
 delete_option('mollom_roles');
-delete_option('mollom_analysis_types');
+delete_option('mollom_checks');
 delete_option('mollom_protection_mode');
 delete_option('mollom_private_key');
 delete_option('mollom_public_key');

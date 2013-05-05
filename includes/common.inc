@@ -50,6 +50,9 @@ function mollom_theme() {
 * @param $variables Array an array of variables which will be integrated in the template
 */
 function _mollom_render_template($template_file, $variables) {
+  // Provide global variables.
+  $title = $GLOBALS['title'];
+
   extract($variables, EXTR_SKIP); // Extract the variables to a local namespace
   ob_start(); // Start output buffering
   include MOLLOM_PLUGIN_PATH . "/templates/$template_file"; // Include the template file

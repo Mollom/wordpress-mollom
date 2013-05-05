@@ -1,22 +1,18 @@
 <div class="wrap">
-  <h2><?php _e('Mollom Settings', MOLLOM_I18N); ?></h2>
+<?php screen_icon(); ?>
+<h2><?php print $title; ?></h2>
 
-  <div class="narrow">
-    <?php print $messages; ?>
-  <div class="column-left">
+<form action="options.php" method="post">
+<?php settings_fields('mollom'); ?>
 
-    <p><?php _e('Mollom is a web service that helps you identify content quality and, more importantly, helps you stop comment and contact form spam. When moderation becomes easier, you can spend more time and energy to interact with your web community.', MOLLOM_I18N); ?></p>
+<?php do_settings_sections('mollom'); ?>
 
-    <form action="options-general.php?page=mollom-key-config" method="post" id="mollom_configuration" style="margin: auto;">
-      <?php settings_fields( 'mollom_configuration_settings' ); ?>
+<?php submit_button(); ?>
 
-      <p><?php _e('You need a public and a private key before you can make use of Mollom. <a href="http://mollom.com/user/register">Register</a> with Mollom to get your keys.', MOLLOM_I18N); ?></p>
+</form>
+</div>
 
-      <h3><label><?php _e('Public key', MOLLOM_I18N); ?></label></h3>
-      <input type="text" size="50" maxlength="32" name="publicKey" class="mollom-public-key" value="<?php print $publicKey; ?>" />
-
-      <h3><label><?php _e('Private key', MOLLOM_I18N); ?></label></h3>
-      <input type="text" size="50" maxlength="32" name="privateKey" id="mollom-private-key" value="<?php print $privateKey; ?>" />
+<?php return; ?>
 
       <h3><label><?php _e('Roles', MOLLOM_I18N); ?></label></h3>
       <p><?php _e('Select the roles you want to exclude from the mandatory Mollom check. Default: all roles are exempt.', MOLLOM_I18N); ?></p>
@@ -40,44 +36,21 @@
       <h3><label><?php _e('Protection mode', MOLLOM_I18N); ?></label></h3>
 
       <div id="mollom-analysis-mode">
-
         <div id="form-element-mollom-mode-analysis">
           <label>
             <input type="radio" id="edit-mollom-mode-2" name="protection_mode[mode]" value="1" <?php print $mollom_protection_mode['analysis']; ?> class="form-radio">
             <span>Text analysis</span>
           </label>
         </div>
-
         <div id="form-element-mollom-mode-spam">
           <label>
             <input type="radio" id="edit-mollom-mode-2" name="protection_mode[mode]" value="2" <?php print $mollom_protection_mode['spam']; ?> class="form-radio">
             <span>CAPTCHA</span>
           </label>
         </div>
-
       </div>
-
       <p class="description">
       <?php _e('Different content analysis strategies are available. You can enable one or combine several strategies when analysing content. Defaults: Spam'); ?>
-      </p>
-
-      <h3><label><?php _e('Text analysis strategies', MOLLOM_I18N); ?></label></h3>
-      <?php print $mollom_analysis_types; ?>
-      <p class="description">
-      <?php _e('Different content analysis strategies are available. You can enable one or combine several strategies when analysing content. Defaults: Spam'); ?>
-      </p>
-
-      <p><input type="checkbox" name="privacy_notice" value="on" <?php echo $mollom_privacy_notice; ?> />&nbsp;&nbsp;<?php _e('Link to Mollom\'s privacy policy on forms protected by textual analysis', MOLLOM_I18N); ?></p>
-      <p class="description">
-      <?php print strtr(__('Displays a link to the recommended <a href="@privacy-policy-url">privacy policy on mollom.com</a> on all forms that are protected via textual analysis. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="@terms-of-service-url">terms of service</a>.', MOLLOM_I18N), array(
-       '@privacy-policy-url' => 'http://mollom.com/web-service-privacy-policy',
-       '@terms-of-service-url' => 'http://mollom.com/terms-of-service',
-      )); ?></p>
-
-      <h3><label><?php _e('Developer mode', MOLLOM_I18N); ?></label></h3>
-      <p><input type="checkbox" name="developer_mode" value="on" <?php echo $mollom_developer_mode; ?> />&nbsp;&nbsp;<?php _e('Put your site in developer mode', MOLLOM_I18N); ?></p>
-      <p class="description">
-      <?php _e('When you are testing code against the Mollom API, you should switch to developer mode. API calls will be made against Molloms\'s testing API instead of the its\' production API'); ?>
       </p>
 
       <h3><label><?php _e('Remote moderation', MOLLOM_I18N); ?></label></h3>
@@ -85,11 +58,3 @@
         '@local-moderation' => admin_url('edit-comments.php'),
         '@remote-moderation' => 'http://my.mollom.com',
       )); ?></p>
-      
-      <?php mollom_nonce_field($mollom_nonce); ?>
-      <input type="submit" name="submit" value="<?php _e('Update options &raquo;', MOLLOM_I18N); ?>" id="submit"/>
-    </form>
-  </div>
-  </div>
-
-</div>

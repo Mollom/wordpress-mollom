@@ -103,7 +103,7 @@ class WPMollomContent extends WPMollomBase {
       // whether a 'unsure' response asking for a CAPTCHA is possible.
       $data['unsure'] = (int) ($comment['comment_type'] != 'trackback');
       // A string denoting the check to perform.
-      $data['checks'] = get_option('mollom_analysis_types', array('spam'));
+      $data['checks'] = array_keys(get_option('mollom_checks', array('spam' => 1)));
 
       $result = $mollom->checkContent($data);
 
@@ -267,7 +267,7 @@ class WPMollomContent extends WPMollomBase {
     // 3. Cache the form (assign a unique form ID)
     $variables['form_id'] = self::mollom_form_id($this->mollom_comment);
 
-    $variables['show_privacy_notice'] = (get_option('mollom_privacy_notice', 'on') == 'on') ? TRUE : FALSE;
+    $variables['show_privacy_notice'] = get_option('mollom_privacy_link', TRUE);
 
     // 4. Show the rendered form and kill any further processing of the comment
     mollom_theme('show_captcha', $variables);
