@@ -40,11 +40,8 @@ define('MOLLOM_I18N', 'wp-mollom');
  */
 define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
-/**
- * define the plugin url
- */
-define('MOLLOM_PLUGIN_URL', plugin_dir_url(__FILE__));
-
+// Use plugins_url() instead of plugin_dir_url() to avoid trailing slash.
+define('MOLLOM_PLUGIN_URL', plugins_url('', __FILE__));
 
 /**
  * define WP Mollom table where mollom data per comment gets stored
@@ -102,7 +99,7 @@ function mollom_classloader($class) {
     }
     // Disambiguated classname as includes/Foo.php.
     else {
-      include_once $dir . '/includes/' . substr($class, 5) . '.php';
+      include_once $dir . '/includes/' . substr($class, 6) . '.php';
     }
   }
 }
@@ -149,13 +146,8 @@ class WPMollomFactory {
   public static function get_instance() {
     mollom_include('WPMollomBase.class.inc');
     if (!self::$instance) {
-      if (is_admin()) {
-        mollom_include('WPMollomAdmin.class.inc');
-        self::$instance = new WPMollomAdmin();
-      } else {
-        mollom_include('WPMollomContent.class.inc');
-        self::$instance = new WPMollomContent();
-      }
+      mollom_include('WPMollomContent.class.inc');
+      self::$instance = new WPMollomContent();
     }
 
     return self::$instance;
@@ -207,6 +199,22 @@ class WPMollomFactory {
 // Register the activation callback
 register_activation_hook(__FILE__, array('WPMollomFactory', 'activate'));
 
-// Gone with the wind!
-WPMollomFactory::get_instance();
+// Note: Unlike code examples in Codex, we do not (ab)use object-oriented
+// programming for more than clean code organization and automated loading
+// of code, unless WP core gets its act together and learns how to use and
+// adopt OO patterns in a proper way.
+add_action('admin_init', array('MollomAdmin', 'init'));
+add_action('admin_menu', array('MollomAdmin', 'registerPages'));
+add_action('admin_enqueue_scripts', array('MollomAdmin', 'enqueueScripts'));
+
+// register the comment feedback when managing comments
+add_action('wp_set_comment_status', array('MollomAdmin', 'send_feedback'), 10, 2);
+
+// Register callback to delete associated mollom information
+add_action('delete_comment', array('MollomAdmin', 'delete_comment'));
+//add_filter('comment_row_actions', array('MollomAdmin', 'comment_actions'));
+
+if (!is_admin()) {
+  WPMollomFactory::get_instance();
+}
 
