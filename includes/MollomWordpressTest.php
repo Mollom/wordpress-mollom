@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Mollom client class for Wordpress.
+ * Mollom testing client class for Wordpress.
  */
 
 /**
@@ -20,7 +20,7 @@ class MollomWordpressTest extends MollomWordpress {
    *
    * @var bool
    */
-  public $createKeys;
+  public $createKeys = TRUE;
 
   /**
    * Mapping of configuration names to Wordpress variables.
@@ -58,6 +58,7 @@ class MollomWordpressTest extends MollomWordpress {
    *   and manually create testing API keys (once).
    */
   function __construct() {
+    // Load and set publicKey and privateKey configuration values.
     parent::__construct();
 
     // Any Mollom API request requires valid API keys, or no API calls can be
@@ -115,7 +116,7 @@ class MollomWordpressTest extends MollomWordpress {
     $this->oAuthStrategy = '';
     $result = $this->createSite(array(
       'url' => get_option('siteurl', ''),
-      'email' => get_option('site_mail', 'mollom-drupal-test@example.com'),
+      'email' => get_option('site_mail', 'mollom-wordpress-test@example.com'),
     ));
     $this->oAuthStrategy = $oAuthStrategy;
 
@@ -138,4 +139,6 @@ class MollomWordpressTest extends MollomWordpress {
     $this->saveConfiguration('publicKey', $this->publicKey);
     $this->saveConfiguration('privateKey', $this->privateKey);
   }
+
 }
+

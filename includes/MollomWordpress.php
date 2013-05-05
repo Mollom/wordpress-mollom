@@ -30,14 +30,14 @@ class MollomWordpress extends Mollom {
    * Implements Mollom::saveConfiguration().
    */
   public function saveConfiguration($name, $value) {
-    return update_option($name, $value);
+    return update_option($this->configuration_map[$name], $value);
   }
 
   /**
    * Implements Mollom::deleteConfiguration().
    */
   public function deleteConfiguration($name) {
-    return delete_option($name);
+    return delete_option($this->configuration_map[$name]);
   }
 
   /**
@@ -49,10 +49,9 @@ class MollomWordpress extends Mollom {
     $data = array(
       'platformName' => 'Wordpress',
       'platformVersion' => $wp_version,
-      'clientName' => 'WP Mollom',
+      'clientName' => 'Mollom',
       'clientVersion' => MOLLOM_PLUGIN_VERSION,
     );
-
     return $data;
   }
 
@@ -74,13 +73,21 @@ class MollomWordpress extends Mollom {
    * Implements Mollom::request().
    */
   protected function request($method, $server, $path, $query = NULL, array $headers = array()) {
-    $function = ($method == 'GET' ? 'wp_remote_get' : 'wp_remote_post');
+    $url = $server . '/' . $path;
     $data = array(
       'headers' => $headers,
-      'body' => $query,
+      'timeout' => $this->requestTimeout,
     );
 
-    $result = $function($server . '/' . $path, $data);
+    if ($method == 'GET') {
+      $function = 'wp_remote_get';
+      $url .= '?' . $query;
+    }
+    else {
+      $function = 'wp_remote_post';
+      $data['body'] = $query;
+    }
+    $result = $function($url, $data);
 
     if (is_wp_error($result)) {
       // A WP_Error means a network error by default.
@@ -96,7 +103,8 @@ class MollomWordpress extends Mollom {
         'headers' => array(),
         'body' => NULL,
       );
-    } else {
+    }
+    else {
       $response = (object) array(
         'code' => $result['response']['code'],
         'message' => $result['response']['message'],
@@ -104,7 +112,6 @@ class MollomWordpress extends Mollom {
         'body' => $result['body'],
       );
     }
-
     return $response;
   }
 
