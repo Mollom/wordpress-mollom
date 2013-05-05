@@ -214,6 +214,23 @@ add_action('wp_set_comment_status', array('MollomAdmin', 'send_feedback'), 10, 2
 add_action('delete_comment', array('MollomAdmin', 'delete_comment'));
 //add_filter('comment_row_actions', array('MollomAdmin', 'comment_actions'));
 
+// @todo Move into comment form bucket.
+
+//add_action('comment_form', function () {
+//  echo "<pre>comment_form: "; var_dump(func_get_args()); echo "</pre>\n";
+//});
+
+add_filter('comment_form_defaults', function ($options) {
+  if (get_option('mollom_privacy_link', TRUE)) {
+    $options['comment_notes_after'] .= '<p class="description">';
+    $options['comment_notes_after'] .= vsprintf(__('By submitting this form, you accept the <a href="%s" target="_blank" rel="nofollow">Mollom privacy policy</a>.', MOLLOM_I18N), array(
+      '//mollom.com/web-service-privacy-policy',
+    ));
+    $options['comment_notes_after'] .= '</p>';
+  }
+  return $options;
+});
+
 if (!is_admin()) {
   WPMollomFactory::get_instance();
 }

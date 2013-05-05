@@ -81,6 +81,7 @@ class MollomAdmin {
     register_setting('mollom', 'mollom_reverse_proxy_addresses');
 
     register_setting('mollom', 'mollom_checks');
+    register_setting('mollom', 'mollom_privacy_link');
 
     register_setting('mollom', 'mollom_roles');
     register_setting('mollom', 'mollom_fallback_mode');
