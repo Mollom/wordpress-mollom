@@ -268,12 +268,13 @@ class MollomAdmin {
    * @return string Rendered output
    */
   public static function mollom_comment_column_row($column, $comment_id) {
-    if ($column != 'mollom')
+    if ($column != 'mollom') {
       return;
-
+    }
     $mollom_comment = new MollomComment();
-    $object = $mollom_comment->get($comment_id);
-
+    if (!$object = $mollom_comment->get($comment_id)) {
+      return;
+    }
     $vars['spam_classification'] = $object->spamClassification;
 
     // Render the output
@@ -290,7 +291,7 @@ class MollomAdmin {
    * @return array An array of columns for a table
    */
   public static function mollom_comments_columns($columns) {
-    $columns['mollom'] = __('Mollom score', MOLLOM_I18N);
+    $columns['mollom'] = __('Mollom', MOLLOM_I18N);
     return $columns;
   }
 
