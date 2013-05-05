@@ -271,7 +271,6 @@ class MollomAdmin {
     if ($column != 'mollom')
       return;
 
-    mollom_include('comment.class.inc');
     $mollom_comment = new MollomComment();
     $object = $mollom_comment->get($comment_id);
 
@@ -306,7 +305,6 @@ class MollomAdmin {
    */
   public static function send_feedback($comment_ID, $comment_status) {
     if ($comment_status == 'spam') {
-      mollom_include('comment.class.inc');
       $mollom_comment = new MollomComment();
       $object = $mollom_comment->get($comment_ID);
       if ($object) {
@@ -330,7 +328,6 @@ class MollomAdmin {
    * @param unknown_type $comment_ID
    */
   public static function delete_comment($comment_ID) {
-    mollom_include('comment.class.inc');
     $mollom_comment = new MollomComment();
     $mollom_comment->delete($comment_ID);
   }

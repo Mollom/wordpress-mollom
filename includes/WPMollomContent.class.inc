@@ -17,9 +17,9 @@ class WPMollomContent extends WPMollomBase {
   public function __construct() {
     parent::__construct();
     // pass comments through Mollom during processing
-    add_filter('preprocess_comment', array(&$this, 'check_comment'));
+    add_filter('preprocess_comment', array($this, 'check_comment'));
     // Enqueue our scripts
-    add_action('wp_enqueue_scripts', array(&$this, 'wp_enqueue_scripts'));
+    add_action('wp_enqueue_scripts', array($this, 'wp_enqueue_scripts'));
   }
 
   /**
@@ -120,22 +120,23 @@ class WPMollomContent extends WPMollomBase {
       }
 
       // Spam check
-      if ($result['spamClassification'] == 'spam') {
-        wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
-        return;
-      }
-      elseif ($result['spamClassification'] == 'unsure') {
-        // If a captchaId exists, this was probably a POST request from the
-        // CAPTCHA form and we must validate the CAPTCHA
-        if ($this->mollom_comment['captchaId']) {
-          $this->mollom_check_captcha();
+      if (isset($result['spamClassification'])) {
+        if ($result['spamClassification'] == 'spam') {
+          wp_die(__('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N), __('Comment blocked', MOLLOM_I18N));
+          return;
         }
-        if (!$this->mollom_comment['captcha_passed']) {
-          $this->mollom_show_captcha();
+        elseif ($result['spamClassification'] == 'unsure') {
+          // If a captchaId exists, this was probably a POST request from the
+          // CAPTCHA form and we must validate the CAPTCHA
+          if ($this->mollom_comment['captchaId']) {
+            $this->mollom_check_captcha();
+          }
+          if (!$this->mollom_comment['captcha_passed']) {
+            $this->mollom_show_captcha();
+          }
         }
-      }
-      elseif ($result['spamClassification'] == 'ham') {
-        // Fall through
+        else {
+        }
       }
     }
 
@@ -152,7 +153,7 @@ class WPMollomContent extends WPMollomBase {
       }
     }
 
-    add_action('comment_post', array(&$this, 'mollom_save_comment'), 1, 1);
+    add_action('comment_post', array($this, 'mollom_save_comment'), 1, 1);
 
     return $comment;
   }
@@ -164,60 +165,26 @@ class WPMollomContent extends WPMollomBase {
    * @return array The comment
    */
   public function mollom_save_comment($comment_ID) {
-
-    mollom_include('comment.inc');
-
-    /*
-     array(13) {
-    ["captcha_passed"]=> bool(true)
-    ["comment_post_ID"]=> string(1) "1"
-    ["author"]=> string(7) "zrtezre"
-    ["url"]=> string(0) ""
-    ["email"]=> string(19) "qsdfjkm@etrytey.com"
-    ["comment"]=> string(6) "unsure"
-    ["comment_parent"]=> string(1) "0"
-    ["mollom_solution"]=> string(7) "correct"
-    ["captchaId"]=> string(12) "1fxq7w7hbx0x"
-    ["contentId"]=> string(12) "1fxq7w7hbx0x"
-    ["form_id"]=> string(40) "a59f0c655cbd68646f296a47a4cefc9cb82915b1"
-    ["analysis"]=> array(8) {
-    ["id"]=> string(12) "1fxq7w7hbx0x"
-    ["spamScore"]=> string(3) "0.5"
-    ["reason"]=> string(18) "some secret reason"
-    ["postBody"]=> string(6) "unsure"
-    ["authorMail"]=> string(19) "qsdfjkm@etrytey.com"
-    ["authorIp"]=> string(9) "127.0.0.1"
-    ["authorId"]=> string(1) "0"
-    ["spamClassification"]=> string(6) "unsure"
-    }
-    ["captcha"]=> array(3) {
-    ["id"]=> string(12) "1fxq7w7hbx0x"
-    ["solved"]=> string(1) "1"
-    ["reason"]=> string(0) ""
-    }
-    }
-    */
-
     $data = array(
-        'comment_ID' => $comment_ID,
-        'content_ID' => $this->mollom_comment['contentId'],
-        'captcha_ID' => $this->mollom_comment['captchaId'],
-        'form_ID' => $this->mollom_comment['form_id'],
-        'moderate' => 0,
-        'changed' => REQUEST_TIME,
-        'spamScore' => $this->mollom_comment['analysis']['spamScore'],
-        'spamClassification' => $this->mollom_comment['analysis']['spamClassification'],
-        'solved' => $this->mollom_comment['captcha']['solved'],
-        'profanityScore' => 0.0,
-        'reason' => '',
-        'languages' => '',
+      'comment_ID' => $comment_ID,
+      'content_ID' => $this->mollom_comment['analysis']['id'],
+      'captcha_ID' => isset($this->mollom_comment['captchaId']) ? $this->mollom_comment['captchaId'] : NULL,
+      'form_ID' => isset($this->mollom_comment['form_id']) ? $this->mollom_comment['form_id'] : NULL,
+      'moderate' => 0,
+      'changed' => time(),
+      'spamScore' => $this->mollom_comment['analysis']['spamScore'],
+      'spamClassification' => $this->mollom_comment['analysis']['spamClassification'],
+      'solved' => isset($this->mollom_comment['captcha']['solved']) ? $this->mollom_comment['captcha']['solved'] : 0,
+      'profanityScore' => 0.0,
+      'reason' => '',
+      'languages' => '',
     );
 
     // Save the comment
     $mollom_comment = new MollomComment();
     $mollom_comment->create($data);
 
-    return $comment;
+    return $mollom_comment;
   }
 
   /**
