@@ -17,11 +17,13 @@ if ( 8645 > $wp_db_version ) {
 	return;
 }
 
-// delete all mollom related options
-delete_option('mollom_developer_mode');
-delete_option('mollom_reverseproxy_addresses');
-delete_option('mollom_fallback_mode');
-delete_option('mollom_roles');
-delete_option('mollom_checks');
-delete_option('mollom_private_key');
 delete_option('mollom_public_key');
+delete_option('mollom_private_key');
+
+delete_option('mollom_checks');
+delete_option('mollom_roles');
+delete_option('mollom_fallback_mode');
+delete_option('mollom_privacy_link');
+
+delete_option('mollom_reverseproxy_addresses');
+delete_option('mollom_testing_mode');

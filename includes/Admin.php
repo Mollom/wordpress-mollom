@@ -28,7 +28,7 @@ class MollomAdmin {
     // Mollom client configuration.
     register_setting('mollom', 'mollom_public_key', 'trim');
     register_setting('mollom', 'mollom_private_key', 'trim');
-    register_setting('mollom', 'mollom_developer_mode', 'intval');
+    register_setting('mollom', 'mollom_testing_mode', 'intval');
     register_setting('mollom', 'mollom_reverse_proxy_addresses');
 
     register_setting('mollom', 'mollom_checks');
@@ -95,11 +95,11 @@ class MollomAdmin {
     ));
 
     // Testing section.
-    add_settings_field('mollom_developer_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_test', array(
+    add_settings_field('mollom_testing_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_test', array(
       'type' => 'checkbox',
-      'name' => 'mollom_developer_mode',
+      'name' => 'mollom_testing_mode',
       'label' => 'Enable Mollom testing mode',
-      'value' => get_option('mollom_developer_mode'),
+      'value' => get_option('mollom_testing_mode'),
       // @todo Sanitize.
       'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_I18N),
     ));

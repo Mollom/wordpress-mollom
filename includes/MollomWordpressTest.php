@@ -31,8 +31,8 @@ class MollomWordpressTest extends MollomWordpress {
    * @see Mollom::loadConfiguration()
    */
   public $configuration_map = array(
-    'publicKey' => 'mollom_developer_mode_public_key',
-    'privateKey' => 'mollom_developer_mode_private_key',
+    'publicKey' => 'mollom_testing_public_key',
+    'privateKey' => 'mollom_testing_private_key',
   );
 
   /**

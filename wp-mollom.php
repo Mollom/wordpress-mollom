@@ -70,7 +70,7 @@ function mollom() {
 
   $class = 'MollomWordpress';
 
-  if (get_option('mollom_developer_mode', FALSE)) {
+  if (get_option('mollom_testing_mode', FALSE)) {
     $class = 'MollomWordpressTest';
   }
   // If there is no instance yet or if it is not of the desired class, create a
