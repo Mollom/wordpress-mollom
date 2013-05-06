@@ -44,10 +44,10 @@ function mollom_classloader($class) {
 function mollom() {
   static $instance;
 
+  // The only class that is not covered by mollom_classloader().
   require_once dirname(__FILE__) . '/lib/mollom.class.inc';
 
   $class = 'MollomWordpress';
-
   if (get_option('mollom_testing_mode', FALSE)) {
     $class = 'MollomWordpressTest';
   }
@@ -76,167 +76,11 @@ add_action('wp_set_comment_status', array('MollomAdmin', 'sendFeedback'), 10, 2)
 //add_filter('comment_row_actions', array('MollomAdmin', 'comment_actions'));
 
 
+add_filter('comment_form_defaults', array('MollomEntity', 'buildFormArray'));
 
-// @todo Move into comment form bucket.
-
-add_filter('comment_form_default_fields', array('MollomForm', 'addMollomFields'));
-add_filter('comment_form_defaults', array('MollomForm', 'formatPrivacyPolicyLink'));
-
-add_filter('preprocess_comment', 'mollom_preprocess_comment', 0);
+add_filter('preprocess_comment', array('MollomEntity', 'validateForm'), 0);
 add_action('comment_form_before', array('MollomForm', 'beforeFormRendering'), -100);
 add_action('comment_form_after', array('MollomForm', 'afterFormRendering'), 100);
-
-function mollom_preprocess_comment($comment) {
-  // Exclude all posts performed from the administrative interface.
-  if (is_admin()) {
-    return $comment;
-  }
-  // Check whether the user has any of the bypass access roles.
-  $user = wp_get_current_user();
-  $bypass_roles = array_keys(array_filter((array) get_option('mollom_bypass_roles', array())));
-  if (array_intersect($user->roles, $bypass_roles)) {
-    return $comment;
-  }
-
-  $author_data = array(
-    'authorName' => $comment['comment_author'],
-    'authorMail' => $comment['comment_author_email'],
-    'authorUrl' => $comment['comment_author_url'],
-    'authorIp' => ip_address(),
-  );
-  if (!empty($comment['user_ID'])) {
-    $author_data['authorId'] = $comment['user_ID'];
-  }
-  if (isset($_POST['mollom']['homepage']) && $_POST['mollom']['homepage'] !== '') {
-    $author_data['honeypot'] = $_POST['mollom']['homepage'];
-  }
-
-  // Check (unsure) CAPTCHA solution.
-  if (!empty($_POST['mollom']['captchaId'])) {
-    $data = array(
-      'id' => $_POST['mollom']['captchaId'],
-      'solution' => isset($_POST['mollom']['solution']) ? $_POST['mollom']['solution'] : '',
-    );
-    $data += $author_data;
-    $result = mollom()->checkCaptcha($data);
-
-    unset($_POST['mollom']['solution']);
-  }
-
-  // Check content.
-  $data = array();
-  // Ensure to pass existing content ID if we have one already.
-  if (!empty($_POST['mollom']['contentId'])) {
-    $data['id'] = $_POST['mollom']['contentId'];
-  }
-  $data += $author_data;
-  // These parameters should be sent regardless of whether they are empty.
-  $data += array(
-    'checks' => array_keys(get_option('mollom_checks', array('spam' => 1))),
-    'postBody' => isset($comment['comment_content']) ? $comment['comment_content'] : '',
-    'contextUrl' => get_permalink(),
-    'contextTitle' => get_the_title($comment['comment_post_ID']),
-  );
-  if (isset($comment['comment_type']) && $comment['comment_type'] == 'trackback') {
-    $data['unsure'] = FALSE;
-  }
-  $result = mollom()->checkContent($data);
-
-  if (!is_array($result) || !isset($result['id'])) {
-    if (get_option('mollom_fallback_mode', 'accept') == 'accept') {
-      return $comment;
-    }
-    $title = __('Comment not posted', MOLLOM_L10N);
-    $msg = __('The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.', MOLLOM_L10N);
-    wp_die($msg, $title);
-  }
-
-  // Output the new contentId to include it in the next form submission attempt.
-  $_POST['mollom']['contentId'] = $result['id'];
-
-  $errors = array();
-
-  // Handle the spam classification result:
-  if (isset($result['spamClassification'])) {
-    $_POST['mollom']['spamClassification'] = $result['spamClassification'];
-
-    // Spam: Discard the post.
-    if ($result['spamClassification'] == 'spam') {
-      $errors[] = __('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_L10N);
-      // @todo False-positive report link.
-    }
-    // Unsure: Require to solve a CAPTCHA.
-    elseif ($result['spamClassification'] == 'unsure') {
-      // UX: Don't make the user believe that there's a bug or endless loop by
-      // presenting a different error message, depending on whether we already
-      // showed a CAPTCHA previously or not.
-      if (empty($_POST['mollom']['captchaId'])) {
-        $errors[] = __('To complete this form, please complete the word verification below.', MOLLOM_L10N);
-      }
-      else {
-        $errors[] = __('The word verification was not completed correctly. Please complete this new word verification and try again.', MOLLOM_L10N);
-      }
-      // Retrieve a new CAPTCHA, assign the captchaId, and pass the full
-      // response to the form constructor.
-      $captcha_result = mollom()->createCaptcha(array(
-        'type' => 'image',
-        'contentId' => $_POST['mollom']['contentId'],
-      ));
-      $_POST['mollom']['captchaId'] = $captcha_result['id'];
-      $_POST['mollom']['captchaUrl'] = $captcha_result['url'];
-    }
-    // Ham: Accept the post.
-    else {
-      // Ensure the CAPTCHA validation above is not re-triggered after a
-      // previous 'unsure' response.
-      $_POST['mollom']['captchaId'] = NULL;
-    }
-  }
-
-  // Handle the profanity classification result:
-  if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
-    $errors[] = __('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.', MOLLOM_L10N);
-  }
-
-  // If there are errors, re-render the page containing the form.
-  if ($errors) {
-    $_POST['_errors'] = $errors;
-    add_action('wp_enqueue_scripts', array('MollomForm', 'enqueueScripts'));
-
-    // @see http://codex.wordpress.org/Function_Reference/WP_Query
-    $post = query_posts('p=' . $comment['comment_post_ID']);
-    // @see template-loader.php
-    $template = get_single_template();
-    include $template;
-    // Prevent wp_new_comment() from processing this POST further.
-    exit;
-  }
-
-  $comment['mollom_content_id'] = $result['id'];
-  return $comment;
-}
-
-// @see comment_form()
-// @see site_url()
-// @see get_site_url()
-add_filter('site_url', 'mollom_filter_site_url', 10, 2);
-function mollom_filter_site_url($url, $path) {
-  if ($path === '/wp-comments-post.php') {
-    $url .= '#commentform';
-  }
-  return $url;
-}
-
-add_action('comment_post', 'mollom_entity_save_meta');
-function mollom_entity_save_meta($id) {
-  if (empty($_POST['mollom']['contentId'])) {
-    return;
-  }
-  // @todo Abstract this.
-  // Store the contentId separately to enable reverse-mapping lookups for CMP.
-  add_metadata('comment', $id, 'mollom_content_id', $_POST['mollom']['contentId']);
-  add_metadata('comment', $id, 'mollom', $_POST['mollom']);
-}
 
 /**
  * Returns the IP address of the client.
@@ -286,4 +130,25 @@ function ip_address() {
   }
 
   return $ip_address;
+}
+
+add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
+
+function mollom_die_handler_callback($function, $return_last = FALSE) {
+  static $last_callback;
+  if ($return_last) {
+    return $last_callback;
+  }
+  $last_callback = $function;
+  return 'mollom_die_handler';
+}
+
+function mollom_die_handler($message, $title, $args) {
+  // Disable duplicate comment check when testing mode is enabled, since one
+  // typically tests with the literal ham/unsure/spam strings only.
+  if (get_option('mollom_testing_mode') && $message === __('Duplicate comment detected; it looks as though you&#8217;ve already said that!')) {
+    return;
+  }
+  $function = mollom_die_handler_callback(NULL, TRUE);
+  $function($message, $title, $args);
 }

@@ -18,43 +18,6 @@
 class MollomForm {
 
   /**
-   * Adds HTML for Mollom form fields to a given array of form fields.
-   *
-   * @param array $fields
-   *   An associative array whose keys are input field names and whose values
-   *   are raw HTML representations of the form fields to output.
-   *
-   * @return array
-   *   $fields with additional 'mollom' key (containing multiple elements).
-   */
-  public static function addMollomFields($fields) {
-    $values = (isset($_POST['mollom']) ? $_POST['mollom'] : array());
-    $values += array(
-      'contentId' => '',
-      'captchaId' => '',
-      'homepage' => '',
-    );
-
-    $fields['mollom'] = MollomForm::formatInput('hidden', 'mollom[contentId]', $values['contentId']);
-    $fields['mollom'] .= MollomForm::formatInput('hidden', 'mollom[captchaId]', $values['captchaId']);
-
-    $fields['mollom'] .= '<div class="hidden">';
-    $fields['mollom'] .= MollomForm::formatInput('text', 'mollom[homepage]', $values['homepage']);
-    $fields['mollom'] .= '</div>';
-
-    if (!empty($_POST['mollom']['captchaId'])) {
-      // @todo Automatically retrieve a new CAPTCHA in case captchaUrl doesn't
-      //   exist for whatever reason?
-      $output = '<div>';
-      $output .= '<img src="' . $_POST['mollom']['captchaUrl'] . '" alt="Type the characters you see in this picture." />';
-      $output .= '</div>';
-      $output .= MollomForm::formatInput('text', 'mollom[solution]', '', array('required' => NULL, 'size' => 10));
-      $fields['mollom'] .= MollomForm::formatItem('text', __('Word verification'), $output);
-    }
-    return $fields;
-  }
-
-  /**
    * Form pre-render callback.
    *
    * Starts output buffering for MollomForm::afterFormRendering().
@@ -172,23 +135,6 @@ class MollomForm {
    */
   public static function enqueueScripts() {
     wp_enqueue_style('mollom', MOLLOM_PLUGIN_URL . '/css/mollom.css');
-  }
-
-  /**
-   * Formats HTML for the privacy policy notice/link.
-   *
-   * @todo $options is specific to comment_form().
-   */
-  public static function formatPrivacyPolicyLink($options) {
-    if (get_option('mollom_privacy_link', TRUE)) {
-      $options['comment_notes_after'] .= "\n";
-      $options['comment_notes_after'] .= '<p class="description">';
-      $options['comment_notes_after'] .= vsprintf(__('By submitting this form, you accept the <a href="%s" target="_blank" rel="nofollow">Mollom privacy policy</a>.', MOLLOM_L10N), array(
-        '//mollom.com/web-service-privacy-policy',
-      ));
-      $options['comment_notes_after'] .= '</p>';
-    }
-    return $options;
   }
 
   /**
