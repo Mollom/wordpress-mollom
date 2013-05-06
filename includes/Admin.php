@@ -81,7 +81,7 @@ class MollomAdmin {
         'accept' => 'Accept all form submissions',
       ),
       'value' => get_option('mollom_fallback_mode', 'accept'),
-      'description' => vsprintf(__('In case Mollom services are unreachable, no text analysis can be performed and no CAPTCHAs can be generated. Customers on <a href="%s">paid plans</a> have access to <a href="%s">Mollom\'s high-availability backend infrastructure</a>, not available to free users, reducing potential downtime.', MOLLOM_I18N), array(
+      'description' => vsprintf(__('In case Mollom services are unreachable, no text analysis can be performed and no CAPTCHAs can be generated. Customers on <a href="%s">paid plans</a> have access to <a href="%s">Mollom\'s high-availability backend infrastructure</a>, not available to free users, reducing potential downtime.', MOLLOM_L10N), array(
         '//mollom.com/web-service-privacy-policy',
         '//mollom.com/terms-of-service',
       )),
@@ -91,7 +91,7 @@ class MollomAdmin {
       'name' => 'mollom_privacy_link',
       'label' => "Link to Mollom's privacy policy",
       'value' => get_option('mollom_privacy_link'),
-      'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.', MOLLOM_I18N), array(
+      'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.', MOLLOM_L10N), array(
         '@privacy-policy-url' => '//mollom.com/web-service-privacy-policy',
         '@terms-of-service-url' => '//mollom.com/terms-of-service',
       )),
@@ -111,7 +111,7 @@ class MollomAdmin {
       'label' => 'Enable Mollom testing mode',
       'value' => get_option('mollom_testing_mode'),
       // @todo Sanitize.
-      'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_I18N),
+      'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_L10N),
     ));
   }
 
@@ -146,36 +146,36 @@ class MollomAdmin {
     if (empty($_POST)) {
       $error = FALSE;
       if (!get_option('mollom_public_key') || !get_option('mollom_private_key')) {
-        $error = __('The Mollom API keys are not configured yet.', MOLLOM_I18N);
+        $error = __('The Mollom API keys are not configured yet.', MOLLOM_L10N);
       }
       elseif (TRUE !== $result = mollom()->verifyKeys()) {
         // Bad request: Invalid client system time: Too large offset from UTC.
         if ($result === Mollom::REQUEST_ERROR) {
-          $error = vsprintf(__('The server time of this site is incorrect. The time of the operating system is not synchronized with the Coordinated Universal Time (UTC), which prevents a successful authentication with Mollom. The maximum allowed offset is %d minutes. Please consult your hosting provider or server operator to correct the server time.', MOLLOM_I18N), array(
+          $error = vsprintf(__('The server time of this site is incorrect. The time of the operating system is not synchronized with the Coordinated Universal Time (UTC), which prevents a successful authentication with Mollom. The maximum allowed offset is %d minutes. Please consult your hosting provider or server operator to correct the server time.', MOLLOM_L10N), array(
             Mollom::TIME_OFFSET_MAX / 60,
           ));
         }
         // Invalid API keys.
         elseif ($result === Mollom::AUTH_ERROR) {
-          $error = __('The configured Mollom API keys are invalid.', MOLLOM_I18N);
+          $error = __('The configured Mollom API keys are invalid.', MOLLOM_L10N);
         }
         // Communication error.
         elseif ($result === Mollom::NETWORK_ERROR) {
-          $error = __('The Mollom servers could not be contacted. Please make sure that your web server can make outgoing HTTP requests.', MOLLOM_I18N);
+          $error = __('The Mollom servers could not be contacted. Please make sure that your web server can make outgoing HTTP requests.', MOLLOM_L10N);
         }
         // Server error.
         elseif ($result === Mollom::RESPONSE_ERROR) {
-          $error = __('The Mollom API keys could not be verified. Please try again later.', MOLLOM_I18N);
+          $error = __('The Mollom API keys could not be verified. Please try again later.', MOLLOM_L10N);
         }
         else {
-          $error = __('The Mollom servers could be contacted, but the Mollom API keys could not be verified.', MOLLOM_I18N);
+          $error = __('The Mollom servers could be contacted, but the Mollom API keys could not be verified.', MOLLOM_L10N);
         }
       }
       if ($error) {
         add_settings_error('mollom', 'mollom_keys', $error, 'error');
       }
       else {
-        $status = __('Mollom servers verified your keys. The services are operating correctly.', MOLLOM_I18N);
+        $status = __('Mollom servers verified your keys. The services are operating correctly.', MOLLOM_L10N);
         add_settings_error('mollom', 'mollom_keys', $status, 'updated');
       }
       settings_errors('mollom');
@@ -209,13 +209,13 @@ class MollomAdmin {
 
     if (isset($meta['spamClassification'])) {
       if ($meta['spamClassification'] == 'ham') {
-        _e('Ham', MOLLOM_I18N);
+        _e('Ham', MOLLOM_L10N);
       }
       elseif ($meta['spamClassification'] == 'unsure') {
-        _e('Unsure', MOLLOM_I18N);
+        _e('Unsure', MOLLOM_L10N);
       }
       elseif ($meta['spamClassification'] == 'spam') {
-        _e('Spam', MOLLOM_I18N);
+        _e('Spam', MOLLOM_L10N);
       }
     }
     else {

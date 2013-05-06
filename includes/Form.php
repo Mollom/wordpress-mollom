@@ -183,7 +183,7 @@ class MollomForm {
     if (get_option('mollom_privacy_link', TRUE)) {
       $options['comment_notes_after'] .= "\n";
       $options['comment_notes_after'] .= '<p class="description">';
-      $options['comment_notes_after'] .= vsprintf(__('By submitting this form, you accept the <a href="%s" target="_blank" rel="nofollow">Mollom privacy policy</a>.', MOLLOM_I18N), array(
+      $options['comment_notes_after'] .= vsprintf(__('By submitting this form, you accept the <a href="%s" target="_blank" rel="nofollow">Mollom privacy policy</a>.', MOLLOM_L10N), array(
         '//mollom.com/web-service-privacy-policy',
       ));
       $options['comment_notes_after'] .= '</p>';

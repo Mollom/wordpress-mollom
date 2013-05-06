@@ -17,9 +17,9 @@ if (!function_exists('add_action')) {
 }
 
 /**
- *  define WP Mollom's i18n namespace
+ * Localization text domain.
  */
-define('MOLLOM_I18N', 'wp-mollom');
+define('MOLLOM_L10N', 'mollom');
 
 // Use plugins_url() instead of plugin_dir_url() to avoid trailing slash.
 define('MOLLOM_PLUGIN_URL', plugins_url('', __FILE__));
@@ -148,8 +148,8 @@ function mollom_preprocess_comment($comment) {
     if (get_option('mollom_fallback_mode', 'accept') == 'accept') {
       return $comment;
     }
-    $title = __('Comment not posted', MOLLOM_I18N);
-    $msg = __('The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.', MOLLOM_I18N);
+    $title = __('Comment not posted', MOLLOM_L10N);
+    $msg = __('The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.', MOLLOM_L10N);
     wp_die($msg, $title);
   }
 
@@ -164,7 +164,7 @@ function mollom_preprocess_comment($comment) {
 
     // Spam: Discard the post.
     if ($result['spamClassification'] == 'spam') {
-      $errors[] = __('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_I18N);
+      $errors[] = __('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_L10N);
       // @todo False-positive report link.
     }
     // Unsure: Require to solve a CAPTCHA.
@@ -173,10 +173,10 @@ function mollom_preprocess_comment($comment) {
       // presenting a different error message, depending on whether we already
       // showed a CAPTCHA previously or not.
       if (empty($_POST['mollom']['captchaId'])) {
-        $errors[] = __('To complete this form, please complete the word verification below.', MOLLOM_I18N);
+        $errors[] = __('To complete this form, please complete the word verification below.', MOLLOM_L10N);
       }
       else {
-        $errors[] = __('The word verification was not completed correctly. Please complete this new word verification and try again.', MOLLOM_I18N);
+        $errors[] = __('The word verification was not completed correctly. Please complete this new word verification and try again.', MOLLOM_L10N);
       }
       // Retrieve a new CAPTCHA, assign the captchaId, and pass the full
       // response to the form constructor.
@@ -196,7 +196,7 @@ function mollom_preprocess_comment($comment) {
   }
 
   if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
-    $errors[] = __('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.', MOLLOM_I18N);
+    $errors[] = __('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.', MOLLOM_L10N);
   }
 
   // If there are errors, re-render the page containing the form.
