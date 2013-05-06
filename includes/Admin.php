@@ -22,6 +22,7 @@ class MollomAdmin {
    * Registers options for the WP Settings API.
    *
    * @see http://codex.wordpress.org/Settings_API
+   * @see MollomForm
    */
   public static function registerSettings() {
     // Mollom client configuration.
@@ -39,10 +40,9 @@ class MollomAdmin {
     // Configuration sections.
     add_settings_section('mollom_keys', 'API keys', '__return_false', 'mollom');
     add_settings_section('mollom_options', 'Protection options', '__return_false', 'mollom');
-    add_settings_section('mollom_dev', 'Testing', '__return_false', 'mollom');
+    add_settings_section('mollom_test', 'Testing', '__return_false', 'mollom');
 
-    // Settings fields.
-    // @see MollomForm
+    // API keys section.
     add_settings_field('mollom_public_key', 'Public key', array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
       'type' => 'text',
       'name' => 'mollom_public_key',
@@ -60,6 +60,7 @@ class MollomAdmin {
       'maxlength' => 32,
     ));
 
+    // Protection options section.
     add_settings_field('mollom_checks', 'Checks', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkboxes',
       'name' => 'mollom_checks',
@@ -69,24 +70,38 @@ class MollomAdmin {
       ),
       'values' => get_option('mollom_checks'),
     ));
+    add_settings_field('mollom_fallback_mode', 'When Mollom is down', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+      'type' => 'radios',
+      'name' => 'mollom_fallback_mode',
+      'options' => array(
+        'block' => 'Block all form submissions',
+        'accept' => 'Accept all form submissions',
+      ),
+      'value' => get_option('mollom_fallback_mode', 'accept'),
+      'description' => vsprintf(__('In case Mollom services are unreachable, no text analysis can be performed and no CAPTCHAs can be generated. Customers on <a href="%s">paid plans</a> have access to <a href="%s">Mollom\'s high-availability backend infrastructure</a>, not available to free users, reducing potential downtime.', MOLLOM_I18N), array(
+        '//mollom.com/web-service-privacy-policy',
+        '//mollom.com/terms-of-service',
+      )),
+    ));
     add_settings_field('mollom_privacy_link', 'Privacy policy link', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkbox',
       'name' => 'mollom_privacy_link',
       'label' => "Link to Mollom's privacy policy",
       'value' => get_option('mollom_privacy_link'),
-      'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.'), array(
+      'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.', MOLLOM_I18N), array(
         '@privacy-policy-url' => '//mollom.com/web-service-privacy-policy',
         '@terms-of-service-url' => '//mollom.com/terms-of-service',
       )),
     ));
 
-    add_settings_field('mollom_developer_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_dev', array(
+    // Testing section.
+    add_settings_field('mollom_developer_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_test', array(
       'type' => 'checkbox',
       'name' => 'mollom_developer_mode',
       'label' => 'Enable Mollom testing mode',
       'value' => get_option('mollom_developer_mode'),
       // @todo Sanitize.
-      'description' => 'Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.',
+      'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_I18N),
     ));
   }
 

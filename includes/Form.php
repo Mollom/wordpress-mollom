@@ -273,10 +273,29 @@ class MollomForm {
       $item = array(
         'type' => rtrim($options['type'], 'es'),
         'name' => $options['type'] == 'radios' ? $options['name'] : $options['name'] . "[$key]",
-        'value' => isset($options['values'][$key]) ? $options['values'][$key] : NULL,
         'label' => $label,
       );
+      if (isset($options['values'][$key]) && is_array($options['values'])) {
+        $item['value'] = $options['values'][$key];
+      }
+      elseif ($options['type'] == 'radios') {
+        if ($options['value'] === $key) {
+          $item['checked'] = NULL;
+        }
+        $item['value'] = $key;
+      }
+      elseif (isset($options['value'])) {
+        $item['value'] = $options['value'];
+      }
+      else {
+        $item['value'] = NULL;
+      }
       self::printItemArray($item);
+    }
+    if (!empty($options['description'])) {
+      print '<p class="description">';
+      print $options['description'];
+      print '</p>';
     }
   }
 
@@ -295,7 +314,10 @@ class MollomForm {
     $input_attributes = array_diff_key($options, array_flip(array('type', 'name', 'value', 'label', 'description', 'attributes')));
 
     if (!isset($input_attributes['id'])) {
-      $input_attributes['id'] = preg_replace('@[^a-zA-Z0-9]@', '', $options['name']);
+      $input_attributes['id'] = preg_replace('@[^a-zA-Z0-9]@', '-', $options['name']);
+    }
+    if ($options['type'] == 'radio') {
+      $input_attributes['id'] .= '-' . preg_replace('@[^a-zA-Z0-9]@', '-', $options['value']);
     }
     $input = self::formatInput($options['type'], $options['name'], $options['value'], $input_attributes);
 
