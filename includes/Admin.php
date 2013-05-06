@@ -14,8 +14,6 @@ class MollomAdmin {
 
   public static function init() {
     self::registerSettings();
-    // @todo Remove.
-//    self::redirect();
   }
 
   /**
@@ -135,20 +133,6 @@ class MollomAdmin {
   }
 
   /**
-   * Redirect the user when editing comments
-   *
-   * Redirect the user to http://my.mollom.com to moderate comments instead of the regular
-   * Wordpress comment moderation system at edit-comments.php. The setting is "Remote moderation"
-   * is configurated at the Mollom tab under General options
-   */
-  public static function redirect() {
-    $location = basename($_SERVER['PHP_SELF']);
-    if (($location == 'edit-comments.php') && (get_option('mollom_moderation_redirect', 'off') == 'on')) {
-      wp_redirect('http://my.mollom.com');
-    }
-  }
-
-  /**
    * Page callback; Presents the Mollom settings options page.
    */
   public static function settingsPage() {
@@ -194,19 +178,6 @@ class MollomAdmin {
       settings_errors('mollom');
     }
     mollom_theme('configuration', array());
-    return;
-
-
-    if (isset($_POST['submit'])) {
-      // Reverse proxy addresses.
-      update_option('mollom_reverseproxy_addresses', $_POST['mollom_reverseproxy_addresses']);
-      // Redirect to http://my.mollom.com
-      update_option('mollom_moderation_redirect', !empty($_POST['moderation_redirect']) ? 'on' : 'off');
-    }
-
-    // Set variables used to render the page.
-    $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
-    $vars['mollom_moderation_redirect'] = (get_option('mollom_moderation_redirect', 'on') == 'on') ? ' checked="checked"' : '';
   }
 
   /**

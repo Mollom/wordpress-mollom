@@ -19,9 +19,3 @@
       <p class="description">
       <?php _e('If your site resides behind one or more reverse proxies, enter their IP addresses as a comma separated list.'); ?>
       </p>
-
-      <h3><label><?php _e('Remote moderation', MOLLOM_I18N); ?></label></h3>
-      <p><input type="checkbox" name="moderation_redirect" value="block" <?php echo $mollom_moderation_redirect; ?> />&nbsp;&nbsp;<?php print strtr(__('Redirect <a href="@local-moderation">local moderation pages</a> to the <a href="@remote-moderation">hosted Mollom moderation system</a>', MOLLOM_I18N), array(
-        '@local-moderation' => admin_url('edit-comments.php'),
-        '@remote-moderation' => 'http://my.mollom.com',
-      )); ?></p>
