@@ -127,6 +127,7 @@ abstract class MollomEntity {
 
     // Check (unsure) CAPTCHA solution.
     if (!empty($_POST['mollom']['captchaId'])) {
+      $data['captchaId'] = $_POST['mollom']['captchaId'];
       $captcha_data = array(
         'id' => $_POST['mollom']['captchaId'],
         'solution' => isset($_POST['mollom']['solution']) ? $_POST['mollom']['solution'] : '',
@@ -168,8 +169,7 @@ abstract class MollomEntity {
 
       // Spam: Discard the post.
       if ($result['spamClassification'] == 'spam') {
-        $this->errors->add('spam', __('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_L10N));
-        // @todo False-positive report link.
+        $this->errors->add('spam', __('Your submission has triggered the spam filter and will not be accepted.', MOLLOM_L10N) . ' ' . $this->formatFalsePositiveLink($data));
       }
       // Unsure: Require to solve a CAPTCHA.
       elseif ($result['spamClassification'] == 'unsure') {
@@ -180,7 +180,7 @@ abstract class MollomEntity {
           $this->errors->add('unsure', __('To complete this form, please complete the word verification below.', MOLLOM_L10N));
         }
         else {
-          $this->errors->add('unsure', __('The word verification was not completed correctly. Please complete this new word verification and try again.', MOLLOM_L10N));
+          $this->errors->add('unsure', __('The word verification was not completed correctly. Please complete this new word verification and try again.', MOLLOM_L10N) . ' ' . $this->formatFalsePositiveLink($data));
         }
         // Retrieve a new CAPTCHA, assign the captchaId, and pass the full
         // response to the form constructor.
@@ -201,10 +201,43 @@ abstract class MollomEntity {
 
     // Handle the profanity classification result:
     if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
-      $this->errors->add('profanity', __('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.', MOLLOM_L10N));
+      $this->errors->add('profanity', __('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.', MOLLOM_L10N) . ' ' . $this->formatFalsePositiveLink($data));
     }
 
     return $data;
+  }
+
+  /**
+   * Formats a message for end-users to report false-positives.
+   *
+   * @param array $data
+   *   The latest Mollom session data pertaining to the form submission attempt.
+   *
+   * @return string
+   *   A message string containing a specially crafted link to Mollom's
+   *   false-positive report form, supplying these parameters:
+   *   - public_key: The public API key of this site.
+   *   - url: The current, absolute URL of the form.
+   *   At least one or both of:
+   *   - contentId: The content ID of the Mollom session.
+   *   - captchaId: The CAPTCHA ID of the Mollom session.
+   *   If available, to speed up and simplify the false-positive report form:
+   *   - authorName: The author name, if supplied.
+   *   - authorMail: The author's e-mail address, if supplied.
+   */
+  public function formatFalsePositiveLink($data) {
+    $mollom = mollom();
+    $params = array(
+      'public_key' => $mollom->loadConfiguration('publicKey'),
+    );
+    $params += array_intersect_key($data, array_flip(array('contentId', 'captchaId', 'authorName', 'authorMail')));
+
+    // This should be the URL of the page containing the form.
+    // NOT the general URL of your site!
+    $params['url'] = isset($data['contextUrl']) ? $data['contextUrl'] : site_url();
+
+    $report_url = '//mollom.com/false-positive?' . http_build_query($params);
+    return sprintf(__('If you feel this is in error, please <a href="%s" target="_blank">report that you are blocked</a>.', MOLLOM_L10N), htmlspecialchars($report_url, ENT_QUOTES, 'UTF-8'));
   }
 
   /**
@@ -263,6 +296,12 @@ abstract class MollomEntity {
     echo MollomForm::serializeDOM($dom);
   }
 
+  /**
+   * Renders WP_Error object messages into HTML.
+   *
+   * @see wp-login.php
+   * @see _default_wp_die_handler()
+   */
   public function renderErrors() {
     $messages = $this->errors->get_error_messages();
     if (empty($messages)) {
