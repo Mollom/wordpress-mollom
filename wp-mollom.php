@@ -105,6 +105,12 @@ add_filter('comment_form_default_fields', array('MollomForm', 'addMollomFields')
 
 add_filter('preprocess_comment', 'mollom_preprocess_comment', 0);
 function mollom_preprocess_comment($comment) {
+  $user = wp_get_current_user();
+  $bypass_roles = array_keys(get_option('mollom_bypass_roles', array()));
+  if (array_intersect($user->roles, $bypass_roles)) {
+    return $comment;
+  }
+
   $author_data = array(
     'authorName' => $comment['comment_author'],
     'authorMail' => $comment['comment_author_email'],

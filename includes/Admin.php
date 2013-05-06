@@ -34,7 +34,7 @@ class MollomAdmin {
     register_setting('mollom', 'mollom_checks');
     register_setting('mollom', 'mollom_privacy_link', 'intval');
 
-    register_setting('mollom', 'mollom_roles');
+    register_setting('mollom', 'mollom_bypass_roles');
     register_setting('mollom', 'mollom_fallback_mode');
 
     // Configuration sections.
@@ -69,6 +69,13 @@ class MollomAdmin {
         'profanity' => 'Profanity',
       ),
       'values' => get_option('mollom_checks'),
+    ));
+    add_settings_field('mollom_bypass_roles', 'Bypass roles', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+      'type' => 'checkboxes',
+      'name' => 'mollom_bypass_roles',
+      'options' => array_map('translate_user_role', $GLOBALS['wp_roles']->get_names()),
+      'values' => get_option('mollom_bypass_roles'),
+      'description' => __('Select user roles to exclude from all Mollom checks.'),
     ));
     add_settings_field('mollom_fallback_mode', 'When Mollom is down', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'radios',
@@ -191,59 +198,15 @@ class MollomAdmin {
 
 
     if (isset($_POST['submit'])) {
-      // Excluded roles.
-      if (!empty($_POST['mollom_roles'])) {
-        $mollom->roles = $_POST['mollom_roles'];
-        update_option('mollom_roles', $mollom->roles);
-      }
-      else {
-        delete_option('mollom_roles');
-      }
       // Reverse proxy addresses.
       update_option('mollom_reverseproxy_addresses', $_POST['mollom_reverseproxy_addresses']);
-      // Fallback mode.
-      update_option('mollom_fallback_mode', !empty($_POST['fallback_mode']) ? 'block' : 'accept');
-      // Protection mode
-      update_option('mollom_protection_mode', $_POST['protection_mode']['mode']);
       // Redirect to http://my.mollom.com
       update_option('mollom_moderation_redirect', !empty($_POST['moderation_redirect']) ? 'on' : 'off');
     }
 
     // Set variables used to render the page.
     $vars['mollom_reverseproxy_addresses'] = get_option('mollom_reverseproxy_addresses', '');
-    $vars['mollom_roles'] = self::mollom_roles_element();
-    $vars['mollom_protection_mode'] = self::mollom_protection_mode();
-    $vars['mollom_fallback_mode'] = (get_option('mollom_fallback_mode', 'accept') == 'block') ? ' checked="checked"' : '';
     $vars['mollom_moderation_redirect'] = (get_option('mollom_moderation_redirect', 'on') == 'on') ? ' checked="checked"' : '';
-
-    // Render the page.
-    mollom_theme('configuration', $vars);
-  }
-
-  /**
-   * Helper function. Generate an <ul> list of roles
-   *
-   * @global type $wp_roles
-   * @return string
-   */
-  protected static function mollom_roles_element() {
-    global $wp_roles;
-    $mollom_roles = get_option('mollom_roles', array());
-    $checked = '';
-
-    $element = "<ul>";
-
-    foreach ($wp_roles->get_names() as $role => $name) {
-      $name = translate_user_role($name);
-      if ($mollom_roles) {
-        $checked = (in_array($role, $mollom_roles)) ? "checked" : "";
-      }
-      $element .= "<li><input type=\"checkbox\" name=\"mollom_roles[]\" value=\"" . $role . "\" " . $checked . " /> " . $name . "</li>";
-    }
-
-    $element .= "</ul>";
-
-    return $element;
   }
 
   /**

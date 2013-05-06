@@ -14,10 +14,6 @@
 
 <?php return; ?>
 
-      <h3><label><?php _e('Roles', MOLLOM_I18N); ?></label></h3>
-      <p><?php _e('Select the roles you want to exclude from the mandatory Mollom check. Default: all roles are exempt.', MOLLOM_I18N); ?></p>
-      <?php print $mollom_roles; ?>
-
       <h3><label><?php _e('Reverse proxy addresses', MOLLOM_I18N); ?></label></h3>
       <input type="text" size="50" name="mollom_reverseproxy_addresses" id="mollom-reverseproxy-addresses" value="<?php print $mollom_reverseproxy_addresses; ?>" />
       <p class="description">

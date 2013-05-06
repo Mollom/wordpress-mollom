@@ -3,30 +3,6 @@
 class WPMollomContent extends WPMollomBase {
 
   /**
-   * Callback. Perform the actual Mollom check on a new comment
-   *
-   * This function hooks onto the comment preprocessing. It will pass the comment
-   * to Mollom. Depending on the result, it will either pass the comment to WP as ham,
-   * block it as spam or show captcha if unsure. Trackbacks are also passed to Mollom.
-   *
-   * @param array $comment The preprocessed comment
-   * @return array The comment if it passed the check, or void to block it from the database
-   */
-  public function check_comment($comment) {
-    // If a logged in user exists check if the role is exempt from a Mollom check
-    // non-registered visitors don't have a role so their submissions are always checked
-    $user = wp_get_current_user();
-    if ($user->ID) {
-      $mollom_roles = get_option('mollom_roles');
-      $detected = array_intersect($user->roles, $mollom_roles);
-      if (count($detected) > 0) {
-        return $comment;
-      }
-    }
-    return $comment;
-  }
-
-  /**
    * Fetch the IP address of the user who posts data to Mollom
    *
    * This function tries to retrieve the correct IP address of a user posting data

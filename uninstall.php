@@ -21,7 +21,7 @@ delete_option('mollom_public_key');
 delete_option('mollom_private_key');
 
 delete_option('mollom_checks');
-delete_option('mollom_roles');
+delete_option('mollom_bypass_roles');
 delete_option('mollom_fallback_mode');
 delete_option('mollom_privacy_link');
 
