@@ -87,7 +87,7 @@ class MollomForm {
     }
   
     // Re-inject all POST values into the form.
-    $dom = filter_dom_load($output);
+    $dom = self::loadDOM($output);
     foreach ($dom->getElementsByTagName('input') as $input) {
       if ($name = $input->getAttribute('name')) {
         if (isset($values[$name])) {
@@ -120,7 +120,51 @@ class MollomForm {
     $form->insertBefore($errors, $form->firstChild);
   
     // Output the form again.
-    echo filter_dom_serialize($dom);
+    echo self::serializeDOM($dom);
+  }
+
+  /**
+   * Parses an HTML snippet and returns it as a DOM object.
+   *
+   * This function loads the body part of a partial (X)HTML document and returns
+   * a full DOMDocument object that represents this document.
+   *
+   * @param $text
+   *   The partial (X)HTML snippet to load. Invalid markup will be corrected on
+   *   import.
+   *
+   * @return
+   *   A DOMDocument that represents the loaded (X)HTML snippet.
+   */
+  public static function loadDOM($text) {
+    $dom_document = new DOMDocument();
+    // Ignore warnings during HTML soup loading.
+    @$dom_document->loadHTML('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>' . $text . '</body></html>');
+
+    return $dom_document;
+  }
+
+  /**
+   * Converts a DOM object back to an HTML snippet.
+   *
+   * The function serializes the body part of a DOMDocument back to an XHTML
+   * snippet. The resulting XHTML snippet will be properly formatted to be
+   * compatible with HTML user agents.
+   *
+   * @param $dom_document
+   *   A DOMDocument object to serialize, only the tags below
+   *   the first <body> node will be converted.
+   *
+   * @return
+   *   A valid (X)HTML snippet, as a string.
+   */
+  public static function serializeDOM($dom_document) {
+    $body_node = $dom_document->getElementsByTagName('body')->item(0);
+    $body_content = '';
+    foreach ($body_node->childNodes as $child_node) {
+      $body_content .= $dom_document->saveXML($child_node);
+    }
+    return $body_content;
   }
 
   /**

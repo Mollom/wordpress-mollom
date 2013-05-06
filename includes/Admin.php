@@ -10,8 +10,6 @@
  */
 class MollomAdmin {
 
-  const NONCE = 'mollom-configuration';
-
   public static function init() {
     self::registerSettings();
   }
