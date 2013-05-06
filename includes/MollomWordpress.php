@@ -46,11 +46,12 @@ class MollomWordpress extends Mollom {
   public function getClientInformation() {
     global $wp_version;
 
+    $meta = get_plugin_data(dirname(dirname(__FILE__)) . '/wp-mollom.php', FALSE, FALSE);
     $data = array(
       'platformName' => 'Wordpress',
       'platformVersion' => $wp_version,
-      'clientName' => 'Mollom',
-      'clientVersion' => MOLLOM_PLUGIN_VERSION,
+      'clientName' => $meta['Name'],
+      'clientVersion' => $meta['Version'],
     );
     return $data;
   }

@@ -2,23 +2,19 @@
 
 /*
   Plugin Name: Mollom
-  Plugin URI: http://wordpress.org/extend/plugins/wp-mollom/
-  Description: Protect your site from spam and unwanted posts with <a href="http://mollom.com">Mollom</a>.
-  Author: Matthias Vandermaesen
+  Plugin URI: http://mollom.com
   Version: 2.x-dev
+  Text Domain: mollom
+  Description: Protects you from spam and unwanted posts. <strong>Get started:</strong> 1) <em>Activate</em>, 2) <a href="//mollom.com/pricing">Sign up</a> and create API keys, 3) Set them in <a href="options-general.php?page=mollom">settings</a>.
+  Author: Matthias Vandermaesen
   Author URI: http://www.colada.be
-  Email: matthias@colada.be
- */
+  License: GPLv2 or later
+*/
 
 if (!function_exists('add_action')) {
   header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not found');
   exit;
 }
-
-/**
- * define this version of the plugin
- */
-define('MOLLOM_PLUGIN_VERSION', '2.x-dev');
 
 /**
  *  define WP Mollom's i18n namespace
