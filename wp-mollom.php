@@ -105,8 +105,12 @@ add_filter('comment_form_default_fields', array('MollomForm', 'addMollomFields')
 
 add_filter('preprocess_comment', 'mollom_preprocess_comment', 0);
 function mollom_preprocess_comment($comment) {
+  // Exclude all posts performed from the administrative interface.
+  if (is_admin()) {
+    return $comment;
+  }
   $user = wp_get_current_user();
-  $bypass_roles = array_keys(get_option('mollom_bypass_roles', array()));
+  $bypass_roles = array_keys(array_filter((array) get_option('mollom_bypass_roles', array())));
   if (array_intersect($user->roles, $bypass_roles)) {
     return $comment;
   }
@@ -121,7 +125,7 @@ function mollom_preprocess_comment($comment) {
   if (!empty($comment['user_ID'])) {
     $author_data['authorId'] = $comment['user_ID'];
   }
-  if ($_POST['mollom']['homepage'] !== '') {
+  if (isset($_POST['mollom']['homepage']) && $_POST['mollom']['homepage'] !== '') {
     $author_data['honeypot'] = $_POST['mollom']['homepage'];
   }
 
@@ -147,11 +151,11 @@ function mollom_preprocess_comment($comment) {
   // These parameters should be sent regardless of whether they are empty.
   $data += array(
     'checks' => array_keys(get_option('mollom_checks', array('spam' => 1))),
-    'postBody' => $comment['comment_content'],
+    'postBody' => isset($comment['comment_content']) ? $comment['comment_content'] : '',
     'contextUrl' => get_permalink(),
     'contextTitle' => get_the_title($comment['comment_post_ID']),
   );
-  if ($comment['comment_type'] == 'trackback') {
+  if (isset($comment['comment_type']) && $comment['comment_type'] == 'trackback') {
     $data['unsure'] = FALSE;
   }
   $result = mollom()->checkContent($data);
