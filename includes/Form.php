@@ -211,7 +211,6 @@ class MollomForm {
    *   The formatted HTML form element.
    */
   public static function formatItem($type, $label, $children, $description = NULL, $attributes = array()) {
-    $label = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
     $attributes += array(
       'item' => array(),
       'label' => array(),
@@ -220,12 +219,18 @@ class MollomForm {
     $attributes['item']['class'][] = 'form-type-' . $type;
 
     $output = '<div ' . self::formatAttributes($attributes['item']) . '>';
-    if ($type == 'checkbox' || $type == 'radio') {
-      $output .= $children;
-      $output .= ' <label ' . self::formatAttributes($attributes['label']) . '>' . $label . '</label>';
+    if (isset($label)) {
+      $label = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+      if ($type == 'checkbox' || $type == 'radio') {
+        $output .= $children;
+        $output .= ' <label ' . self::formatAttributes($attributes['label']) . '>' . $label . '</label>';
+      }
+      else {
+        $output .= '<label ' . self::formatAttributes($attributes['label']) . '>' . $label . '</label>';
+        $output .= $children;
+      }
     }
     else {
-      $output .= '<label ' . self::formatAttributes($attributes['label']) . '>' . $label . '</label>';
       $output .= $children;
     }
     if (!empty($description)) {
@@ -348,6 +353,7 @@ class MollomForm {
    */
   public static function printItemArray($options) {
     $options += array(
+      'label' => NULL,
       'description' => NULL,
       'attributes' => array(),
     );

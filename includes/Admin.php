@@ -36,7 +36,7 @@ class MollomAdmin {
     // Configuration sections.
     add_settings_section('mollom_keys', 'API keys', '__return_false', 'mollom');
     add_settings_section('mollom_options', 'Protection options', '__return_false', 'mollom');
-    add_settings_section('mollom_test', 'Testing', '__return_false', 'mollom');
+    add_settings_section('mollom_advanced', 'Advanced settings', '__return_false', 'mollom');
 
     // API keys section.
     add_settings_field('mollom_public_key', 'Public key', array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
@@ -97,8 +97,15 @@ class MollomAdmin {
       )),
     ));
 
-    // Testing section.
-    add_settings_field('mollom_testing_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_test', array(
+    // Advanced section.
+    add_settings_field('mollom_reverse_proxy_addresses', 'Reverse proxy IP addresses', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_advanced', array(
+      'type' => 'text',
+      'name' => 'mollom_reverse_proxy_addresses',
+      'value' => get_option('mollom_reverse_proxy_addresses'),
+      'size' => 60,
+      'description' => __('If your site resides behind one or more reverse proxies, enter their IP addresses as a comma-separated list.'),
+    ));
+    add_settings_field('mollom_testing_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_advanced', array(
       'type' => 'checkbox',
       'name' => 'mollom_testing_mode',
       'label' => 'Enable Mollom testing mode',
@@ -134,8 +141,6 @@ class MollomAdmin {
    * Page callback; Presents the Mollom settings options page.
    */
   public static function settingsPage() {
-    $mollom = mollom();
-
     // When requesting the page, and after updating the settings, verify the
     // API keys (unless empty).
     if (empty($_POST)) {
@@ -143,7 +148,7 @@ class MollomAdmin {
       if (!get_option('mollom_public_key') || !get_option('mollom_private_key')) {
         $error = __('The Mollom API keys are not configured yet.', MOLLOM_I18N);
       }
-      elseif (TRUE !== $result = $mollom->verifyKeys()) {
+      elseif (TRUE !== $result = mollom()->verifyKeys()) {
         // Bad request: Invalid client system time: Too large offset from UTC.
         if ($result === Mollom::REQUEST_ERROR) {
           $error = vsprintf(__('The server time of this site is incorrect. The time of the operating system is not synchronized with the Coordinated Universal Time (UTC), which prevents a successful authentication with Mollom. The maximum allowed offset is %d minutes. Please consult your hosting provider or server operator to correct the server time.', MOLLOM_I18N), array(
@@ -175,7 +180,16 @@ class MollomAdmin {
       }
       settings_errors('mollom');
     }
-    mollom_theme('configuration', array());
+
+    echo '<div class="wrap">';
+    screen_icon();
+    echo '<h2>' . $GLOBALS['title'] . '</h2>';
+    echo '<form action="options.php" method="post">';
+    settings_fields('mollom');
+    do_settings_sections('mollom');
+    submit_button();
+    echo '</form>';
+    echo '</div>';
   }
 
   /**

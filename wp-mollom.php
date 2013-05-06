@@ -25,11 +25,6 @@ define('MOLLOM_PLUGIN_VERSION', '2.x-dev');
  */
 define('MOLLOM_I18N', 'wp-mollom');
 
-/** 
- * define the plugin path
- */
-define('MOLLOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
-
 // Use plugins_url() instead of plugin_dir_url() to avoid trailing slash.
 define('MOLLOM_PLUGIN_URL', plugins_url('', __FILE__));
 
@@ -53,12 +48,6 @@ function mollom_classloader($class) {
     }
   }
 }
-
-/**
- * Common functions are stored in common.inc file. These are made available
- * throughout the entire plugin.
- */
-require_once(MOLLOM_PLUGIN_PATH . '/includes/common.inc');
 
 /**
  * Instantiates a new Mollom client (once).
@@ -119,8 +108,7 @@ function mollom_preprocess_comment($comment) {
     'authorName' => $comment['comment_author'],
     'authorMail' => $comment['comment_author_email'],
     'authorUrl' => $comment['comment_author_url'],
-    // @todo ip_address()
-    'authorIp' => $_SERVER['REMOTE_ADDR'],
+    'authorIp' => ip_address(),
   );
   if (!empty($comment['user_ID'])) {
     $author_data['authorId'] = $comment['user_ID'];
@@ -258,4 +246,54 @@ function mollom_entity_save_meta($id) {
   // Store the contentId separately to enable reverse-mapping lookups for CMP.
   add_metadata('comment', $id, 'mollom_content_id', $_POST['mollom']['contentId']);
   add_metadata('comment', $id, 'mollom', $_POST['mollom']);
+}
+
+/**
+ * Returns the IP address of the client.
+ *
+ * If the app is behind a reverse proxy, we use the X-Forwarded-For header
+ * instead of $_SERVER['REMOTE_ADDR'], which would be the IP address of
+ * the proxy server, and not the client's. The actual header name can be
+ * configured by the reverse_proxy_header variable.
+ *
+ * @return
+ *   IP address of client machine, adjusted for reverse proxy and/or cluster
+ *   environments.
+ *
+ * @see http://api.drupal.org/api/drupal/includes!bootstrap.inc/function/ip_address/7
+ */
+function ip_address() {
+  static $ip_address;
+
+  if (!isset($ip_address)) {
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+
+    if ($reverse_proxy_addresses = get_option('mollom_reverse_proxy_addresses', '')) {
+      $reverse_proxy_addresses = array_filter(array_map('trim', explode(',', $reverse_proxy_addresses)));
+      $reverse_proxy_header = 'HTTP_X_FORWARDED_FOR';
+
+      if (!empty($_SERVER[$reverse_proxy_header])) {
+        // If an array of known reverse proxy IPs is provided, then trust
+        // the XFF header if request really comes from one of them.
+        $reverse_proxy_addresses = (array) $reverse_proxy_addresses;
+
+        // Turn XFF header into an array.
+        $forwarded = explode(',', $_SERVER[$reverse_proxy_header]);
+
+        // Trim the forwarded IPs; they may have been delimited by commas and spaces.
+        $forwarded = array_map('trim', $forwarded);
+
+        // Tack direct client IP onto end of forwarded array.
+        $forwarded[] = $ip_address;
+
+        // Eliminate all trusted IPs.
+        $untrusted = array_diff($forwarded, $reverse_proxy_addresses);
+
+        // The right-most IP is the most specific we can trust.
+        $ip_address = array_pop($untrusted);
+      }
+    }
+  }
+
+  return $ip_address;
 }
