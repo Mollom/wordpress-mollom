@@ -17,21 +17,11 @@ if ( 8645 > $wp_db_version ) {
 	return;
 }
 
-define( 'MOLLOM_TABLE', 'mollom' );
-
 // delete all mollom related options
 delete_option('mollom_developer_mode');
 delete_option('mollom_reverseproxy_addresses');
 delete_option('mollom_fallback_mode');
 delete_option('mollom_roles');
 delete_option('mollom_checks');
-delete_option('mollom_protection_mode');
 delete_option('mollom_private_key');
 delete_option('mollom_public_key');
-delete_option('mollom_servers');
-
-// delete MOLLOM_TABLE
-$mollom_table = $wpdb->prefix . MOLLOM_TABLE;
-$cache_table = $wpdb->prefix . MOLLOM_CACHE_TABLE;
-$wpdb->query('DROP TABLE IF EXISTS ' . $mollom_table);
-$wpdb->query('DROP TABLE IF EXISTS ' . $cache_table);
