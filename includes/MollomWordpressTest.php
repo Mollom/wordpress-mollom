@@ -98,9 +98,6 @@ class MollomWordpressTest extends MollomWordpress {
 
   /**
    * Creates new testing API keys.
-   *
-   * @todo Move site properties into $data argument (Drupal-specific values),
-   *   rename to createTestingSite(), and move into Mollom class?
    */
   public function createKeys() {
     // Do not attempt to create API keys repeatedly.

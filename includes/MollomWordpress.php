@@ -56,20 +56,6 @@ class MollomWordpress extends Mollom {
   }
 
   /**
-   * Overrides Mollom::writeLog().
-   *
-   * @todo Implement this
-   */
-  function writeLog() {
-    foreach ($this->log as $key => $entry) {
-      // @todo: write log away
-    }
-
-    // Purge the logs
-    $this->purgeLog();
-  }
-
-  /**
    * Implements Mollom::request().
    */
   protected function request($method, $server, $path, $query = NULL, array $headers = array()) {

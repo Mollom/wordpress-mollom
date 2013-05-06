@@ -185,10 +185,6 @@ class MollomAdmin {
    *
    * Show Mollom action links and status messages per commentinthe comments table.
    *
-   * @todo add spaminess indicator
-   * @todo add a had a captcha indicator
-   * @todo add status messages
-   *
    * @param string $column The column name
    * @param int $comment_id The comment ID
    * @return string Rendered output
