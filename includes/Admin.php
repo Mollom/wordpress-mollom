@@ -24,10 +24,25 @@ class MollomAdmin {
    * @see http://codex.wordpress.org/Settings_API
    */
   public static function registerSettings() {
+    // Mollom client configuration.
+    register_setting('mollom', 'mollom_public_key', 'trim');
+    register_setting('mollom', 'mollom_private_key', 'trim');
+    register_setting('mollom', 'mollom_developer_mode', 'intval');
+    register_setting('mollom', 'mollom_reverse_proxy_addresses');
+
+    register_setting('mollom', 'mollom_checks');
+    register_setting('mollom', 'mollom_privacy_link', 'intval');
+
+    register_setting('mollom', 'mollom_roles');
+    register_setting('mollom', 'mollom_fallback_mode');
+
+    // Configuration sections.
     add_settings_section('mollom_keys', 'API keys', '__return_false', 'mollom');
     add_settings_section('mollom_options', 'Protection options', '__return_false', 'mollom');
     add_settings_section('mollom_dev', 'Testing', '__return_false', 'mollom');
 
+    // Settings fields.
+    // @see MollomForm
     add_settings_field('mollom_public_key', 'Public key', array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
       'type' => 'text',
       'name' => 'mollom_public_key',
@@ -58,7 +73,7 @@ class MollomAdmin {
       'type' => 'checkbox',
       'name' => 'mollom_privacy_link',
       'label' => "Link to Mollom's privacy policy",
-      'value' => (int) get_option('mollom_privacy_link'),
+      'value' => get_option('mollom_privacy_link'),
       'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.'), array(
         '@privacy-policy-url' => '//mollom.com/web-service-privacy-policy',
         '@terms-of-service-url' => '//mollom.com/terms-of-service',
@@ -69,22 +84,10 @@ class MollomAdmin {
       'type' => 'checkbox',
       'name' => 'mollom_developer_mode',
       'label' => 'Enable Mollom testing mode',
-      'value' => (int) get_option('mollom_developer_mode'),
+      'value' => get_option('mollom_developer_mode'),
       // @todo Sanitize.
       'description' => 'Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.',
     ));
-
-    // Mollom client configuration.
-    register_setting('mollom', 'mollom_public_key', 'trim');
-    register_setting('mollom', 'mollom_private_key', 'trim');
-    register_setting('mollom', 'mollom_developer_mode', 'intval');
-    register_setting('mollom', 'mollom_reverse_proxy_addresses');
-
-    register_setting('mollom', 'mollom_checks');
-    register_setting('mollom', 'mollom_privacy_link');
-
-    register_setting('mollom', 'mollom_roles');
-    register_setting('mollom', 'mollom_fallback_mode');
   }
 
   /**
@@ -271,14 +274,23 @@ class MollomAdmin {
     if ($column != 'mollom') {
       return;
     }
-    $mollom_comment = new MollomComment();
-    if (!$object = $mollom_comment->get($comment_id)) {
-      return;
-    }
-    $vars['spam_classification'] = $object->spamClassification;
+    $meta = get_metadata('comment', $comment_id, 'mollom', TRUE);
 
-    // Render the output
-    mollom_theme('comment_moderation', $vars);
+    if (isset($meta['spamClassification'])) {
+      if ($meta['spamClassification'] == 'ham') {
+        _e('Ham', MOLLOM_I18N);
+      }
+      elseif ($meta['spamClassification'] == 'unsure') {
+        _e('Unsure', MOLLOM_I18N);
+      }
+      elseif ($meta['spamClassification'] == 'spam') {
+        _e('Spam', MOLLOM_I18N);
+      }
+    }
+    else {
+      // @todo Needless clutter? Leave the cell empty?
+      echo '—';
+    }
   }
 
   /**
@@ -291,7 +303,7 @@ class MollomAdmin {
    * @return array An array of columns for a table
    */
   public static function mollom_comments_columns($columns) {
-    $columns['mollom'] = __('Mollom', MOLLOM_I18N);
+    $columns['mollom'] = 'Mollom';
     return $columns;
   }
 

@@ -3,15 +3,18 @@
 /**
  * @file
  * Form API helpers.
- *
- * Stupidly simplified re-implementation of Drupal's sophisticated form handling.
- *
- * If you like the basic concepts, use Drupal.
- * @see http://drupal.org
- *
- * @todo Replace self:: with static:: when requiring PHP 5.3.
  */
 
+/**
+ * Form construction, processing, validation, and rendering.
+ *
+ * Stupidly simplified and UGLIFIED re-implementation of Drupal's sophisticated
+ * form handling.
+ *
+ * If you like the basic concepts, use Drupal: http://drupal.org
+ * Alternatively, use Symfony: http://symfony.com
+ * Either way, build your site on a platform that knows how to treat user input.
+ */
 class MollomForm {
 
   /**
