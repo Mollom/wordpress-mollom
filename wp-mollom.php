@@ -76,11 +76,57 @@ add_action('wp_set_comment_status', array('MollomAdmin', 'sendFeedback'), 10, 2)
 //add_filter('comment_row_actions', array('MollomAdmin', 'comment_actions'));
 
 
-add_filter('comment_form_defaults', array('MollomEntity', 'buildFormArray'));
+/**
+ * Dispatches filter/action hooks to class instances.
+ *
+ * The architecture of this hook dispatcher is based on the following
+ * architectural constraints, considerations, and assumptions:
+ * - Filter/action hook callbacks need to be registered unconditionally on every
+ *   request, but not every request needs to instantiate Mollom entity wrapper
+ *   classes.
+ * - WP's add_filter() does not support additional custom arguments per
+ *   registered callback.
+ * - Mollom's entity wrapper class needs to be re-used and re-accessed for
+ *   multiple hooks (e.g., form building vs. form validation).
+ * - WP form building, validation, and rendering stages are executed from
+ *   entirely different code paths (or even front controllers) that do not have
+ *   anything in common.
+ * - Only one entity of a certain entity type is processed by Mollom in a single
+ *   request.
+ *
+ * Given the constraints of WP's hook architecture, PHP 5.3's LSB would mostly
+ * eliminate this, but cannot be used due to WP's minimum compatibility with
+ * PHP 5.2.
+ */
+function mollom_dispatch_hook($has_args = NULL) {
+  static $instances = array();
+  static $mapping = array(
+    'comment_form_defaults' => array('MollomEntityComment', 'buildForm'),
+    'preprocess_comment' => array('MollomEntityComment', 'validateForm'),
+    'comment_post' => array('MollomEntityComment', 'saveMetaData'),
+  );
 
-add_filter('preprocess_comment', array('MollomEntity', 'validateForm'), 0);
-add_action('comment_form_before', array('MollomForm', 'beforeFormRendering'), -100);
-add_action('comment_form_after', array('MollomForm', 'afterFormRendering'), 100);
+  $filter = current_filter();
+  if (isset($mapping[$filter])) {
+    list($class, $method) = $mapping[$filter];
+    if (!isset($instances[$class])) {
+      $instances[$class] = new $class;
+    }
+    if (isset($has_args)) {
+      $args = func_get_args();
+      return call_user_func_array(array($instances[$class], $method), $args);
+    }
+    else {
+      return $instances[$class]->$method();
+    }
+  }
+}
+
+add_filter('comment_form_defaults', 'mollom_dispatch_hook');
+add_filter('preprocess_comment', 'mollom_dispatch_hook', 0);
+add_action('comment_post', 'mollom_dispatch_hook');
+
+
 
 /**
  * Returns the IP address of the client.

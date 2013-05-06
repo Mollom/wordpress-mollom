@@ -18,85 +18,16 @@
 class MollomForm {
 
   /**
-   * Form pre-render callback.
-   *
-   * Starts output buffering for MollomForm::afterFormRendering().
-   */
-  public static function beforeFormRendering() {
-    if (empty($_POST['mollom'])) {
-      return;
-    }
-    ob_start();
-  }
-
-  /**
-   * Form post-render callback.
-   *
-   * Re-injects previously submitted POST values back into a newly rendered form.
-   */
-  public static function afterFormRendering() {
-    if (empty($_POST['mollom'])) {
-      return;
-    }
-    // Retrieve the captured form output.
-    $output = ob_get_contents();
-    ob_end_clean();
-  
-    // Prepare all POST parameter values for re-injection.
-    $values = array();
-    foreach (explode('&', http_build_query($_POST)) as $param) {
-      list($key, $value) = explode('=', $param);
-      $values[urldecode($key)] = urldecode($value);
-    }
-  
-    // Re-inject all POST values into the form.
-    $dom = self::loadDOM($output);
-    foreach ($dom->getElementsByTagName('input') as $input) {
-      if ($name = $input->getAttribute('name')) {
-        if (isset($values[$name])) {
-          $input->setAttribute('value', $values[$name]);
-        }
-      }
-    }
-    foreach ($dom->getElementsByTagName('textarea') as $input) {
-      if ($name = $input->getAttribute('name')) {
-        if (isset($values[$name])) {
-          $input->nodeValue = htmlspecialchars($values[$name], ENT_QUOTES, 'UTF-8');
-        }
-      }
-    }
-    // Inject error messages.
-    // After form#commentform anchor/jump-target, but before form fields.
-    $form = $dom->getElementsByTagName('form')->item(0);
-    $errors = $dom->createElement('div');
-    $errors->setAttribute('class', 'p messages error');
-    if (count($_POST['_errors']) == 1) {
-      $errors->nodeValue = $_POST['_errors'][0];
-    }
-    else {
-      $list = $dom->createElement('ul');
-      foreach ($_POST['_errors'] as $message) {
-        $list->appendChild($dom->createElement('li', $message));
-      }
-      $errors->appendChild($list);
-    }
-    $form->insertBefore($errors, $form->firstChild);
-  
-    // Output the form again.
-    echo self::serializeDOM($dom);
-  }
-
-  /**
    * Parses an HTML snippet and returns it as a DOM object.
    *
    * This function loads the body part of a partial (X)HTML document and returns
    * a full DOMDocument object that represents this document.
    *
-   * @param $text
+   * @param string $text
    *   The partial (X)HTML snippet to load. Invalid markup will be corrected on
    *   import.
    *
-   * @return
+   * @return DOMDocument
    *   A DOMDocument that represents the loaded (X)HTML snippet.
    */
   public static function loadDOM($text) {
@@ -114,20 +45,68 @@ class MollomForm {
    * snippet. The resulting XHTML snippet will be properly formatted to be
    * compatible with HTML user agents.
    *
-   * @param $dom_document
+   * @param DOMDocument $dom_document
    *   A DOMDocument object to serialize, only the tags below
    *   the first <body> node will be converted.
    *
-   * @return
+   * @return string
    *   A valid (X)HTML snippet, as a string.
    */
   public static function serializeDOM($dom_document) {
     $body_node = $dom_document->getElementsByTagName('body')->item(0);
     $body_content = '';
+
+    foreach ($body_node->getElementsByTagName('script') as $node) {
+      self::escapeDOMCdataElement($dom_document, $node);
+    }
+
+    foreach ($body_node->getElementsByTagName('style') as $node) {
+      self::escapeDOMCdataElement($dom_document, $node, '/*', '*/');
+    }
+
     foreach ($body_node->childNodes as $child_node) {
       $body_content .= $dom_document->saveXML($child_node);
     }
     return $body_content;
+  }
+
+  /**
+   * Adds comments around the <!CDATA section in a dom element.
+   *
+   * DOMDocument::loadHTML in self::loadDOM() makes CDATA sections from the
+   * contents of inline script and style tags.  This can cause HTML 4 browsers to
+   * throw exceptions.
+   *
+   * This function attempts to solve the problem by creating a DocumentFragment
+   * and commenting the CDATA tag.
+   *
+   * @param DOMDocument $dom_document
+   *   The DOMDocument containing the $dom_element.
+   * @param DOMElement $dom_element
+   *   The element potentially containing a CDATA node.
+   * @param string $comment_start
+   *   String to use as a comment start marker to escape the CDATA declaration.
+   * @param string $comment_end
+   *   String to use as a comment end marker to escape the CDATA declaration.
+   */
+  public static function escapeDOMCdataElement($dom_document, $dom_element, $comment_start = '//', $comment_end = '') {
+    foreach ($dom_element->childNodes as $node) {
+      if (get_class($node) == 'DOMCdataSection') {
+        $embed_prefix = "\n<!--{$comment_start}--><![CDATA[{$comment_start} ><!--{$comment_end}\n";
+        $embed_suffix = "\n{$comment_start}--><!]]>{$comment_end}\n";
+
+        // Prevent invalid cdata escaping as this would throw a DOM error.
+        // This is the same behavior as found in libxml2.
+        // Related W3C standard: http://www.w3.org/TR/REC-xml/#dt-cdsection
+        // Fix explanation: http://en.wikipedia.org/wiki/CDATA#Nesting
+        $data = str_replace(']]>', ']]]]><![CDATA[>', $node->data);
+
+        $fragment = $dom_document->createDocumentFragment();
+        $fragment->appendXML($embed_prefix . $data . $embed_suffix);
+        $dom_element->appendChild($fragment);
+        $dom_element->removeChild($node);
+      }
+    }
   }
 
   /**
