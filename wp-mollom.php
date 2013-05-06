@@ -63,16 +63,6 @@ define( 'MOLLOM_CAPTCHA_RATE_LIMIT', 15);
  */
 define( 'MOLLOM_MODE_DISABLED', 0);
 
-/**
- * Form protection mode: text analysis with CAPTCHA fallback
- */
-define ( 'MOLLOM_MODE_ANALYSIS', 1);
-
-/**
- * Form protection mode: CAPTCHA only protection
- */
-define( 'MOLLOM_MODE_CAPTCHA', 2);
-
 spl_autoload_register('mollom_classloader');
 
 /**
@@ -200,10 +190,9 @@ if (is_admin()) {
 }
 
 // register the comment feedback when managing comments
-add_action('wp_set_comment_status', array('MollomAdmin', 'send_feedback'), 10, 2);
+add_action('wp_set_comment_status', array('MollomAdmin', 'sendFeedback'), 10, 2);
 
 // Register callback to delete associated mollom information
-add_action('delete_comment', array('MollomAdmin', 'delete_comment'));
 //add_filter('comment_row_actions', array('MollomAdmin', 'comment_actions'));
 
 
@@ -317,6 +306,8 @@ function mollom_preprocess_comment($comment) {
   // If there are errors, re-render the page containing the form.
   if ($errors) {
     $_POST['_errors'] = $errors;
+    add_action('wp_enqueue_scripts', array('MollomForm', 'enqueueScripts'));
+
     // @see http://codex.wordpress.org/Function_Reference/WP_Query
     $post = query_posts('p=' . $comment['comment_post_ID']);
     // @see template-loader.php

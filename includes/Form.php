@@ -124,6 +124,13 @@ class MollomForm {
   }
 
   /**
+   * Enqueues files for inclusion in the head of a page
+   */
+  public static function enqueueScripts() {
+    wp_enqueue_style('mollom', MOLLOM_PLUGIN_URL . '/css/mollom.css');
+  }
+
+  /**
    * Formats HTML for the privacy policy notice/link.
    *
    * @todo $options is specific to comment_form().

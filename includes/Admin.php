@@ -108,7 +108,7 @@ class MollomAdmin {
   public static function enqueueScripts($hook) {
     // Add CSS for the comment listing page.
     if ($hook == 'edit-comments.php') {
-      wp_enqueue_style('wp-mollom', MOLLOM_PLUGIN_URL . '/css/mollom-admin.css');
+      wp_enqueue_style('mollom', MOLLOM_PLUGIN_URL . '/css/mollom-admin.css');
     }
   }
 
@@ -232,32 +232,6 @@ class MollomAdmin {
   }
 
   /**
-   * Helper function
-   *
-   * Generate a checked=checked item for the captcha/analysis checkboxes on the configuration screen
-   *
-   * @todo refactor this
-   *
-   * @return string
-   */
-  protected static function mollom_protection_mode() {
-    $mollom_protection_mode = get_option('mollom_protection_mode', MOLLOM_MODE_ANALYSIS);
-    $mollom_parsed = array(
-        'analysis' => '',
-        'spam' => '',
-    );
-
-    if ($mollom_protection_mode['mode'] == MOLLOM_MODE_ANALYSIS) {
-      $mollom_parsed['analysis'] = ' checked="checked"';
-    }
-    elseif ($mollom_protection_mode['mode'] == MOLLOM_MODE_CAPTCHA) {
-      $mollom_parsed['spam'] = ' checked="checked"';
-    }
-
-    return $mollom_parsed;
-  }
-
-  /**
    * Callback. Show Mollom actions in the Comments table
    *
    * Show Mollom action links and status messages per commentinthe comments table.
@@ -308,40 +282,26 @@ class MollomAdmin {
   }
 
   /**
-   * Callback. Send feedback to Mollom on moderation
+   * Sends feedback to Mollom upon moderating a comment.
    *
    * When moderating comments from edit-comments.php, this callback will send
    * feedback if a comment status changes to 'trash', 'spam', 'hold', 'approve'.
    *
-   * @param unknown_type $comment_ID
-   * @param unknown_type $comment_status
+   * @param int $comment_ID
+   *   The comment ID.
+   * @param string $comment_status
+   *   The new comment status.
    */
-  public static function send_feedback($comment_ID, $comment_status) {
-    if ($comment_status == 'spam') {
-      $mollom_comment = new MollomComment();
-      $object = $mollom_comment->get($comment_ID);
-      if ($object) {
+  public static function sendFeedback($comment_ID, $comment_status) {
+    if ($comment_status == 'spam' || $comment_status == 'approve') {
+      if ($contentId = get_metadata('comment', $comment_id, 'mollom_content_id', TRUE)) {
         $data = array(
-          'reason' => 'spam',
-          'contentId' => $object->content_ID,
+          'reason' => $comment_status,
+          'contentId' => $contentId,
         );
-        $mollom = mollom();
-        $mollom->sendFeedback($data);
-        // @todo Find a way to display feedback as an admin notice in the interface.
+        mollom()->sendFeedback($data);
       }
     }
   }
 
-  /**
-   * Callback. Delete the comment record form the mollom table
-   *
-   * When a comment is deleted from the system, the corresponding record
-   * in the mollom table should be purged too.
-   *
-   * @param unknown_type $comment_ID
-   */
-  public static function delete_comment($comment_ID) {
-    $mollom_comment = new MollomComment();
-    $mollom_comment->delete($comment_ID);
-  }
 }
