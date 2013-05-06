@@ -61,17 +61,3 @@ function _mollom_render_template($template_file, $variables) {
   print $contents; // Return the contents
 }
 
-function mollom_nonce_field($action = -1) {
-  return wp_nonce_field($action);
-}
-
-/**
- * Helper function
- *
- * Include files, take care of paths
- * @param string $file
- *   The file name of an existing file in the includes/ folder
- */
-function mollom_include($file) {
-  require_once(MOLLOM_PLUGIN_PATH . '/includes/' . $file);
-}

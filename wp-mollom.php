@@ -81,29 +81,6 @@ function mollom() {
   return $instance;
 }
 
-/**
- * Factory class.
- * 
- * WP Mollom has a componentized architecture since not all the functionality
- * needs to be loaded everytime a request is made. When we are on the frontend,
- * the content checkinking class is loaded, if we are in the backend, only the
- * administration class with moderation, configuration,... functionality gets
- * loaded.
- */
-class WPMollomFactory {
-  static private $instance = NULL;
-
-  public static function get_instance() {
-    mollom_include('WPMollomBase.class.inc');
-    if (!self::$instance) {
-      mollom_include('WPMollomContent.class.inc');
-      self::$instance = new WPMollomContent();
-    }
-
-    return self::$instance;
-  }
-}
-
 // Note: Unlike code examples in Codex, we do not (ab)use object-oriented
 // programming for more than clean organization and automated loading of code,
 // unless WP Core learns how to use and adopt OO patterns in a proper way.
