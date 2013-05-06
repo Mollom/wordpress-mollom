@@ -6,7 +6,7 @@
  */
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not found');
+  header($_SERVER['SERVER_PROTOCOL'] . ' 403 Access denied');
   exit;
 }
 

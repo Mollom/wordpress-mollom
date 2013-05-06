@@ -87,13 +87,18 @@ add_action('wp_set_comment_status', array('MollomAdmin', 'sendFeedback'), 10, 2)
 // @todo Move into comment form bucket.
 
 add_filter('comment_form_default_fields', array('MollomForm', 'addMollomFields'));
+add_filter('comment_form_defaults', array('MollomForm', 'formatPrivacyPolicyLink'));
 
 add_filter('preprocess_comment', 'mollom_preprocess_comment', 0);
+add_action('comment_form_before', array('MollomForm', 'beforeFormRendering'), -100);
+add_action('comment_form_after', array('MollomForm', 'afterFormRendering'), 100);
+
 function mollom_preprocess_comment($comment) {
   // Exclude all posts performed from the administrative interface.
   if (is_admin()) {
     return $comment;
   }
+  // Check whether the user has any of the bypass access roles.
   $user = wp_get_current_user();
   $bypass_roles = array_keys(array_filter((array) get_option('mollom_bypass_roles', array())));
   if (array_intersect($user->roles, $bypass_roles)) {
@@ -158,7 +163,7 @@ function mollom_preprocess_comment($comment) {
 
   $errors = array();
 
-  // If we checked for spam, handle the spam classification result:
+  // Handle the spam classification result:
   if (isset($result['spamClassification'])) {
     $_POST['mollom']['spamClassification'] = $result['spamClassification'];
 
@@ -195,6 +200,7 @@ function mollom_preprocess_comment($comment) {
     }
   }
 
+  // Handle the profanity classification result:
   if (isset($result['profanityScore']) && $result['profanityScore'] >= 0.5) {
     $errors[] = __('Your submission has triggered the profanity filter and will not be accepted until the inappropriate language is removed.', MOLLOM_L10N);
   }
@@ -217,9 +223,6 @@ function mollom_preprocess_comment($comment) {
   return $comment;
 }
 
-add_action('comment_form_before', array('MollomForm', 'beforeFormRendering'), -100);
-add_action('comment_form_after', array('MollomForm', 'afterFormRendering'), 100);
-
 // @see comment_form()
 // @see site_url()
 // @see get_site_url()
@@ -230,8 +233,6 @@ function mollom_filter_site_url($url, $path) {
   }
   return $url;
 }
-
-add_filter('comment_form_defaults', array('MollomForm', 'formatPrivacyPolicyLink'));
 
 add_action('comment_post', 'mollom_entity_save_meta');
 function mollom_entity_save_meta($id) {
