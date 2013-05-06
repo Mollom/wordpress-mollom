@@ -33,15 +33,8 @@ spl_autoload_register('mollom_classloader');
  */
 function mollom_classloader($class) {
   if (strpos($class, 'Mollom') === 0) {
-    $dir = dirname(__FILE__);
-    // Literal classname as includes/MollomFoo.php.
-    if (file_exists($dir . "/includes/$class.php")) {
-      include_once $dir . "/includes/$class.php";
-    }
-    // Disambiguated classname as includes/Foo.php.
-    else {
-      include_once $dir . '/includes/' . substr($class, 6) . '.php';
-    }
+    // Classname as includes/Foo.php (without 'Mollom' prefix).
+    include_once dirname(__FILE__) . '/includes/' . substr($class, 6) . '.php';
   }
 }
 
