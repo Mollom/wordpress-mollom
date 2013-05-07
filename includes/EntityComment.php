@@ -53,7 +53,6 @@ class MollomEntityComment extends MollomEntity {
       'authorName' => $comment['comment_author'],
       'authorMail' => $comment['comment_author_email'],
       'authorUrl' => $comment['comment_author_url'],
-      'authorIp' => ip_address(),
     );
     if (!empty($comment['user_ID'])) {
       $data['authorId'] = $comment['user_ID'];
@@ -86,6 +85,20 @@ class MollomEntityComment extends MollomEntity {
 
     $comment['mollom_content_id'] = $data['contentId'];
     return $comment;
+  }
+
+  /**
+   * Reacts to comment status changes.
+   *
+   * When a spam comment is "unspammed", it might transition into either
+   * "approved", "unapproved", or alternatively even into trash. The target
+   * status is the original status, which is read from the internal
+   * '_wp_trash_meta_status' meta data value.
+   */
+  public function transitionStatus($new_status, $old_status, $comment) {
+    if ($old_status == 'spam' && $new_status != 'spam') {
+      $this->sendFeedback($comment->comment_ID, 'approve');
+    }
   }
 
 }

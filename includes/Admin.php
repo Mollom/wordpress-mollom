@@ -12,6 +12,10 @@ class MollomAdmin {
 
   public static function init() {
     self::registerSettings();
+
+    add_filter('manage_edit-comments_columns', array(__CLASS__, 'registerCommentsColumn'));
+    // @todo Consider to move this into MollomEntity.
+    add_action('manage_comments_custom_column', array(__CLASS__, 'formatMollomCell'), 10, 2);
   }
 
   /**
@@ -122,9 +126,6 @@ class MollomAdmin {
    */
   public static function registerPages() {
     add_options_page('Mollom settings', 'Mollom', 'manage_options', 'mollom', array(__CLASS__, 'settingsPage'));
-
-    add_action('manage_comments_custom_column', array(__CLASS__, 'mollom_comment_column_row'), 10, 2);
-    add_filter('manage_edit-comments_columns', array(__CLASS__, 'mollom_comments_columns'));
   }
 
   /**
@@ -193,19 +194,35 @@ class MollomAdmin {
   }
 
   /**
-   * Callback. Show Mollom actions in the Comments table
+   * Registers columns for the administrative comments table.
    *
-   * Show Mollom action links and status messages per commentinthe comments table.
+   * @param array $columns
+   *   An associative array of comment management table columns.
    *
-   * @param string $column The column name
-   * @param int $comment_id The comment ID
-   * @return string Rendered output
+   * @return array
+   *   The processed $columns array.
    */
-  public static function mollom_comment_column_row($column, $comment_id) {
+  public static function registerCommentsColumn($columns) {
+    $columns['mollom'] = 'Mollom';
+    return $columns;
+  }
+
+  /**
+   * Formats Mollom classifaction info for the administrative comments table.
+   *
+   * @param string $column
+   *   The currently processed table column name.
+   * @param int $id
+   *   The currently processed entity ID.
+   *
+   * @return string
+   *   The formatted table cell HTML content.
+   */
+  public static function formatMollomCell($column, $id) {
     if ($column != 'mollom') {
       return;
     }
-    $meta = get_metadata('comment', $comment_id, 'mollom', TRUE);
+    $meta = get_metadata('comment', $id, 'mollom', TRUE);
 
     if (isset($meta['spamClassification'])) {
       if ($meta['spamClassification'] == 'ham') {
@@ -219,45 +236,7 @@ class MollomAdmin {
       }
     }
     else {
-      // @todo Needless clutter? Leave the cell empty?
       echo '—';
-    }
-  }
-
-  /**
-   * Callback. Registers an extra column in the Comments table.
-   *
-   * Registers an extra column in the Comments section of wp-admin. This column
-   * is used to display Mollom specific status messages and actions per comment.
-   *
-   * @param array $columns an array of columns for a table
-   * @return array An array of columns for a table
-   */
-  public static function mollom_comments_columns($columns) {
-    $columns['mollom'] = 'Mollom';
-    return $columns;
-  }
-
-  /**
-   * Sends feedback to Mollom upon moderating a comment.
-   *
-   * When moderating comments from edit-comments.php, this callback will send
-   * feedback if a comment status changes to 'trash', 'spam', 'hold', 'approve'.
-   *
-   * @param int $comment_ID
-   *   The comment ID.
-   * @param string $comment_status
-   *   The new comment status.
-   */
-  public static function sendFeedback($comment_ID, $comment_status) {
-    if ($comment_status == 'spam' || $comment_status == 'approve') {
-      if ($contentId = get_metadata('comment', $comment_id, 'mollom_content_id', TRUE)) {
-        $data = array(
-          'reason' => $comment_status,
-          'contentId' => $contentId,
-        );
-        mollom()->sendFeedback($data);
-      }
     }
   }
 

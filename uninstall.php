@@ -10,6 +10,8 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
   exit;
 }
 
+// @todo Delete meta data.
+
 delete_option('mollom_public_key');
 delete_option('mollom_private_key');
 

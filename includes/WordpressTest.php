@@ -112,7 +112,7 @@ class MollomWordpressTest extends MollomWordpress {
     $oAuthStrategy = $this->oAuthStrategy;
     $this->oAuthStrategy = '';
     $result = $this->createSite(array(
-      'url' => get_option('siteurl', ''),
+      'url' => site_url(),
       'email' => get_option('site_mail', 'mollom-wordpress-test@example.com'),
     ));
     $this->oAuthStrategy = $oAuthStrategy;

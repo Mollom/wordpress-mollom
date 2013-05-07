@@ -119,6 +119,8 @@ abstract class MollomEntity {
     if ($this->isPrivileged()) {
       return $data;
     }
+    $data['authorIp'] = self::getAuthorIp();
+
     if (isset($_POST['mollom']['homepage']) && $_POST['mollom']['homepage'] !== '') {
       $data['honeypot'] = $_POST['mollom']['homepage'];
     }
@@ -318,13 +320,89 @@ abstract class MollomEntity {
     return $output;
   }
 
-  public function saveMetaData($id) {
+  /**
+   * Saves Mollom data for a processed entity.
+   *
+   * @see http://codex.wordpress.org/Metadata_API
+   */
+  public function save($id) {
     if (empty($_POST['mollom']['contentId'])) {
       return;
     }
+    // Save meta data.
     add_metadata($this->getType(), $id, 'mollom', $_POST['mollom']);
+
     // Store the contentId separately to enable reverse-mapping lookups for CMP.
     add_metadata($this->getType(), $id, 'mollom_content_id', $_POST['mollom']['contentId']);
+  }
+
+  /**
+   * Sends feedback to Mollom.
+   *
+   * @param int $id
+   *   The entity ID.
+   * @param string $status
+   *   The new status of the entity.
+   */
+  public function sendFeedback($id, $status) {
+    if ($status == 'spam' || $status == 'approve') {
+      if ($contentId = get_metadata($this->getType(), $id, 'mollom_content_id', TRUE)) {
+        $data = array(
+          'reason' => $status,
+          'contentId' => $contentId,
+        );
+        mollom()->sendFeedback($data);
+      }
+    }
+  }
+
+  /**
+   * Returns the IP address of the client.
+   *
+   * If the app is behind a reverse proxy, we use the X-Forwarded-For header
+   * instead of $_SERVER['REMOTE_ADDR'], which would be the IP address of
+   * the proxy server, and not the client's. The actual header name can be
+   * configured by the reverse_proxy_header variable.
+   *
+   * @return
+   *   IP address of client machine, adjusted for reverse proxy and/or cluster
+   *   environments.
+   *
+   * @see http://api.drupal.org/api/drupal/includes!bootstrap.inc/function/ip_address/7
+   */
+  public static function getAuthorIp() {
+    static $ip_address;
+
+    if (!isset($ip_address)) {
+      $ip_address = $_SERVER['REMOTE_ADDR'];
+
+      if ($reverse_proxy_addresses = get_option('mollom_reverse_proxy_addresses', '')) {
+        $reverse_proxy_addresses = array_filter(array_map('trim', explode(',', $reverse_proxy_addresses)));
+        $reverse_proxy_header = 'HTTP_X_FORWARDED_FOR';
+
+        if (!empty($_SERVER[$reverse_proxy_header])) {
+          // If an array of known reverse proxy IPs is provided, then trust
+          // the XFF header if request really comes from one of them.
+          $reverse_proxy_addresses = (array) $reverse_proxy_addresses;
+
+          // Turn XFF header into an array.
+          $forwarded = explode(',', $_SERVER[$reverse_proxy_header]);
+
+          // Trim the forwarded IPs; they may have been delimited by commas and spaces.
+          $forwarded = array_map('trim', $forwarded);
+
+          // Tack direct client IP onto end of forwarded array.
+          $forwarded[] = $ip_address;
+
+          // Eliminate all trusted IPs.
+          $untrusted = array_diff($forwarded, $reverse_proxy_addresses);
+
+          // The right-most IP is the most specific we can trust.
+          $ip_address = array_pop($untrusted);
+        }
+      }
+    }
+    return $ip_address;
   }
 
 }
