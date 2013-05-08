@@ -848,6 +848,49 @@ abstract class Mollom {
   }
 
   /**
+   * Retrieves GET/HEAD or POST/PUT parameters of an inbound HTTP request.
+   *
+   * @return array
+   *   An array containing either GET/HEAD query string parameters or POST/PUT
+   *   post body parameters. Parameter parsing accounts for multiple request
+   *   parameters in non-PHP format; e.g., 'foo=one&foo=bar'.
+   */
+  public static function getServerParameters() {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'HEAD') {
+      $data = self::httpParseQuery($_SERVER['QUERY_STRING']);
+    }
+    elseif ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PUT') {
+      $data = self::httpParseQuery(file_get_contents('php://input'));
+    }
+    return $data;
+  }
+
+  /**
+   * Retrieves the OAuth Authorization header of an inbound HTTP request.
+   *
+   * @return array
+   *   An array containing all key/value pairs extracted out of the
+   *   'Authorization' HTTP header, if any.
+   */
+  public static function getServerAuthentication() {
+    $header = array();
+    if (function_exists('apache_request_headers')) {
+      $headers = apache_request_headers();
+      if (isset($headers['Authorization'])) {
+        $input = $headers['Authorization'];
+      }
+    }
+    elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+      $input = $_SERVER['HTTP_AUTHORIZATION'];
+    }
+    if (isset($input)) {
+      preg_match_all('@([^, =]+)="([^"]*)"@', $input, $header);
+      $header = array_combine($header[1], $header[2]);
+    }
+    return $header;
+  }
+
+  /**
    * Retrieves a list of sites accessible to this client.
    *
    * Used by Mollom resellers only.
