@@ -17,26 +17,35 @@ if (!function_exists('add_action')) {
 }
 
 /**
- * Localization text domain.
+ * Gettext localization domain.
  */
-define('MOLLOM_L10N', 'mollom');
+if (!defined('MOLLOM_L10N')) {
+  define('MOLLOM_L10N', 'mollom');
+}
 
-// Use plugins_url() instead of plugin_dir_url() to avoid trailing slash.
-define('MOLLOM_PLUGIN_URL', plugins_url('', __FILE__));
+/**
+ * The base URL to this plugin.
+ *
+ * Use plugins_url() instead of plugin_dir_url() to avoid trailing slash.
+ */
+if (!defined('MOLLOM_PLUGIN_URL')) {
+  define('MOLLOM_PLUGIN_URL', plugins_url('', __FILE__));
+}
 
 spl_autoload_register('mollom_classloader');
 
 /**
  * Registers the plugin activation callback.
  *
- * The first argument must not point to this file, since the WP core plugin
- * activation process attempts to verify whether a plugin can be safely enabled
- * in a "sandbox" first. This sandbox does not run in a separate process and
- * thus fails to account for PHP constants (which can be defined only once),
- * so the plugin activation succeeds, but reports a bogus warning about
- * "unexpected output" after doing so.
+ * The WP core plugin activation process attempts to verify whether a plugin can
+ * be safely enabled in a "sandbox" first. This sandbox does not run in a
+ * separate process and thus fails to account for PHP constants (which can be
+ * defined only once), so the plugin activation succeeds, but reports a bogus
+ * warning about "unexpected output" after doing so.
+ *
+ * Therefore all constants defined above have to be wrapped into conditions.
  */
-register_activation_hook(dirname(__FILE__) . '/includes/MollomSchema.php', array('MollomSchema', 'install'));
+register_activation_hook(__FILE__, array('MollomSchema', 'install'));
 
 // Register hook callbacks.
 // Note: Unlike code examples in Codex, we do not (ab)use object-oriented
@@ -122,7 +131,7 @@ function mollom_dispatch_hook($has_args = NULL) {
 function mollom_classloader($class) {
   if (strpos($class, 'Mollom') === 0) {
     // Classname as includes/Foo.php (without 'Mollom' prefix).
-    include_once dirname(__FILE__) . '/includes/' . substr($class, 6) . '.php';
+    include dirname(__FILE__) . '/includes/' . substr($class, 6) . '.php';
   }
 }
 
