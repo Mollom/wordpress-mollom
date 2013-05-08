@@ -12,7 +12,7 @@
 */
 
 if (!function_exists('add_action')) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not found');
+  header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
   exit;
 }
 
@@ -63,6 +63,7 @@ function mollom() {
 // programming for more than clean organization and automated loading of code,
 // unless WP Core learns how to use and adopt OO patterns in a proper way.
 // @see http://phptherightway.com
+register_activation_hook(__FILE__, array('MollomSchema', 'install'));
 if (is_admin()) {
   add_action('admin_init', array('MollomAdmin', 'init'));
   add_action('admin_menu', array('MollomAdmin', 'registerPages'));
@@ -97,8 +98,10 @@ function mollom_dispatch_hook($has_args = NULL) {
     'comment_form_defaults' => array('MollomEntityComment', 'buildForm'),
     'preprocess_comment' => array('MollomEntityComment', 'validateForm'),
     'comment_post' => array('MollomEntityComment', 'save'),
+    'delete_comment' => array('MollomEntityComment', 'delete'),
     'wp_set_comment_status' => array('MollomEntityComment', 'sendFeedback'),
     'transition_comment_status' => array('MollomEntityComment', 'transitionStatus'),
+    'mollom_moderate_comment' => array('MollomEntityComment', 'moderate'),
   );
 
   $filter = current_filter();
@@ -120,10 +123,29 @@ function mollom_dispatch_hook($has_args = NULL) {
 add_filter('comment_form_defaults', 'mollom_dispatch_hook');
 add_filter('preprocess_comment', 'mollom_dispatch_hook', 0);
 add_action('comment_post', 'mollom_dispatch_hook');
+add_action('delete_comment', 'mollom_dispatch_hook');
 add_action('wp_set_comment_status', 'mollom_dispatch_hook', 10, 2);
 add_action('transition_comment_status', 'mollom_dispatch_hook', 10, 3);
+add_action('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
 
+add_action('init', 'mollom_moderate');
 
+/**
+ * Init callback; Intercepts a Mollom moderation request.
+ */
+function mollom_moderate() {
+  // Intercept and handle Mollom moderation requests.
+  // WP core does not provide a means of registering proper routes, except for
+  // its Rewrite API. However, the WP Rewrite subsystem is 1) customizable
+  // whereas this endpoint is not, and 2) not generic enough to work for custom
+  // routes. Thus, this seems to be the only viable solution.
+  // @todo Most likely fails on sites that don't have pretty URLs enabled.
+  if (preg_match('@/mollom/moderate/(?P<contentId>[^/]+)/(?P<action>[^/]+)$@', $_SERVER['REQUEST_URI'], $args)) {
+    echo (int) MollomModeration::handleRequest($args['contentId'], $args['action']);
+    //error_log(var_export(MollomModeration::$log, TRUE), 3, __DIR__ . '/includes/log.log');
+    exit;
+  }
+}
 
 add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
 

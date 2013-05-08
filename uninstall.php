@@ -6,10 +6,11 @@
  */
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 403 Access denied');
+  header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
   exit;
 }
 
+// @todo Delete mollom table.
 // @todo Delete meta data.
 
 delete_option('mollom_public_key');

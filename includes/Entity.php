@@ -329,11 +329,60 @@ abstract class MollomEntity {
     if (empty($_POST['mollom']['contentId'])) {
       return;
     }
+    // Notify that the entity was stored.
+    $data = array(
+      'id' => $_POST['mollom']['contentId'],
+      'stored' => 1,
+    );
+    mollom()->checkContent($data);
     // Save meta data.
     add_metadata($this->getType(), $id, 'mollom', $_POST['mollom']);
 
-    // Store the contentId separately to enable reverse-mapping lookups for CMP.
+    // Store the reverse-mapping.
+    // @todo Remove after double-checking WP_Query meta data support.
+    //   See also sendFeedback().
     add_metadata($this->getType(), $id, 'mollom_content_id', $_POST['mollom']['contentId']);
+
+    global $wpdb;
+    $updated = $wpdb->update($wpdb->prefix . 'mollom',
+      array('content_id' => $_POST['mollom']['contentId']),
+      array('entity_type' => $this->getType(), 'entity_id' => $id),
+      array('%s'),
+      array('%s', '%d')
+    );
+    if (!$updated) {
+      $wpdb->insert($wpdb->prefix . 'mollom',
+        array(
+          'entity_type' => $this->getType(),
+          'entity_id' => $id,
+          'content_id' => $_POST['mollom']['contentId'],
+          'created' => time(),
+        ),
+        array('%s', '%d', '%s', '%d')
+      );
+    }
+  }
+
+  /**
+   * Acts upon deletion of an entity.
+   *
+   * @param int $id
+   *   The entity ID that is about to be deleted.
+   */
+  public function delete($id) {
+    if ($contentId = get_metadata($this->getType(), $id, 'mollom_content_id', TRUE)) {
+      $data = array(
+        'id' => $contentId,
+        'stored' => 0,
+      );
+      mollom()->checkContent($data);
+    }
+    global $wpdb;
+    $table = $wpdb->prefix . 'mollom';
+    $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE entity_type = '%s' AND entity_id = %d", array(
+      $this->getType(),
+      $id,
+    )));
   }
 
   /**
@@ -354,6 +403,21 @@ abstract class MollomEntity {
         mollom()->sendFeedback($data);
       }
     }
+  }
+
+  /**
+   * Moderates an entity.
+   *
+   * @param int $id
+   *   The entity ID.
+   * @param string $action
+   *   The moderation action to perform.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on error.
+   */
+  public function moderate($id, $action) {
+    // No-op. There is no common denominator for all entity types in WP.
   }
 
   /**

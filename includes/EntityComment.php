@@ -101,4 +101,22 @@ class MollomEntityComment extends MollomEntity {
     }
   }
 
+  /**
+   * Moderates an entity.
+   *
+   * @param int $id
+   *   The entity ID.
+   * @param string $action
+   *   The moderation action to perform.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on error.
+   */
+  public function moderate($id, $action) {
+    if ($action == 'delete') {
+      $action = 'trash';
+    }
+    return wp_set_comment_status($id, $action);
+  }
+
 }
