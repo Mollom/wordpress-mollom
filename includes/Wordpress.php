@@ -51,7 +51,7 @@ class MollomWordpress extends Mollom {
     if (!function_exists('get_plugin_data')) {
       require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
-    $meta = get_plugin_data(dirname(dirname(__FILE__)) . '/wp-mollom.php', FALSE, FALSE);
+    $meta = get_plugin_data(dirname(dirname(__FILE__)) . '/mollom.php', FALSE, FALSE);
     $data = array(
       'platformName' => 'Wordpress',
       'platformVersion' => $wp_version,
