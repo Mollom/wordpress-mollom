@@ -1,3 +1,8 @@
+# The bundled MollomPHP library (+ history) is integrated into the mainline and
+# should be updated via git-subtree:
+# https://github.com/sun/git-subtree
+# To update, run:
+#   git subtree pull --prefix=lib
 [subtree "lib"]
 	url = git://github.com/Mollom/MollomPHP.git
 	path = lib
