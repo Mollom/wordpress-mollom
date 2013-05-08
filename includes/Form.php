@@ -18,6 +18,36 @@
 class MollomForm {
 
   /**
+   * Unescapes user input.
+   *
+   * We'll not make ourselves friends, but it has to be stated this bluntly:
+   *
+   * WP core apparently has no idea at all what "user input" really means and
+   * how to deal with user input in a web application layer.
+   *
+   * All available original user input is unconditionally passed through
+   * *database* query string escaping functions and is replaced without backup.
+   * That logic essentially resembles PHP's magic_quotes_gpc, which is not
+   * only discouraged and deprecated, but even has been removed from PHP core
+   * for 5.4. The inappropriate munging of user input happens during WP's
+   * bootstrap. All existing WP core + plugin functionality factually depends
+   * on it.
+   *
+   * @see wp_magic_quotes()
+   * @see add_magic_quotes()
+   * @see addslashes_gpc()
+   *
+   * @param array $input
+   *   The bogusly escaped user input.
+   *
+   * @return array
+   *   Fixed user $input.
+   */
+  public static function unescapeUserInput($input) {
+    return stripslashes_deep($input);
+  }
+
+  /**
    * Parses an HTML snippet and returns it as a DOM object.
    *
    * This function loads the body part of a partial (X)HTML document and returns

@@ -139,6 +139,8 @@ function mollom_moderate() {
   // its Rewrite API. However, the WP Rewrite subsystem is 1) customizable
   // whereas this endpoint is not, and 2) not generic enough to work for custom
   // routes. Thus, this seems to be the only viable solution.
+  // @see http://codex.wordpress.org/Rewrite_API
+  // @see http://codex.wordpress.org/Plugin_API/Action_Reference/init
   // @todo Most likely fails on sites that don't have pretty URLs enabled.
   if (preg_match('@/mollom/moderate/(?P<contentId>[^/]+)/(?P<action>[^/]+)$@', $_SERVER['REQUEST_URI'], $args)) {
     echo (int) MollomModeration::handleRequest($args['contentId'], $args['action']);

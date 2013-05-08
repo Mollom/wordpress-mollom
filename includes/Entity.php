@@ -119,6 +119,11 @@ abstract class MollomEntity {
     if ($this->isPrivileged()) {
       return $data;
     }
+    // Unescape all user input.
+    // Most entity-specific values in $data are derived from WP core's bogusly
+    // munged user input or helper functions that equally munge data objects.
+    $data = MollomForm::unescapeUserInput($data);
+
     $data['authorIp'] = self::getAuthorIp();
 
     if (isset($_POST['mollom']['homepage']) && $_POST['mollom']['homepage'] !== '') {
@@ -154,7 +159,7 @@ abstract class MollomEntity {
 
     if (!is_array($result) || !isset($result['id'])) {
       if (get_option('mollom_fallback_mode', 'accept') == 'accept') {
-        return $comment;
+        return $data;
       }
       $title = __('Service unavailable', MOLLOM_L10N);
       $msg = __('The spam filter installed on this site is currently unavailable. Per site policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple of minutes.', MOLLOM_L10N);
@@ -262,8 +267,9 @@ abstract class MollomEntity {
     ob_end_clean();
   
     // Prepare all POST parameter values for re-injection.
+    $input = MollomForm::unescapeUserInput($_POST);
     $values = array();
-    foreach (explode('&', http_build_query($_POST)) as $param) {
+    foreach (explode('&', http_build_query($input)) as $param) {
       list($key, $value) = explode('=', $param);
       $values[urldecode($key)] = urldecode($value);
     }
