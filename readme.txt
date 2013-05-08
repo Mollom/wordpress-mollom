@@ -2,7 +2,7 @@
 Contributors: netsensei, tha_sun
 Donate link: http://mollom.com
 Tags: comments, spam, social, content, moderation, captcha
-Requires at least: 3.5.0
+Requires at least: 3.1.0
 Tested up to: 3.5.1
 Stable tag: trunk
 License: GPLv2 or later
