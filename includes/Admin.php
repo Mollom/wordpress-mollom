@@ -139,6 +139,19 @@ class MollomAdmin {
   }
 
   /**
+   * Outputs a warning when testing mode is (still) enabled.
+   *
+   * @see http://codex.wordpress.org/Plugin_API/Action_Reference/admin_notices
+   */
+  public static function testingModeWarning() {
+    if (get_option('mollom_testing_mode')) {
+      print '<div class="updated"><p>';
+      print sprintf(__('Mollom testing mode is still enabled. <a href="%s">Disable</a> it after testing.', MOLLOM_L10N), admin_url('options-general.php?page=mollom'));
+      print '</p></div>';
+    }
+  }
+
+  /**
    * Page callback; Presents the Mollom settings options page.
    */
   public static function settingsPage() {

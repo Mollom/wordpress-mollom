@@ -68,6 +68,7 @@ if (is_admin()) {
   add_action('admin_init', array('MollomAdmin', 'init'));
   add_action('admin_menu', array('MollomAdmin', 'registerPages'));
   add_action('admin_enqueue_scripts', array('MollomAdmin', 'enqueueScripts'));
+  add_action('admin_notices', array('MollomAdmin', 'testingModeWarning'));
 }
 
 /**
