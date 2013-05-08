@@ -1,0 +1,12 @@
+
+.messages {
+  margin: 0.5em 0 1em;
+  padding: 0.5em 1em;
+}
+.messages.error {
+  background-color: #ffebe8;
+  border: #c00 1px solid;
+}
+.messages > ul {
+  padding: 0 1em;
+}
