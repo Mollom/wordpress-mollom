@@ -8,7 +8,7 @@
   Description: Protects you from spam and unwanted posts. <strong>Get started:</strong> 1) <em>Activate</em>, 2) <a href="//mollom.com/pricing">Sign up</a> and create API keys, 3) Set them in <a href="options-general.php?page=mollom">settings</a>.
   Author: Matthias Vandermaesen
   Author URI: http://www.colada.be
-  License: GPLv2 or later
+  License: GPLv2 or later; see LICENSE.md
 */
 
 if (!function_exists('add_action')) {
