@@ -27,49 +27,42 @@ define('MOLLOM_PLUGIN_URL', plugins_url('', __FILE__));
 spl_autoload_register('mollom_classloader');
 
 /**
- * Loads Mollom* classes.
+ * Registers the plugin activation callback.
  *
- * @see spl_autoload_register()
+ * The first argument must not point to this file, since the WP core plugin
+ * activation process attempts to verify whether a plugin can be safely enabled
+ * in a "sandbox" first. This sandbox does not run in a separate process and
+ * thus fails to account for PHP constants (which can be defined only once),
+ * so the plugin activation succeeds, but reports a bogus warning about
+ * "unexpected output" after doing so.
  */
-function mollom_classloader($class) {
-  if (strpos($class, 'Mollom') === 0) {
-    // Classname as includes/Foo.php (without 'Mollom' prefix).
-    include_once dirname(__FILE__) . '/includes/' . substr($class, 6) . '.php';
-  }
-}
+register_activation_hook(dirname(__FILE__) . '/includes/MollomSchema.php', array('MollomSchema', 'install'));
 
-/**
- * Instantiates a new Mollom client (once).
- */
-function mollom() {
-  static $instance;
-
-  // The only class that is not covered by mollom_classloader().
-  require_once dirname(__FILE__) . '/lib/mollom.class.inc';
-
-  $class = 'MollomWordpress';
-  if (get_option('mollom_testing_mode', FALSE)) {
-    $class = 'MollomWordpressTest';
-  }
-  // If there is no instance yet or if it is not of the desired class, create a
-  // new one.
-  if (!isset($instance) || !($instance instanceof $class)) {
-    $instance = new $class();
-  }
-  return $instance;
-}
-
+// Register hook callbacks.
 // Note: Unlike code examples in Codex, we do not (ab)use object-oriented
 // programming for more than clean organization and automated loading of code,
 // unless WP Core learns how to use and adopt OO patterns in a proper way.
 // @see http://phptherightway.com
-register_activation_hook(__FILE__, array('MollomSchema', 'install'));
+// Note the priority argument semantics (4th argument to add_filter/add_action):
+//   WordPress $priority == Drupal $weight != Symfony $priority
 if (is_admin()) {
   add_action('admin_init', array('MollomAdmin', 'init'));
   add_action('admin_menu', array('MollomAdmin', 'registerPages'));
   add_action('admin_enqueue_scripts', array('MollomAdmin', 'enqueueScripts'));
   add_action('admin_notices', array('MollomAdmin', 'testingModeWarning'));
 }
+
+add_filter('comment_form_defaults', 'mollom_dispatch_hook');
+add_filter('preprocess_comment', 'mollom_dispatch_hook', 0);
+add_action('comment_post', 'mollom_dispatch_hook');
+add_action('delete_comment', 'mollom_dispatch_hook');
+add_action('wp_set_comment_status', 'mollom_dispatch_hook', 10, 2);
+add_action('transition_comment_status', 'mollom_dispatch_hook', 10, 3);
+add_action('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
+
+add_action('init', 'mollom_moderate');
+
+add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
 
 /**
  * Dispatches filter/action hooks to class instances.
@@ -121,15 +114,38 @@ function mollom_dispatch_hook($has_args = NULL) {
   }
 }
 
-add_filter('comment_form_defaults', 'mollom_dispatch_hook');
-add_filter('preprocess_comment', 'mollom_dispatch_hook', 0);
-add_action('comment_post', 'mollom_dispatch_hook');
-add_action('delete_comment', 'mollom_dispatch_hook');
-add_action('wp_set_comment_status', 'mollom_dispatch_hook', 10, 2);
-add_action('transition_comment_status', 'mollom_dispatch_hook', 10, 3);
-add_action('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
+/**
+ * Loads Mollom* classes.
+ *
+ * @see spl_autoload_register()
+ */
+function mollom_classloader($class) {
+  if (strpos($class, 'Mollom') === 0) {
+    // Classname as includes/Foo.php (without 'Mollom' prefix).
+    include_once dirname(__FILE__) . '/includes/' . substr($class, 6) . '.php';
+  }
+}
 
-add_action('init', 'mollom_moderate');
+/**
+ * Instantiates a new Mollom client (once).
+ */
+function mollom() {
+  static $instance;
+
+  // The only class that is not covered by mollom_classloader().
+  require_once dirname(__FILE__) . '/lib/mollom.class.inc';
+
+  $class = 'MollomWordpress';
+  if (get_option('mollom_testing_mode', FALSE)) {
+    $class = 'MollomWordpressTest';
+  }
+  // If there is no instance yet or if it is not of the desired class, create a
+  // new one.
+  if (!isset($instance) || !($instance instanceof $class)) {
+    $instance = new $class();
+  }
+  return $instance;
+}
 
 /**
  * Init callback; Intercepts a Mollom moderation request.
@@ -149,8 +165,6 @@ function mollom_moderate() {
     exit;
   }
 }
-
-add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
 
 function mollom_die_handler_callback($function, $return_last = FALSE) {
   static $last_callback;
