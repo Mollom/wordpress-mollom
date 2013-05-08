@@ -36,11 +36,31 @@ abstract class Mollom {
   const RESPONSE_ERROR = 511;
 
   /**
-   * Server communication failure code: Authentication error.
+   * Client communication failure code: Bad request.
+   *
+   * Used in case of a too large system time offset from UTC.
+   *
+   * @see MollomBadRequestException
+   * @see Mollom::TIME_OFFSET_MAX
+   */
+  const REQUEST_ERROR = 400;
+
+  /**
+   * Client communication failure code: Authentication error.
    *
    * @see MollomAuthenticationException
    */
   const AUTH_ERROR = 401;
+
+  /**
+   * Maximum allowed time offset from UTC in seconds allowed for the client's local time.
+   *
+   * @see Mollom::handleRequest()
+   * @see MollomBadRequestException
+   *
+   * @var integer
+   */
+  const TIME_OFFSET_MAX = 300;
 
   /**
    * The public Mollom API key to use for request authentication.
@@ -79,6 +99,7 @@ abstract class Mollom {
    * Maximum number of attempts for a request to a Mollom server.
    *
    * @see Mollom::query()
+   * @see Mollom::$requestTimeout
    *
    * @var integer
    */
@@ -87,11 +108,22 @@ abstract class Mollom {
   /**
    * Seconds in which a request to a Mollom server times out.
    *
+   * Mollom servers usually respond within a few milliseconds. However, if a
+   * server is under very high load, or in case of networking issues, a response
+   * might take longer. A maximum response time of 3 seconds ensures that the
+   * client waits long enough in edge-cases, but also not too long in case a
+   * particular server is unreachable.
+   *
+   * The timeout applies per request. Mollom::query() will retry a request until
+   * it reaches Mollom::$requestMaxAttempts. With the default values, a Mollom
+   * API call has a total timeout of 6 seconds in case of a server failure.
+   *
    * @see Mollom::request()
+   * @see Mollom::$requestMaxAttempts
    *
    * @var float
    */
-  public $requestTimeout = 1.0;
+  public $requestTimeout = 3.0;
 
   /**
    * The status code of the last server response, or TRUE if the request succeeded.
@@ -99,6 +131,7 @@ abstract class Mollom {
    * If not TRUE, then the value is either one of
    * - Mollom::NETWORK_ERROR
    * - Mollom::RESPONSE_ERROR
+   * - Mollom::REQUEST_ERROR
    * - Mollom::AUTH_ERROR
    * or the actual HTTP status code returned by the server.
    *
@@ -253,7 +286,7 @@ abstract class Mollom {
    * @see Mollom::handleRequest()
    * @see Mollom::request()
    */
-  protected function query($method, $path, array $data = array(), array $expected = array()) {
+  public function query($method, $path, array $data = array(), array $expected = array()) {
     // Reset list response properties.
     $this->listCount = NULL;
     $this->listOffset = 0;
@@ -265,6 +298,10 @@ abstract class Mollom {
     while ($max_attempts--) {
       try {
         $result = $this->handleRequest($method, $server, $path, $data, $expected);
+      }
+      catch (MollomBadRequestException $e) {
+        // This is an irrecoverable error, so don't try further.
+        break;
       }
       catch (MollomAuthenticationException $e) {
         // This is an irrecoverable error, so don't try further.
@@ -313,6 +350,11 @@ abstract class Mollom {
     // If the last request succeeded but there was a unexpected response, return
     // the error code.
     if ($this->lastResponseCode === self::RESPONSE_ERROR) {
+      return $this->lastResponseCode;
+    }
+    // Return a request error, which always requires to take client-side
+    // measures to resolve the problem.
+    if ($this->lastResponseCode === self::REQUEST_ERROR) {
       return $this->lastResponseCode;
     }
     // Return an authentication error, which may require special client-side
@@ -439,39 +481,45 @@ abstract class Mollom {
       }
     }
 
+    $request_info = array(
+      'request' => $method . ' ' . $server . '/' . $path,
+      'headers' => $headers,
+      'data' => $data,
+      'response_code' => $response->code,
+      'response_message' => $response->message,
+      'response' => !empty($response->data) ? $response->data : $response->body,
+    );
     if ($response->isError) {
-      $arguments = array(
-        'request' => $method . ' ' . $server . '/' . $path,
-        'headers' => $headers,
-        'data' => $data,
-        'response' => !empty($response->data) ? $response->data : $response->body,
-      );
       if ($response->code <= 0) {
-        throw new MollomNetworkException('Network error.', self::NETWORK_ERROR, NULL, $this, $arguments);
+        throw new MollomNetworkException('Network error.', self::NETWORK_ERROR, NULL, $this, $request_info);
       }
       if ($response->code == self::AUTH_ERROR) {
-        throw new MollomAuthenticationException('Invalid authentication.', self::AUTH_ERROR, NULL, $this, $arguments);
+        // Check whether authentication failed due to a too large time offset.
+        if (isset($response->headers['date'])) {
+          // Parse the 'Date' HTTP header in the response into a UNIX timestamp;
+          // strtotime() normally performs poorly on date operations, but in
+          // this case, there is a standardized date format and timezone
+          // conversion, so it is safe to use.
+          $offset = abs(time() - strtotime($response->headers['date']));
+          // The abs() above turns a negative offset into an absolute integer
+          // value, so the difference is always positive.
+          if ($offset > self::TIME_OFFSET_MAX) {
+            throw new MollomBadRequestException(sprintf('Invalid client system time: Too large offset from UTC: %s seconds.', $offset), self::REQUEST_ERROR, NULL, $this, $request_info);
+          }
+        }
+        throw new MollomAuthenticationException('Invalid authentication.', self::AUTH_ERROR, NULL, $this, $request_info);
       }
       if ($response->code == self::RESPONSE_ERROR || $response->code >= 500) {
-        throw new MollomResponseException($response->message, $response->code, NULL, $this, $arguments);
+        throw new MollomResponseException($response->message, $response->code, NULL, $this, $request_info);
       }
-      throw new MollomException($response->message, $response->code, NULL, $this, $arguments);
+      throw new MollomException($response->message, $response->code, NULL, $this, $request_info);
     }
     else {
       $this->lastResponseCode = TRUE;
+      // No message is logged in case of success.
       $this->log[] = array(
         'severity' => 'debug',
-        'message' => '@code @method @uri',
-        'arguments' => array(
-          '@code' => $response->code,
-          '@method' => $method,
-          '@uri' => $path,
-        ),
-        'request' => $method . ' ' . $server . '/' . $path,
-        'headers' => $headers,
-        'data' => $data,
-        'response' => $response->data,
-      );
+      ) + $request_info;
 
       return $response->data;
     }
@@ -736,7 +784,17 @@ abstract class Mollom {
     // value. (3.4.1.3.2)
     sort($params, SORT_STRING);
 
-    return implode('&', $params);
+    $result = implode('&', $params);
+    // Prior to PHP 5.3.0, rawurlencode encoded tildes (~) as per RFC 1738.
+    // Percent-encoded octets corresponding to unreserved characters can be
+    // decoded at any time. For example, the octet corresponding to the tilde
+    // ("~") character is often encoded as "%7E" by older URI processing
+    // implementations; the "%7E" can be replaced by "~" without changing its
+    // interpretation.
+    // @see http://php.net/manual/en/function.rawurlencode.php
+    // @see http://tools.ietf.org/html/rfc3986#section-2.3
+    $result = str_replace('%7E', '~', $result);
+    return $result;
   }
 
   /**
@@ -787,6 +845,49 @@ abstract class Mollom {
     // Parse query string as usual.
     parse_str($query, $result);
     return $result;
+  }
+
+  /**
+   * Retrieves GET/HEAD or POST/PUT parameters of an inbound HTTP request.
+   *
+   * @return array
+   *   An array containing either GET/HEAD query string parameters or POST/PUT
+   *   post body parameters. Parameter parsing accounts for multiple request
+   *   parameters in non-PHP format; e.g., 'foo=one&foo=bar'.
+   */
+  public static function getServerParameters() {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'HEAD') {
+      $data = self::httpParseQuery($_SERVER['QUERY_STRING']);
+    }
+    elseif ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PUT') {
+      $data = self::httpParseQuery(file_get_contents('php://input'));
+    }
+    return $data;
+  }
+
+  /**
+   * Retrieves the OAuth Authorization header of an inbound HTTP request.
+   *
+   * @return array
+   *   An array containing all key/value pairs extracted out of the
+   *   'Authorization' HTTP header, if any.
+   */
+  public static function getServerAuthentication() {
+    $header = array();
+    if (function_exists('apache_request_headers')) {
+      $headers = apache_request_headers();
+      if (isset($headers['Authorization'])) {
+        $input = $headers['Authorization'];
+      }
+    }
+    elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+      $input = $_SERVER['HTTP_AUTHORIZATION'];
+    }
+    if (isset($input)) {
+      preg_match_all('@([^, =]+)="([^"]*)"@', $input, $header);
+      $header = array_combine($header[1], $header[2]);
+    }
+    return $header;
   }
 
   /**
@@ -892,12 +993,14 @@ abstract class Mollom {
    *
    * @return mixed
    *   TRUE on success. On failure, the error response code returned by the
-   *   server; either Mollom::AUTH_ERROR or Mollom::NETWORK_ERROR.
+   *   server; either Mollom::REQUEST_ERROR, Mollom::AUTH_ERROR or
+   *   Mollom::NETWORK_ERROR.
    */
   public function verifyKeys() {
     $data = $this->getClientInformation();
     $result = $this->updateSite($data);
-    // lastResponseCode will either be TRUE, AUTH_ERROR, or NETWORK_ERROR.
+    // lastResponseCode will either be TRUE, REQUEST_ERROR, AUTH_ERROR, or
+    // NETWORK_ERROR.
     return $this->lastResponseCode === TRUE ? TRUE : $this->lastResponseCode;
   }
 
@@ -935,6 +1038,13 @@ abstract class Mollom {
    *   - checks: An indexed array of strings denoting the checks to perform, one
    *     or more of: 'spam', 'quality', 'profanity', 'language', 'sentiment'.
    *     Defaults to 'spam'.
+   *   - type: An optional string identifier to request a special content
+   *     classification behavior. Possible values are:
+   *     - 'user': Enables classification of 'author*' request parameters as
+   *       primary content. postTitle and postBody may be left empty without
+   *       negative impact on the classification result. Use this for checking
+   *       user registration forms. Optionally pass additional user profile text
+   *       fields as postBody.
    *   - unsure: Integer denoting whether a "unsure" response should be allowed
    *     (1) for the 'spam' check (which should lead to CAPTCHA) or not (0).
    *     Defaults to 1.
@@ -1149,7 +1259,8 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
-    $result = $this->query('GET', 'blacklist/' . $publicKey . '/' . $entryId, array(), array('entry', 'id'));
+    $path = 'blacklist/' . $publicKey . '/' . rawurlencode($entryId);
+    $result = $this->query('GET', $path, array(), array('entry', 'id'));
     return isset($result['entry']) ? $result['entry'] : $result;
   }
 
@@ -1175,7 +1286,7 @@ abstract class Mollom {
     }
     $path = 'blacklist/' . $publicKey;
     if (!empty($data['id'])) {
-      $path .= '/' . $data['id'];
+      $path .= '/' . rawurlencode($data['id']);
       unset($data['id']);
     }
     $result = $this->query('POST', $path, $data, array('entry', 'id'));
@@ -1198,7 +1309,8 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
-    $result = $this->query('POST', 'blacklist/' . $publicKey . '/' . $entryId . '/delete');
+    $path = 'blacklist/' . $publicKey . '/' . rawurlencode($entryId) . '/delete';
+    $result = $this->query('POST', $path);
     return $this->lastResponseCode === TRUE;
   }
 }
@@ -1206,15 +1318,16 @@ abstract class Mollom {
 /**
  * A catchable Mollom exception.
  *
- * The Mollom class internally uses exceptions to handle client-side server
- * balancing and eventually HTTP request errors within the Mollom::handleRequest()
- * method. All exceptions thrown in the Mollom class and derived classes should
- * be instances of the MollomException class if they pertain to errors that can
- * be catched/handled within the class. Other errors should not use the
- * MollomException class and handled differently.
+ * The Mollom class internally uses exceptions to handle HTTP request errors
+ * within the Mollom::handleRequest() method. All exceptions thrown in the
+ * Mollom class and derived classes should be instances of the MollomException
+ * class if they pertain to errors that can be catched/handled within the class.
+ * Other errors should not use the MollomException class and handled
+ * differently.
  *
  * No MollomException is supposed to pile up as a user-facing fatal error. All
- * functions that invoke Mollom::handleRequest() have to catch Mollom exceptions.
+ * functions that invoke Mollom::handleRequest() have to catch Mollom
+ * exceptions.
  *
  * @see Mollom::query()
  * @see Mollom::handleRequest()
@@ -1247,14 +1360,17 @@ class MollomException extends Exception {
   /**
    * The severity of this exception.
    *
+   * By default, all exceptions should be logged and appear as errors (unless
+   * overridden by a later log entry).
+   *
    * @var string
    */
-  protected $severity = 'debug';
+  protected $severity = 'error';
 
   /**
    * Overrides Exception::__construct().
    */
-  function __construct($message = '', $code = 0, Exception $previous = NULL, Mollom $mollom, array $arguments = array()) {
+  function __construct($message = '', $code = 0, Exception $previous = NULL, Mollom $mollom, array $request_info = array()) {
     // Fatal error on PHP <5.3 when passing more arguments to Exception.
     if (version_compare(phpversion(), '5.3') >= 0) {
       parent::__construct($message, $code, $previous);
@@ -1268,17 +1384,25 @@ class MollomException extends Exception {
     $mollom->lastResponseCode = $code;
 
     // Log the exception.
+    // To aid Mollom technical support, include the IP address of the server we
+    // tried to reach in case a request fails.
+    // PHP's native gethostbyname() is available on all platforms, but its DNS
+    // lookup and caching behavior is undocumented and unclear. User comments on
+    // php.net mention that it does not have an own cache and also does not use
+    // the OS/platform's native DNS name resolver. Due to that, we only use it
+    // under error conditions.
     $message = array(
       'severity' => $this->severity,
-      'message' => 'Error @code: %message',
+      'message' => 'Error @code: %message (@server-ip)',
       'arguments' => array(
         '@code' => $code,
         '%message' => $message,
+        '@server-ip' => gethostbyname($mollom->server),
       ),
     );
     // Add HTTP request information, if available.
-    if (!empty($arguments)) {
-      $message += $arguments;
+    if (!empty($request_info)) {
+      $message += $request_info;
     }
     $mollom->log[] = $message;
   }
@@ -1291,7 +1415,12 @@ class MollomException extends Exception {
  * communication error.
  */
 class MollomNetworkException extends MollomException {
-  protected $severity = 'error';
+  /**
+   * Overrides MollomException::$severity.
+   *
+   * The client may be able to recover from this error, so use a warning level.
+   */
+  protected $severity = 'warning';
 }
 
 /**
@@ -1300,7 +1429,18 @@ class MollomNetworkException extends MollomException {
  * Thrown in case API keys or other authentication parameters are invalid.
  */
 class MollomAuthenticationException extends MollomException {
-  protected $severity = 'error';
+}
+
+/**
+ * Mollom error due to bad client request exception.
+ *
+ * Thrown in case the local time diverges too much from UTC.
+ *
+ * @see Mollom::TIME_OFFSET_MAX
+ * @see Mollom::REQUEST_ERROR
+ * @see Mollom::handleRequest()
+ */
+class MollomBadRequestException extends MollomException {
 }
 
 /**
@@ -1313,5 +1453,12 @@ class MollomAuthenticationException extends MollomException {
  * @see Mollom::handleRequest()
  */
 class MollomResponseException extends MollomException {
+  /**
+   * Overrides MollomException::$severity.
+   *
+   * Might be a client-side error, but more likely a server-side error. The
+   * client may be able to recover from this error.
+   */
   protected $severity = 'debug';
 }
+

@@ -2,115 +2,14 @@
 
 /**
  * @file
- * Mollom client class for Wordpress.
+ * Mollom testing client class for Wordpress.
  */
 
 /**
- * Wordpress Mollom client implementation.
+ * Wordpress Mollom testing client implementation.
  */
-class MollomWordpress extends Mollom {
-  /**
-   * Mapping of configuration names to Wordpress variables.
-   *
-   * @see Mollom::loadConfiguration()
-   */
-  public $configuration_map = array(
-    'publicKey' => 'mollom_public_key',
-    'privateKey' => 'mollom_private_key',
-  );
-
-  /**
-   * Implements Mollom::loadConfiguration().
-   */
-  public function loadConfiguration($name) {
-    return get_option($this->configuration_map[$name]);
-  }
-
-  /**
-   * Implements Mollom::saveConfiguration().
-   */
-  public function saveConfiguration($name, $value) {
-    return update_option($name, $value);
-  }
-
-  /**
-   * Implements Mollom::deleteConfiguration().
-   */
-  public function deleteConfiguration($name) {
-    return delete_option($name);
-  }
-
-  /**
-   * Implements Mollom::getClientInformation().
-   */
-  public function getClientInformation() {
-    global $wp_version;
-
-    $data = array(
-      'platformName' => 'Wordpress',
-      'platformVersion' => $wp_version,
-      'clientName' => 'WP Mollom',
-      'clientVersion' => MOLLOM_PLUGIN_VERSION,
-    );
-
-    return $data;
-  }
-
-  /**
-   * Overrides Mollom::writeLog().
-   *
-   * @todo Implement this
-   */
-  function writeLog() {
-    foreach ($this->log as $key => $entry) {
-      // @todo: write log away
-    }
-
-    // Purge the logs
-    $this->purgeLog();
-  }
-
-  /**
-   * Implements Mollom::request().
-   */
-  protected function request($method, $server, $path, $query = NULL, array $headers = array()) {
-    $function = ($method == 'GET' ? 'wp_remote_get' : 'wp_remote_post');
-    $data = array(
-      'headers' => $headers,
-      'body' => $query,
-    );
-
-    $result = $function($server . '/' . $path, $data);
-
-    if (is_wp_error($result)) {
-      // A WP_Error means a network error by default.
-      $code = self::NETWORK_ERROR;
-      // Try to extract error code from error message, if any.
-      $code_in_message = (int) $result->get_error_message();
-      if ($code_in_message > 0) {
-        $code = $code_in_message;
-      }
-      $response = (object) array(
-        'code' => $code,
-        'message' => $result->get_error_message(),
-        'headers' => array(),
-        'body' => NULL,
-      );
-    } else {
-      $response = (object) array(
-        'code' => $result['response']['code'],
-        'message' => $result['response']['message'],
-        'headers' => $result['headers'],
-        'body' => $result['body'],
-      );
-    }
-
-    return $response;
-  }
-
-}
-
 class MollomWordpressTest extends MollomWordpress {
+ 
   /**
    * Overrides Mollom::$server.
    */
@@ -121,7 +20,7 @@ class MollomWordpressTest extends MollomWordpress {
    *
    * @var bool
    */
-  public $createKeys;
+  public $createKeys = TRUE;
 
   /**
    * Mapping of configuration names to Wordpress variables.
@@ -132,8 +31,8 @@ class MollomWordpressTest extends MollomWordpress {
    * @see Mollom::loadConfiguration()
    */
   public $configuration_map = array(
-    'publicKey' => 'mollom_developer_mode_public_key',
-    'privateKey' => 'mollom_developer_mode_private_key',
+    'publicKey' => 'mollom_testing_public_key',
+    'privateKey' => 'mollom_testing_private_key',
   );
 
   /**
@@ -159,6 +58,7 @@ class MollomWordpressTest extends MollomWordpress {
    *   and manually create testing API keys (once).
    */
   function __construct() {
+    // Load and set publicKey and privateKey configuration values.
     parent::__construct();
 
     // Any Mollom API request requires valid API keys, or no API calls can be
@@ -198,9 +98,6 @@ class MollomWordpressTest extends MollomWordpress {
 
   /**
    * Creates new testing API keys.
-   *
-   * @todo Move site properties into $data argument (Drupal-specific values),
-   *   rename to createTestingSite(), and move into Mollom class?
    */
   public function createKeys() {
     // Do not attempt to create API keys repeatedly.
@@ -215,8 +112,8 @@ class MollomWordpressTest extends MollomWordpress {
     $oAuthStrategy = $this->oAuthStrategy;
     $this->oAuthStrategy = '';
     $result = $this->createSite(array(
-      'url' => get_option('siteurl', ''),
-      'email' => get_option('site_mail', 'mollom-drupal-test@example.com'),
+      'url' => site_url(),
+      'email' => get_option('site_mail', 'mollom-wordpress-test@example.com'),
     ));
     $this->oAuthStrategy = $oAuthStrategy;
 
@@ -239,4 +136,6 @@ class MollomWordpressTest extends MollomWordpress {
     $this->saveConfiguration('publicKey', $this->publicKey);
     $this->saveConfiguration('privateKey', $this->privateKey);
   }
+
 }
+
