@@ -932,6 +932,7 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
+    $publicKey = rawurlencode($publicKey);
     $result = $this->query('GET', 'site/' . $publicKey, array(), array('site', 'publicKey'));
     return isset($result['site']) ? $result['site'] : $result;
   }
@@ -979,7 +980,8 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
-    $result = $this->query('POST', 'site/' . $this->publicKey, $data, array('site', 'publicKey'));
+    $publicKey = rawurlencode($publicKey);
+    $result = $this->query('POST', 'site/' . $publicKey, $data, array('site', 'publicKey'));
     return isset($result['site']) ? $result['site'] : $result;
   }
 
@@ -1014,6 +1016,7 @@ abstract class Mollom {
    *   TRUE on success, FALSE otherwise.
    */
   public function deleteSite($publicKey) {
+    $publicKey = rawurlencode($publicKey);
     $result = $this->query('POST', 'site/' . $publicKey . '/delete');
     return $this->lastResponseCode === TRUE;
   }
@@ -1092,7 +1095,7 @@ abstract class Mollom {
   public function checkContent(array $data = array()) {
     $path = 'content';
     if (!empty($data['id'])) {
-      $path .= '/' . $data['id'];
+      $path .= '/' . rawurlencode($data['id']);
       unset($data['id']);
     }
     $result = $this->query('POST', $path, $data, array('content', 'id'));
@@ -1169,7 +1172,7 @@ abstract class Mollom {
     if (empty($data['id'])) {
       return FALSE;
     }
-    $path = 'captcha/' . $data['id'];
+    $path = 'captcha/' . rawurlencode($data['id']);
     unset($data['id']);
     $result = $this->query('POST', $path, $data, array('captcha', 'id'));
 
@@ -1222,6 +1225,7 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
+    $publicKey = rawurlencode($publicKey);
     $result = $this->query('GET', 'blacklist/' . $publicKey, array(), array('list'));
     return isset($result['list']) ? $result['list'] : $result;
   }
@@ -1259,7 +1263,7 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
-    $path = 'blacklist/' . $publicKey . '/' . rawurlencode($entryId);
+    $path = 'blacklist/' . rawurlencode($publicKey) . '/' . rawurlencode($entryId);
     $result = $this->query('GET', $path, array(), array('entry', 'id'));
     return isset($result['entry']) ? $result['entry'] : $result;
   }
@@ -1284,7 +1288,7 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
-    $path = 'blacklist/' . $publicKey;
+    $path = 'blacklist/' . rawurlencode($publicKey);
     if (!empty($data['id'])) {
       $path .= '/' . rawurlencode($data['id']);
       unset($data['id']);
@@ -1309,7 +1313,7 @@ abstract class Mollom {
     if (!isset($publicKey)) {
       $publicKey = $this->publicKey;
     }
-    $path = 'blacklist/' . $publicKey . '/' . rawurlencode($entryId) . '/delete';
+    $path = 'blacklist/' . rawurlencode($publicKey) . '/' . rawurlencode($entryId) . '/delete';
     $result = $this->query('POST', $path);
     return $this->lastResponseCode === TRUE;
   }
