@@ -93,9 +93,9 @@ class MollomModeration {
       return FALSE;
     }
 
-    $mollom = mollom();
-    $data = $mollom::getServerParameters();
-    $header = $mollom::getServerAuthentication();
+    mollom();
+    $data = MollomWordpress::getServerParameters();
+    $header = MollomWordpress::getServerAuthentication();
 
     // Validate protocol parameters.
     if (!isset($header['oauth_consumer_key'], $header['oauth_nonce'], $header['oauth_timestamp'], $header['oauth_signature_method'], $header['oauth_signature'])) {
