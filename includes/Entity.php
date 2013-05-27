@@ -10,20 +10,48 @@
  */
 abstract class MollomEntity {
 
+  /**
+   * The (WP) entity type (e.g., 'comment').
+   *
+   * @var string
+   */
   protected $type;
 
+  /**
+   * A WP_Error class instance for the to be processed entity.
+   *
+   * @var WP_Error
+   */
   protected $errors;
 
+  /**
+   * Whether the current user is allowed to bypass Mollom protection.
+   *
+   * @var bool
+   */
   protected $isPrivileged;
 
+  /**
+   * Constructs a new MollomEntity object.
+   */
   public function __construct() {
     $this->errors = new WP_Error();
   }
 
+  /**
+   * Returns the WP entity type to which this instance relates to.
+   *
+   * @return string
+   */
   public function getType() {
     return $this->type;
   }
 
+  /**
+   * Returns whether the current user is allowed to bypass the Mollom protection.
+   *
+   * @return bool
+   */
   public function isPrivileged() {
     if (isset($this->isPrivileged)) {
       return $this->isPrivileged;
@@ -49,6 +77,8 @@ abstract class MollomEntity {
    *
    * @return string
    *   HTML markup for multiple form elements.
+   *
+   * @see MollomEntity::alterFormAction()
    */
   public function buildForm() {
     if ($this->isPrivileged()) {
@@ -104,7 +134,7 @@ abstract class MollomEntity {
   }
 
   /**
-   * Callback for 'site_url' hook.
+   * site_url callback.
    *
    * Manipulates the form 'action' attribute value.
    *
@@ -115,6 +145,24 @@ abstract class MollomEntity {
     return $url;
   }
 
+  /**
+   * Validates user-submitted form values.
+   *
+   * @param array $data
+   *   An associative array containing entity-type-specific parameters for the
+   *   Mollom Content API. The following paramters are handled internally and do
+   *   not need to be provided by the entity-type-specific implementation:
+   *   - contentId
+   *   - captchaId
+   *   - authorIp
+   *   - honeypot
+   *   - solution
+   *   For all available parameters, see Mollom::checkContent().
+   *
+   * @return array
+   *   The passed-in $data array, with potential additions. Use
+   *   MollomEntity::hasErrors() to check for validation errors.
+   */
   public function validateForm($data) {
     if ($this->isPrivileged()) {
       return $data;
@@ -251,6 +299,8 @@ abstract class MollomEntity {
    * Form pre-render callback.
    *
    * Starts output buffering for MollomForm::afterFormRendering().
+   *
+   * @see MollomEntity::afterFormRendering()
    */
   public function beforeFormRendering() {
     ob_start();
@@ -260,6 +310,8 @@ abstract class MollomEntity {
    * Form post-render callback.
    *
    * Re-injects previously submitted POST values back into a newly rendered form.
+   *
+   * @see MollomEntity::beforeFormRendering()
    */
   public function afterFormRendering() {
     // Retrieve the captured form output.
@@ -305,6 +357,15 @@ abstract class MollomEntity {
   }
 
   /**
+   * Returns whether Mollom validation encountered any errors.
+   *
+   * @return bool
+   */
+  public function hasErrors() {
+    return (bool) $this->errors->get_error_code();
+  }
+
+  /**
    * Renders WP_Error object messages into HTML.
    *
    * @see wp-login.php
@@ -346,7 +407,7 @@ abstract class MollomEntity {
 
     // Store the reverse-mapping.
     // @todo Remove after double-checking WP_Query meta data support.
-    //   See also sendFeedback().
+    // @see MollomEntity::sendFeedback()
     add_metadata($this->getType(), $id, 'mollom_content_id', $_POST['mollom']['contentId']);
 
     global $wpdb;

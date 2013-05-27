@@ -22,6 +22,12 @@ Mollom blocks all bad spam, accepts the good user-contributed content, and hones
 1. [Sign up](//mollom.com/pricing) and create API keys.
 1. Enter them on the [Mollom plugin settings page](/wp-admin/options-general.php?page=mollom).
 
+= Requirements =
+
+* PHP 5.2.4 or later
+* Your theme **must** use the `comment_form()` API function of WP core 3.0+.
+
+
 == Upgrade Notice ==
 
 = 2.0 =

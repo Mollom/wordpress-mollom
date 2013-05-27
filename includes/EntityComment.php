@@ -6,10 +6,13 @@
  */
 
 /**
- * Defines generic base definitions and methods shared across all entity types.
+ * Defines methods for comment entities.
  */
 class MollomEntityComment extends MollomEntity {
 
+  /**
+   * Constructs a new comment entity wrapper class instance.
+   */
   public function __construct() {
     $this->type = 'comment';
     parent::__construct();
@@ -45,6 +48,17 @@ class MollomEntityComment extends MollomEntity {
     return $url;
   }
 
+  /**
+   * Validates a submitted comment.
+   *
+   * @param array $comment
+   *   An associative array containing comment data.
+   *
+   * @return array
+   *   The passed-in $comment array. Or, in case of validation errors, the page
+   *   containing the comment form is re-rendered to allow the user to e.g.
+   *   solve CAPTCHA or remove profanity and try again.
+   */
   public function validateForm($comment) {
     if ($this->isPrivileged()) {
       return $comment;
@@ -69,7 +83,7 @@ class MollomEntityComment extends MollomEntity {
     $data = parent::validateForm($data);
 
     // If there are errors, re-render the page containing the form.
-    if ($this->errors->get_error_code()) {
+    if ($this->hasErrors()) {
       add_action('wp_enqueue_scripts', array('MollomForm', 'enqueueScripts'));
       add_action('comment_form_before', array($this, 'beforeFormRendering'), -100);
       add_action('comment_form_after', array($this, 'afterFormRendering'), 100);

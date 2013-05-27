@@ -8,11 +8,11 @@
 /**
  * Form construction, processing, validation, and rendering.
  *
- * Stupidly simplified and UGLIFIED re-implementation of Drupal's sophisticated
+ * Stupidly simplified and uglified re-implementation of Drupal's sophisticated
  * form handling.
  *
  * If you like the basic concepts, use Drupal: http://drupal.org
- * Alternatively, use Symfony: http://symfony.com
+ * Alternatively, use Symfony's Form component: http://symfony.com
  * Either way, build your site on a platform that knows how to treat user input.
  */
 class MollomForm {
@@ -20,30 +20,33 @@ class MollomForm {
   /**
    * Unescapes user input.
    *
-   * We'll not make ourselves friends, but it has to be stated this bluntly:
+   * We'll not make ourselves friends, but it has to be stated bluntly:
    *
-   * WP core apparently has no idea at all what "user input" really means and
+   * WP core apparently has no idea at all what "user input" really means, and
    * how to deal with user input in a web application layer.
    *
    * All available original user input is unconditionally passed through
    * *database* query string escaping functions and is replaced without backup.
-   * That logic essentially resembles PHP's magic_quotes_gpc, which is not
-   * only discouraged and deprecated, but even has been removed from PHP core
-   * for 5.4. The inappropriate munging of user input happens during WP's
-   * bootstrap. All existing WP core + plugin functionality factually depends
-   * on it.
+   * The WP core logic essentially resembles PHP's magic_quotes_gpc, which is not
+   * only discouraged and deprecated, it even has been removed from PHP 5.4.
+   * The inappropriate munging of user input happens during WP's bootstrap.
+   * The security of all existing WP core functionality and contributed plugins
+   * factually depends on this bogus string escaping behavior.
    *
    * @see wp_magic_quotes()
    * @see add_magic_quotes()
    * @see addslashes_gpc()
    *
    * @param array $input
-   *   The bogusly escaped user input.
+   *   An associative array containing the bogusly escaped user input (typically
+   *   $_POST).
    *
    * @return array
-   *   Fixed user $input.
+   *   The passed-in $input array, without escaping.
    */
   public static function unescapeUserInput($input) {
+    // WP core developers identified this problem already and provided a helper
+    // function that allows to revert the bogus escaping in one-off situations.
     return stripslashes_deep($input);
   }
 
