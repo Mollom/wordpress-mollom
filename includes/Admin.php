@@ -10,6 +10,11 @@
  */
 class MollomAdmin {
 
+  /**
+   * admin_init callback.
+   *
+   * Registers plugin settings and administrative table column handlers.
+   */
   public static function init() {
     self::registerSettings();
 
@@ -120,16 +125,21 @@ class MollomAdmin {
   }
 
   /**
+   * admin_menu callback.
+   *
    * Registers administration pages.
    *
    * @see http://codex.wordpress.org/Administration_Menus
+   * @see MollomAdmin::settingsPage()
    */
   public static function registerPages() {
     add_options_page('Mollom settings', 'Mollom', 'manage_options', 'mollom', array(__CLASS__, 'settingsPage'));
   }
 
   /**
-   * Enqueues files for inclusion in the head of a page
+   * admin_enqueue_scripts callback.
+   *
+   * Enqueues files for inclusion in the head of a page.
    */
   public static function enqueueScripts($hook) {
     // Add CSS for the comment listing page.
@@ -139,6 +149,8 @@ class MollomAdmin {
   }
 
   /**
+   * admin_notices callback.
+   *
    * Outputs a warning when testing mode is (still) enabled.
    *
    * @see http://codex.wordpress.org/Plugin_API/Action_Reference/admin_notices
@@ -153,6 +165,8 @@ class MollomAdmin {
 
   /**
    * Page callback; Presents the Mollom settings options page.
+   *
+   * @see MollomAdmin::registerPages()
    */
   public static function settingsPage() {
     // When requesting the page, and after updating the settings, verify the
@@ -214,6 +228,8 @@ class MollomAdmin {
    *
    * @return array
    *   The processed $columns array.
+   *
+   * @see MollomAdmin::init()
    */
   public static function registerCommentsColumn($columns) {
     $columns['mollom'] = 'Mollom';
@@ -230,6 +246,8 @@ class MollomAdmin {
    *
    * @return string
    *   The formatted table cell HTML content.
+   *
+   * @see MollomAdmin::init()
    */
   public static function formatMollomCell($column, $id) {
     if ($column != 'mollom') {

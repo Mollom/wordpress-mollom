@@ -175,6 +175,23 @@ function mollom_moderate() {
   }
 }
 
+/**
+ * wp_die_handler callback.
+ *
+ * Overrides the default (or last registered) callback with Mollom's callback.
+ * The originally registered callback is statically cached and re-invoked in
+ * case Mollom's callback does not apply.
+ *
+ * @param string $function
+ *   The function name of the last registered callback.
+ * @param bool $return_last
+ *   (optional) Whether to return the last registered callback function name.
+ *
+ * @return string
+ *   The Mollom wp_die_handler function name, or the last registered callback.
+ *
+ * @see mollom_die_handler()
+ */
 function mollom_die_handler_callback($function, $return_last = FALSE) {
   static $last_callback;
   if ($return_last) {
@@ -184,6 +201,13 @@ function mollom_die_handler_callback($function, $return_last = FALSE) {
   return 'mollom_die_handler';
 }
 
+/**
+ * wp_die callback.
+ *
+ * Mutes the duplicate comment check error if testing mode is enabled.
+ * In all other cases, the previously registered wp_die callback is invoked,
+ * which may be the default, or the one of another plugin.
+ */
 function mollom_die_handler($message, $title, $args) {
   // Disable duplicate comment check when testing mode is enabled, since one
   // typically tests with the literal ham/unsure/spam strings only.
