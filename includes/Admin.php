@@ -36,10 +36,10 @@ class MollomAdmin {
     register_setting('mollom', 'mollom_testing_mode', 'intval');
     register_setting('mollom', 'mollom_reverse_proxy_addresses');
 
-    register_setting('mollom', 'mollom_checks');
+    register_setting('mollom', 'mollom_checks', array('MollomAdmin', 'sanitizeChecksValue'));
     register_setting('mollom', 'mollom_privacy_link', 'intval');
 
-    register_setting('mollom', 'mollom_bypass_roles');
+    register_setting('mollom', 'mollom_bypass_roles', array('MollomAdmin', 'sanitizeCheckboxesValue'));
     register_setting('mollom', 'mollom_fallback_mode');
 
     // Configuration sections.
@@ -70,8 +70,8 @@ class MollomAdmin {
       'type' => 'checkboxes',
       'name' => 'mollom_checks',
       'options' => array(
-        'spam' => 'Spam',
-        'profanity' => 'Profanity',
+        'spam' => __('Spam', MOLLOM_L10N),
+        'profanity' => __('Profanity', MOLLOM_L10N),
       ),
       'values' => get_option('mollom_checks'),
     ));
@@ -122,6 +122,33 @@ class MollomAdmin {
       // @todo Sanitize.
       'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_L10N),
     ));
+  }
+
+  /**
+   * Settings input sanitization callback.
+   *
+   * Ensures that the input for (multiple-choice) checkboxes is an array.
+   *
+   * @param array|null $input
+   *   The submitted user input.
+   *
+   * @return array
+   *   The passed-in $input array, or an empty array if $input is NULL.
+   */
+  public static function sanitizeCheckboxesValue($input) {
+    return is_array($input) ? $input : array();
+  }
+
+  /**
+   * mollom_checks setting input sanitization callback.
+   *
+   * Ensures that at least one check is enabled.
+   */
+  public static function sanitizeChecksValue($input) {
+    if (!$input = self::sanitizeCheckboxesValue($input)) {
+      $input = array('spam' => '1');
+    }
+    return $input;
   }
 
   /**
