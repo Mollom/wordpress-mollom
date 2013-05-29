@@ -32,12 +32,14 @@ class MollomSchema {
     global $wpdb;
     $table = $wpdb->prefix . 'mollom';
 
+    // Note: dbDelta() requires no spaces between column names in the primary
+    // key definition.
     return "CREATE TABLE $table (
   entity_type VARCHAR(32) DEFAULT '' NOT NULL,
   entity_id BIGINT DEFAULT 0 NOT NULL,
   content_id VARCHAR(32),
   created INT,
-  PRIMARY KEY (entity_type, entity_id),
+  PRIMARY KEY (entity_type,entity_id),
   KEY content_id (content_id),
   KEY created (created)
 )";

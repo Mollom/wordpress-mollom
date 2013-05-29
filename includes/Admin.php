@@ -10,6 +10,11 @@
  */
 class MollomAdmin {
 
+  /**
+   * admin_init callback.
+   *
+   * Registers plugin settings and administrative table column handlers.
+   */
   public static function init() {
     self::registerSettings();
 
@@ -31,10 +36,10 @@ class MollomAdmin {
     register_setting('mollom', 'mollom_testing_mode', 'intval');
     register_setting('mollom', 'mollom_reverse_proxy_addresses');
 
-    register_setting('mollom', 'mollom_checks');
+    register_setting('mollom', 'mollom_checks', array('MollomAdmin', 'sanitizeChecksValue'));
     register_setting('mollom', 'mollom_privacy_link', 'intval');
 
-    register_setting('mollom', 'mollom_bypass_roles');
+    register_setting('mollom', 'mollom_bypass_roles', array('MollomAdmin', 'sanitizeCheckboxesValue'));
     register_setting('mollom', 'mollom_fallback_mode');
 
     // Configuration sections.
@@ -65,8 +70,8 @@ class MollomAdmin {
       'type' => 'checkboxes',
       'name' => 'mollom_checks',
       'options' => array(
-        'spam' => 'Spam',
-        'profanity' => 'Profanity',
+        'spam' => __('Spam', MOLLOM_L10N),
+        'profanity' => __('Profanity', MOLLOM_L10N),
       ),
       'values' => get_option('mollom_checks'),
     ));
@@ -120,16 +125,48 @@ class MollomAdmin {
   }
 
   /**
+   * Settings input sanitization callback.
+   *
+   * Ensures that the input for (multiple-choice) checkboxes is an array.
+   *
+   * @param array|null $input
+   *   The submitted user input.
+   *
+   * @return array
+   *   The passed-in $input array, or an empty array if $input is NULL.
+   */
+  public static function sanitizeCheckboxesValue($input) {
+    return is_array($input) ? $input : array();
+  }
+
+  /**
+   * mollom_checks setting input sanitization callback.
+   *
+   * Ensures that at least one check is enabled.
+   */
+  public static function sanitizeChecksValue($input) {
+    if (!$input = self::sanitizeCheckboxesValue($input)) {
+      $input = array('spam' => '1');
+    }
+    return $input;
+  }
+
+  /**
+   * admin_menu callback.
+   *
    * Registers administration pages.
    *
    * @see http://codex.wordpress.org/Administration_Menus
+   * @see MollomAdmin::settingsPage()
    */
   public static function registerPages() {
     add_options_page('Mollom settings', 'Mollom', 'manage_options', 'mollom', array(__CLASS__, 'settingsPage'));
   }
 
   /**
-   * Enqueues files for inclusion in the head of a page
+   * admin_enqueue_scripts callback.
+   *
+   * Enqueues files for inclusion in the head of a page.
    */
   public static function enqueueScripts($hook) {
     // Add CSS for the comment listing page.
@@ -139,6 +176,8 @@ class MollomAdmin {
   }
 
   /**
+   * admin_notices callback.
+   *
    * Outputs a warning when testing mode is (still) enabled.
    *
    * @see http://codex.wordpress.org/Plugin_API/Action_Reference/admin_notices
@@ -153,6 +192,8 @@ class MollomAdmin {
 
   /**
    * Page callback; Presents the Mollom settings options page.
+   *
+   * @see MollomAdmin::registerPages()
    */
   public static function settingsPage() {
     // When requesting the page, and after updating the settings, verify the
@@ -214,6 +255,8 @@ class MollomAdmin {
    *
    * @return array
    *   The processed $columns array.
+   *
+   * @see MollomAdmin::init()
    */
   public static function registerCommentsColumn($columns) {
     $columns['mollom'] = 'Mollom';
@@ -230,6 +273,8 @@ class MollomAdmin {
    *
    * @return string
    *   The formatted table cell HTML content.
+   *
+   * @see MollomAdmin::init()
    */
   public static function formatMollomCell($column, $id) {
     if ($column != 'mollom') {

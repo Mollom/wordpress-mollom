@@ -14,6 +14,7 @@ class MollomModeration {
   protected static $action;
   protected static $entityType;
   protected static $entityId;
+
   public static $log = array();
 
   /**

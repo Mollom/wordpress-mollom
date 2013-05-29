@@ -1095,7 +1095,12 @@ abstract class Mollom {
   public function checkContent(array $data = array()) {
     $path = 'content';
     if (!empty($data['id'])) {
-      $path .= '/' . rawurlencode($data['id']);
+      // The ID originates from raw form input. Ensure we hit the right endpoint
+      // in case a bogus bot fills in even hidden input fields with random
+      // strings, by performing a basic syntax validation.
+      if (preg_match('@^[a-z0-9-]+$@i', $data['id'])) {
+        $path .= '/' . rawurlencode($data['id']);
+      }
       unset($data['id']);
     }
     $result = $this->query('POST', $path, $data, array('content', 'id'));
@@ -1170,6 +1175,12 @@ abstract class Mollom {
    */
   public function checkCaptcha(array $data = array()) {
     if (empty($data['id'])) {
+      return FALSE;
+    }
+    // The ID originates from raw form input. Ensure we hit the right endpoint
+    // in case a bogus bot fills in even hidden input fields with random
+    // strings, by performing a basic syntax validation.
+    if (!preg_match('@^[a-z0-9-]+$@i', $data['id'])) {
       return FALSE;
     }
     $path = 'captcha/' . rawurlencode($data['id']);
