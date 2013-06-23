@@ -27,8 +27,9 @@ Mollom blocks all bad spam, accepts the good user-contributed content, and hones
 * PHP 5.2.4 or later
 * Your theme **must** use the `comment_form()` API function of WP core 3.0+.
 
-= [Content Moderation Platform](http://mollom.com/moderation) integration requirements =
+= Additional requirements for [Content Moderation Platform](http://mollom.com/moderation) integration =
 
+* [Pretty Permalinks](http://codex.wordpress.org/Using_Permalinks#Using_.22Pretty.22_permalinks) need to be enabled.
 * On servers running PHP <5.4, and PHP as CGI (not Apache module), inbound HTTP request headers are not made available to PHP.  Ensure the Apache `mod_rewrite` module is enabled and add the following lines to your `.htaccess` file:
 
         RewriteEngine On
