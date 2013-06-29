@@ -874,14 +874,22 @@ abstract class Mollom {
    */
   public static function getServerAuthentication() {
     $header = array();
-    if (function_exists('apache_request_headers')) {
-      $headers = apache_request_headers();
+    // PHP as Apache module provides a SAPI function.
+    // PHP 5.4+ enables getallheaders() also for FastCGI.
+    if (function_exists('getallheaders')) {
+      $headers = getallheaders();
       if (isset($headers['Authorization'])) {
         $input = $headers['Authorization'];
       }
     }
+    // PHP as CGI with server/.htaccess configuration (e.g., via mod_rewrite)
+    // may transfer/forward HTTP request data into server variables.
     elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
       $input = $_SERVER['HTTP_AUTHORIZATION'];
+    }
+    // PHP as CGI may provide HTTP request data as environment variables.
+    elseif (isset($_ENV['HTTP_AUTHORIZATION'])) {
+      $input = $_ENV['HTTP_AUTHORIZATION'];
     }
     if (isset($input)) {
       preg_match_all('@([^, =]+)="([^"]*)"@', $input, $header);

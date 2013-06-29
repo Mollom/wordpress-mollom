@@ -2,10 +2,10 @@
 
 /*
   Plugin Name: Mollom
-  Plugin URI: http://mollom.com
+  Plugin URI: https://mollom.com
   Version: 2.x-dev
   Text Domain: mollom
-  Description: Protects you from spam and unwanted posts. <strong>Get started:</strong> 1) <em>Activate</em>, 2) <a href="//mollom.com/pricing">Sign up</a> and create API keys, 3) Set them in <a href="options-general.php?page=mollom">settings</a>.
+  Description: Protects you from spam and unwanted posts. <strong>Get started:</strong> 1) <em>Activate</em>, 2) <a href="https://mollom.com/pricing">Sign up</a> and create API keys, 3) Set them in <a href="options-general.php?page=mollom">settings</a>.
   Author: Matthias Vandermaesen
   Author URI: http://www.colada.be
   License: GPLv2 or later; see LICENSE.md

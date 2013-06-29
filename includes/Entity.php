@@ -123,7 +123,7 @@ abstract class MollomEntity {
       $output .= "\n";
       $output .= '<p class="description">';
       $output .= vsprintf(__('By submitting this form, you accept the <a href="%s" target="_blank" rel="nofollow">Mollom privacy policy</a>.', MOLLOM_L10N), array(
-        '//mollom.com/web-service-privacy-policy',
+        'https://mollom.com/web-service-privacy-policy',
       ));
       $output .= '</p>';
     }
@@ -291,7 +291,7 @@ abstract class MollomEntity {
     // NOT the general URL of your site!
     $params['url'] = isset($data['contextUrl']) ? $data['contextUrl'] : site_url();
 
-    $report_url = '//mollom.com/false-positive?' . http_build_query($params);
+    $report_url = 'https://mollom.com/false-positive?' . http_build_query($params);
     return sprintf(__('If you feel this is in error, please <a href="%s" target="_blank">report that you are blocked</a>.', MOLLOM_L10N), htmlspecialchars($report_url, ENT_QUOTES, 'UTF-8'));
   }
 
