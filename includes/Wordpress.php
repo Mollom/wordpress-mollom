@@ -53,7 +53,7 @@ class MollomWordpress extends Mollom {
     }
     $meta = get_plugin_data(dirname(dirname(__FILE__)) . '/mollom.php', FALSE, FALSE);
     $data = array(
-      'platformName' => 'Wordpress',
+      'platformName' => 'WordPress',
       'platformVersion' => $wp_version,
       'clientName' => $meta['Name'],
       'clientVersion' => $meta['Version'],
