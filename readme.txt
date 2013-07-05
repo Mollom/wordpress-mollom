@@ -1,18 +1,18 @@
 === Mollom ===
 Contributors: netsensei, tha_sun
 Donate link: http://mollom.com
-Tags: comments, spam, social, content, moderation, captcha
+Tags: comments, spam, social, content, moderation, captcha, mollom
 Requires at least: 3.1.0
 Tested up to: 3.5.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Protects you from spam and unwanted posts.
+Mollom protects your site from spam, profanity, and unwanted posts.  To allow you to focus on public social engagement; things that matter.
 
 == Description ==
 
-[Mollom](http://mollom.com) protects you from spam and enables you to focus on content quality.
+[Mollom](http://mollom.com) protects you from spam and enables you to focus on quality content, and to embrace social, user-contributed content and public engagement.
 
 Mollom blocks all bad spam, accepts the good user-contributed content, and honestly admits when it is _unsure_ -- asking the author to solve a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA) to be sure.  To learn more, check [How Mollom works](http://mollom.com/how-mollom-works).
 
@@ -24,13 +24,15 @@ Mollom blocks all bad spam, accepts the good user-contributed content, and hones
 
 = Requirements =
 
-* PHP 5.2.4 or later
-* Your theme **must** use the `comment_form()` API function of WP core 3.0+.
+* PHP 5.2.4 or later.
+* Your theme **must** use the `comment_form()` API function introduced in WordPress 3.0+.
 
-= Additional requirements for [Content Moderation Platform](http://mollom.com/moderation) integration =
+= Requirements for Content Moderation Platform =
 
-* [Pretty Permalinks](http://codex.wordpress.org/Using_Permalinks#Using_.22Pretty.22_permalinks) need to be enabled.
-* On servers running PHP <5.4, and PHP as CGI (not Apache module), inbound HTTP request headers are not made available to PHP.  Ensure the Apache `mod_rewrite` module is enabled and add the following lines to your `.htaccess` file:
+Optionally, to enable the [Content Moderation Platform (CMP)](http://mollom.com/moderation) integration:
+
+* [Pretty Permalinks](http://codex.wordpress.org/Using_Permalinks#Using_.22Pretty.22_permalinks) must be enabled.
+* On servers running PHP <5.4 as CGI, ensure the Apache `mod_rewrite` module is enabled and add the following lines to your `.htaccess` file:
 
         RewriteEngine On
         RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
