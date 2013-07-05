@@ -1,5 +1,5 @@
 === Mollom ===
-Contributors: netsensei, tha_sun
+Contributors: Netsensei, tha_sun
 Donate link: http://mollom.com
 Tags: comments, spam, social, content, moderation, captcha, mollom
 Requires at least: 3.1.0
