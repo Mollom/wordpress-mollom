@@ -43,12 +43,12 @@ class MollomAdmin {
     register_setting('mollom', 'mollom_fallback_mode');
 
     // Configuration sections.
-    add_settings_section('mollom_keys', 'API keys', '__return_false', 'mollom');
-    add_settings_section('mollom_options', 'Protection options', '__return_false', 'mollom');
-    add_settings_section('mollom_advanced', 'Advanced settings', '__return_false', 'mollom');
+    add_settings_section('mollom_keys', __('API keys', MOLLOM_L10N), '__return_false', 'mollom');
+    add_settings_section('mollom_options', __('Protection options', MOLLOM_L10N), '__return_false', 'mollom');
+    add_settings_section('mollom_advanced', __('Advanced settings', MOLLOM_L10N), '__return_false', 'mollom');
 
     // API keys section.
-    add_settings_field('mollom_public_key', 'Public key', array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
+    add_settings_field('mollom_public_key', __('Public key', MOLLOM_L10N), array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
       'type' => 'text',
       'name' => 'mollom_public_key',
       'value' => get_option('mollom_public_key'),
@@ -56,7 +56,7 @@ class MollomAdmin {
       'size' => 40,
       'maxlength' => 32,
     ));
-    add_settings_field('mollom_private_key', 'Private key', array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
+    add_settings_field('mollom_private_key', __('Private key', MOLLOM_L10N), array('MollomForm', 'printInputArray'), 'mollom', 'mollom_keys', array(
       'type' => 'text',
       'name' => 'mollom_private_key',
       'value' => get_option('mollom_private_key'),
@@ -66,7 +66,7 @@ class MollomAdmin {
     ));
 
     // Protection options section.
-    add_settings_field('mollom_checks', 'Checks', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_checks', __('Checks', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkboxes',
       'name' => 'mollom_checks',
       'options' => array(
@@ -75,19 +75,19 @@ class MollomAdmin {
       ),
       'values' => get_option('mollom_checks'),
     ));
-    add_settings_field('mollom_bypass_roles', 'Bypass roles', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_bypass_roles', __('Bypass roles', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkboxes',
       'name' => 'mollom_bypass_roles',
       'options' => array_map('translate_user_role', $GLOBALS['wp_roles']->get_names()),
       'values' => get_option('mollom_bypass_roles'),
-      'description' => __('Select user roles to exclude from all Mollom checks.'),
+      'description' => __('Select user roles to exclude from all Mollom checks.', MOLLOM_L10N),
     ));
-    add_settings_field('mollom_fallback_mode', 'When Mollom is down', array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_fallback_mode', __('When Mollom is down', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'radios',
       'name' => 'mollom_fallback_mode',
       'options' => array(
-        'block' => 'Block all form submissions',
-        'accept' => 'Accept all form submissions',
+        'block' => __('Block all form submissions', MOLLOM_L10N),
+        'accept' => __('Accept all form submissions', MOLLOM_L10N),
       ),
       'value' => get_option('mollom_fallback_mode', 'accept'),
       'description' => vsprintf(__('In case Mollom services are unreachable, no text analysis can be performed and no CAPTCHAs can be generated. Customers on <a href="%s">paid plans</a> have access to <a href="%s">Mollom\'s high-availability backend infrastructure</a>, not available to free users, reducing potential downtime.', MOLLOM_L10N), array(
@@ -95,10 +95,10 @@ class MollomAdmin {
         'https://mollom.com/terms-of-service',
       )),
     ));
-    add_settings_field('mollom_privacy_link', 'Privacy policy link', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_privacy_link', __('Privacy policy link', MOLLOM_L10N), array('MollomForm', 'printItemArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkbox',
       'name' => 'mollom_privacy_link',
-      'label' => "Link to Mollom's privacy policy",
+      'label' => __('Link to Mollom\'s privacy policy', MOLLOM_L10N),
       'value' => get_option('mollom_privacy_link'),
       'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.', MOLLOM_L10N), array(
         '@privacy-policy-url' => 'https://mollom.com/web-service-privacy-policy',
@@ -107,17 +107,17 @@ class MollomAdmin {
     ));
 
     // Advanced section.
-    add_settings_field('mollom_reverse_proxy_addresses', 'Reverse proxy IP addresses', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_advanced', array(
+    add_settings_field('mollom_reverse_proxy_addresses', __('Reverse proxy IP addresses', MOLLOM_L10N), array('MollomForm', 'printItemArray'), 'mollom', 'mollom_advanced', array(
       'type' => 'text',
       'name' => 'mollom_reverse_proxy_addresses',
       'value' => get_option('mollom_reverse_proxy_addresses'),
       'size' => 60,
-      'description' => __('If your site resides behind one or more reverse proxies, enter their IP addresses as a comma-separated list.'),
+      'description' => __('If your site resides behind one or more reverse proxies, enter their IP addresses as a comma-separated list.', MOLLOM_L10N),
     ));
     add_settings_field('mollom_testing_mode', 'Testing mode', array('MollomForm', 'printItemArray'), 'mollom', 'mollom_advanced', array(
       'type' => 'checkbox',
       'name' => 'mollom_testing_mode',
-      'label' => 'Enable Mollom testing mode',
+      'label' => __('Enable Mollom testing mode', MOLLOM_L10N),
       'value' => get_option('mollom_testing_mode'),
       // @todo Sanitize.
       'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_L10N),
