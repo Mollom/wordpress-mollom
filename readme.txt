@@ -4,7 +4,7 @@ Donate link: http://mollom.com
 Tags: comments, spam, social, content, moderation, captcha, mollom
 Requires at least: 3.1.0
 Tested up to: 3.5.1
-Stable tag: trunk
+Stable tag: 2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,7 +41,7 @@ Optionally, to enable the [Content Moderation Platform (CMP)](http://mollom.com/
 == Upgrade Notice ==
 
 = 2.0 =
-Required upgrade.  Uninstall the old version, re-install the new, and re-enter your API keys.
+Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and re-enter your API keys.
 
 
 == Changelog ==
