@@ -10,7 +10,9 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
   exit;
 }
 
-// @todo Delete mollom table.
+require_once dirname(__FILE__) . '/includes/Schema.php';
+MollomSchema::uninstall();
+
 // @todo Delete meta data.
 
 delete_option('mollom_public_key');

@@ -30,11 +30,13 @@ class MollomSchema {
    */
   public static function getSchema() {
     global $wpdb;
+
     $table = $wpdb->prefix . 'mollom';
 
     // Note: dbDelta() requires no spaces between column names in the primary
     // key definition.
-    return "CREATE TABLE $table (
+    $schema = array(
+      $table => "CREATE TABLE $table (
   entity_type VARCHAR(32) DEFAULT '' NOT NULL,
   entity_id BIGINT DEFAULT 0 NOT NULL,
   content_id VARCHAR(32),
@@ -42,7 +44,10 @@ class MollomSchema {
   PRIMARY KEY (entity_type,entity_id),
   KEY content_id (content_id),
   KEY created (created)
-)";
+)"
+    );
+
+    return $schema;
   }
 
   /**
@@ -50,9 +55,23 @@ class MollomSchema {
    */
   public static function install() {
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-    dbDelta(self::getSchema());
+    $schema = self::getSchema();
+    foreach ($schema as $table => $create_query) {
+      dbDelta($create_query);
+    }
 
     update_option('mollom_schema_version', self::getVersion());
+  }
+
+  /**
+   * Uninstalls the plugin database schema.
+   */
+  public static function uninstall() {
+    global $wpdb;
+    $schema = self::getSchema();
+    foreach (array_keys($schema) as $table) {
+      $wpdb->query("DROP TABLE IF EXISTS $table");
+    }
   }
 
   /**
