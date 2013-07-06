@@ -98,7 +98,7 @@ class MollomAdmin {
     add_settings_field('mollom_privacy_link', __('Privacy policy link', MOLLOM_L10N), array('MollomForm', 'printItemArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkbox',
       'name' => 'mollom_privacy_link',
-      'label' => __('Link to Mollom\'s privacy policy', MOLLOM_L10N),
+      'label' => __("Link to Mollom's privacy policy", MOLLOM_L10N),
       'value' => get_option('mollom_privacy_link'),
       'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.', MOLLOM_L10N), array(
         '@privacy-policy-url' => 'https://mollom.com/web-service-privacy-policy',
