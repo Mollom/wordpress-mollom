@@ -41,7 +41,7 @@ class MollomModeration {
     if (!self::getEntity($contentId)) {
       header($_SERVER['SERVER_PROTOCOL'] . ' 410 Gone');
       self::log(array(
-        'message' => __('Not Found', MOLLOM_L10N),
+        'message' => 'Not Found',
       ));
       return FALSE;
     }
@@ -89,7 +89,7 @@ class MollomModeration {
     $privateKey = get_option('mollom_private_key', '');
     if ($publicKey === '' || $privateKey === '') {
       self::log(array(
-        'message' => __('Missing module configuration', MOLLOM_L10N),
+        'message' => 'Missing module configuration',
       ));
       return FALSE;
     }
@@ -101,7 +101,7 @@ class MollomModeration {
     // Validate protocol parameters.
     if (!isset($header['oauth_consumer_key'], $header['oauth_nonce'], $header['oauth_timestamp'], $header['oauth_signature_method'], $header['oauth_signature'])) {
       self::log(array(
-        'message' => __('Missing protocol parameters', MOLLOM_L10N),
+        'message' => 'Missing protocol parameters',
         'Request:' => $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'],
         'Request headers:' => $header,
       ));
@@ -116,7 +116,7 @@ class MollomModeration {
     // Validate consumer key.
     if ($header['oauth_consumer_key'] !== $publicKey) {
       self::log(array(
-        'message' => __('Invalid public/consumer key', MOLLOM_L10N),
+        'message' => 'Invalid public/consumer key',
         'Request:' => $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'],
         'Request headers:' => $header,
         'My public key:' => $publicKey,
@@ -132,7 +132,7 @@ class MollomModeration {
         $diff *= -1;
       }
       self::log(array(
-        'message' => __('Outdated authentication timestamp', MOLLOM_L10N),
+        'message' => 'Outdated authentication timestamp',
         'Request:' => $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'],
         'Request headers:' => $header,
         'Time difference:' => $diff_sign . format_interval($diff),
@@ -143,7 +143,7 @@ class MollomModeration {
     // Validate nonce.
     if (empty($header['oauth_nonce'])) {
       self::log(array(
-        'message' => __('Missing authentication nonce', MOLLOM_L10N),
+        'message' => 'Missing authentication nonce',
         'Request:' => $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'],
         'Request headers:' => $header,
       ));
@@ -182,7 +182,7 @@ class MollomModeration {
     $valid = ($signature === $sent_signature);
     if (!$valid) {
       self::log(array(
-        'message' => __('Invalid authentication signature', MOLLOM_L10N),
+        'message' => 'Invalid authentication signature',
         'Request:' => $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'],
         'Request headers:' => $header + array('oauth_signature' => $sent_signature),
         'Base string:' => $base_string,
