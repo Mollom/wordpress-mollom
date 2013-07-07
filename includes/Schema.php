@@ -65,6 +65,16 @@ class MollomSchema {
   }
 
   /**
+   * Updates the plugin database schema, if outdated.
+   */
+  public static function update() {
+    if (get_option('mollom_schema_version', 0) == self::getVersion()) {
+      return;
+    }
+    self::install();
+  }
+
+  /**
    * Uninstalls the plugin database schema.
    */
   public static function uninstall() {
@@ -73,16 +83,6 @@ class MollomSchema {
     foreach (array_keys($schema) as $table) {
       $wpdb->query("DROP TABLE IF EXISTS $table");
     }
-  }
-
-  /**
-   * Updates the plugin database schema, if outdated.
-   */
-  public static function update() {
-    if (get_option('mollom_schema_version', 0) == self::getVersion()) {
-      return;
-    }
-    self::install();
   }
 
 }
