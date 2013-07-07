@@ -57,6 +57,10 @@ class MollomSchema {
       dbDelta("CREATE TABLE $table ($spec)");
     }
 
+    // Do not autoload the schema version option.
+    // Mind the WPWTF: No, not FALSE, but "no".
+    add_option('mollom_schema_version', 0, '', 'no');
+
     update_option('mollom_schema_version', self::getVersion());
   }
 
