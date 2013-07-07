@@ -30,13 +30,12 @@ class MollomSchema {
    */
   public static function getSchema() {
     global $wpdb;
-
-    $table = $wpdb->prefix . 'mollom';
+    $schema = array();
 
     // Note: dbDelta() requires no spaces between column names in the primary
     // key definition.
-    $schema = array(
-      $table => "CREATE TABLE $table (
+    $table = $wpdb->prefix . 'mollom';
+    $schema[$table] = "
   entity_type VARCHAR(32) DEFAULT '' NOT NULL,
   entity_id BIGINT DEFAULT 0 NOT NULL,
   content_id VARCHAR(32),
@@ -44,9 +43,7 @@ class MollomSchema {
   PRIMARY KEY (entity_type,entity_id),
   KEY content_id (content_id),
   KEY created (created)
-)"
-    );
-
+";
     return $schema;
   }
 
@@ -56,8 +53,8 @@ class MollomSchema {
   public static function install() {
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     $schema = self::getSchema();
-    foreach ($schema as $table => $create_query) {
-      dbDelta($create_query);
+    foreach ($schema as $table => $spec) {
+      dbDelta("CREATE TABLE $table ($spec)");
     }
 
     update_option('mollom_schema_version', self::getVersion());
