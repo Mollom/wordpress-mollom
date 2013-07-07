@@ -10,7 +10,13 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
   exit;
 }
 
-// @todo Delete meta data.
+// Delete content meta data.
+delete_metadata('comment', 0, 'mollom', NULL, TRUE);
+delete_metadata('comment', 0, 'mollom_content_id', NULL, TRUE);
+delete_metadata('post', 0, 'mollom', NULL, TRUE);
+delete_metadata('post', 0, 'mollom_content_id', NULL, TRUE);
+delete_metadata('user', 0, 'mollom', NULL, TRUE);
+delete_metadata('user', 0, 'mollom_content_id', NULL, TRUE);
 
 // Drop database tables.
 require_once dirname(__FILE__) . '/includes/Schema.php';
