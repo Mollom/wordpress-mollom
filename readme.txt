@@ -1,6 +1,6 @@
 === Mollom ===
 Contributors: Netsensei, tha_sun
-Donate link: http://mollom.com
+Donate link: https://mollom.com/pricing
 Tags: comments, spam, social, content, moderation, captcha, mollom
 Requires at least: 3.1.0
 Tested up to: 3.5.1
@@ -12,22 +12,35 @@ Mollom protects your site from spam, profanity, and unwanted posts.  Focus on pu
 
 == Description ==
 
-[Mollom](http://mollom.com) protects you from spam and unwanted posts.  Mollom enables you to focus on quality content, and to embrace social, user-contributed content and public engagement.
+[Mollom](http://mollom.com) protects your site from spam and unwanted posts.  Mollom enables you to focus on quality content, and to embrace user-contributed content and public engagement.
 
-Mollom blocks all bad spam, accepts the good user-contributed content, and honestly admits when it is _unsure_ — asking the author to solve a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA) to be sure.  To learn more, check [how Mollom works](http://mollom.com/how-mollom-works).
+Mollom automatically blocks all spam, accepts the content you want, and honestly admits when it is _unsure_ — asking the author to solve a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA).  Obvious spam does not even enter your site; it's outright discarded instead.  To learn more, check [how Mollom works](http://mollom.com/how-mollom-works).
 
-Obvious spam does not even enter your site; it's outright discarded instead.  You should not have to deal with spam.  Mollom supplies a cutting-edge content classification technology that learns and automatically adapts — to allow you to focus on content:  Quality content.
+The Mollom service encompasses all spam filtering techniques that exist, using industry-leading content classification technologies that learn and automatically adapt, and is constantly monitored and improved by engineers — to allow you to focus on content:  Quality content.
 
-You have multiple WordPress blogs and potentially other sites that need your attention and moderation?  This plugin integrates with Mollom's [Content Moderation Platform](http://mollom.com/moderation) out of the box — Moderate them all at once.  Focus on important topics instead.
+Mollom is actively used by more than 50,000 sites, including Sony, twitter, MIT, Adobe, Warner Bros Records, LinuxJournal, NBC, and many others.  More than 4,500,000 posts are checked by Mollom _per day_.
 
-Note:  Mollom is an all-in-one solution.  To get the best performance out of Mollom, ensure to disable all other spam protection plugins.
+Do you have multiple WordPress and other sites that need moderation?  Mollom's [Content Moderation Platform](http://mollom.com/moderation) is supported out of the box — Save time & moderate them all at once.
+
+If you like Mollom, consider to [write a review](http://wordpress.org/support/view/plugin-reviews/mollom) and blog about it! :)
+
+= Support =
+
+To get the best performance out of Mollom, ensure to disable other spam filter plugins.
+
+* Contact [Mollom Support](http://mollom.com/contact) for issues pertaining to the Mollom service; e.g., uncaught spam posts, inappropriately classified posts, etc.
+* Use the [issue queue](https://github.com/Mollom/wordpress-mollom/issues) for bug reports and feature requests pertaining to the WordPress plugin.
+
+= Development =
+
+This plugin is maintained on [GitHub](https://github.com/Mollom/wordpress-mollom).  Contributions are welcome!
 
 
 == Installation ==
 
 1. Install and activate the plugin.
-1. [Sign up](https://mollom.com/pricing) to create Mollom API keys for your site.
-1. Enter them on the settings page of the Mollom plugin on your site.
+1. [Sign up on Mollom.com](https://mollom.com/pricing) to create API keys for your site.
+1. Enter them on the Mollom plugin settings page on your site.
 
 
 = Requirements =
@@ -37,13 +50,20 @@ Note:  Mollom is an all-in-one solution.  To get the best performance out of Mol
 
 = Requirements for Content Moderation Platform =
 
-Optionally, to enable the [Content Moderation Platform (CMP)](http://mollom.com/moderation) integration:
+Optionally, to enable the [Content Moderation Platform (CMP)](http://mollom.com/moderation):
 
 * [Pretty Permalinks](http://codex.wordpress.org/Using_Permalinks#Using_.22Pretty.22_permalinks) must be enabled.
-* On servers running PHP <5.4 as CGI, ensure the Apache `mod_rewrite` module is enabled and add the following lines to your `.htaccess` file:
+* On servers running PHP <5.4 **as CGI**, ensure the Apache `mod_rewrite` module is enabled and add the following lines to your `.htaccess` file:
 
         RewriteEngine On
         RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+
+= Compatibility =
+
+Mollom is an all-in-one solution.  Similar plugins conflict with its operations.
+
+To get the best performance out of Mollom, ensure to disable all other spam filter, honeypot, and CAPTCHA plugins, including the default Akismet plugin that ships with WordPress.
 
 
 == Upgrade Notice ==
@@ -56,5 +76,5 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 
 = 2.0 =
 
-* Rewritten and re-architected for Mollom's new REST API.
+* Rewritten and re-architected for Mollom's new [REST API](http://mollom.com/api).
 
