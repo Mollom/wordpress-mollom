@@ -66,6 +66,28 @@ Mollom is an all-in-one solution.  Similar plugins conflict with its operations.
 To get the best performance out of Mollom, ensure to disable all other spam filter, honeypot, and CAPTCHA plugins, including the default Akismet plugin that ships with WordPress.
 
 
+== FAQ ==
+
+Q: Mollom does not stop any spam on my form?
+
+A: Do you see Mollom's privacy policy link on the protected form?  If not, you
+   most likely did not protect the form.
+
+   Note: The privacy policy link can be toggled in the plugin settings.
+
+Q: Can I protect other forms then the comment form?
+Q: Can I protect a custom form?
+
+A: Out of the box, the Mollom plugin allows to protect the Wordpress comment
+   form only. The Mollom plugin doesn't provide an API for other plugins at this
+   point.
+
+   However, plugins can protect their custom forms, by following Mollom's general guide
+   and example for PHP client implementations:
+
+   - https://github.com/Mollom/guide
+   - https://github.com/Mollom/guide/tree/master/examples/php52
+
 == Upgrade Notice ==
 
 = 2.0 =
