@@ -200,6 +200,7 @@ abstract class MollomEntity {
     }
     // These parameters should be sent regardless of whether they are empty.
     $data += array(
+      'unsure' => (get_option('mollom_unsure', 'captcha') == 'captcha') ? 1 : 0,
       'checks' => array_keys(get_option('mollom_checks', array('spam' => 1))),
     );
 
