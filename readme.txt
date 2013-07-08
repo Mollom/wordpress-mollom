@@ -68,6 +68,21 @@ To get the best performance out of Mollom, ensure to disable all other spam filt
 
 == Frequently Asked Questions ==
 
+**Important:**  In case of any issues, ensure you have the latest stable release of the plugin installed first.
+
+= My Mollom API keys do not work? =
+
+There are multiple possible causes with corresponding error messages; ensure to check whether the message contains a hint at the cause already.  The most common issues:
+
+* *Invalid:*  
+  Most likely, the entered API keys were not copied correctly.
+* *HTTP requests:*  
+  Most likely, a firewall on your server/computer or in your infrastructure happens to block outbound requests to *.mollom.com.  You may need to contact your hosting/server administrator to resolve the issue.
+* *Try again later:*  
+  API key verification might be undergoing temporary maintenance work for Mollom Free users.
+
+If all fails, [Mollom Support](https://mollom.com/contact) might be able to help.
+
 = How can I test Mollom? =
 
 Do **not** test Mollom without enabling the testing mode.  Doing so would negatively affect your own author reputation across all sites in the Mollom network.  To test Mollom:
