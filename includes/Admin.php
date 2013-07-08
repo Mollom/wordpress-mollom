@@ -41,6 +41,7 @@ class MollomAdmin {
 
     register_setting('mollom', 'mollom_bypass_roles', array('MollomAdmin', 'sanitizeCheckboxesValue'));
     register_setting('mollom', 'mollom_fallback_mode');
+    register_setting('mollom', 'mollom_unsure');
 
     // Configuration sections.
     add_settings_section('mollom_keys', __('API keys', MOLLOM_L10N), '__return_false', 'mollom');
@@ -74,6 +75,16 @@ class MollomAdmin {
         'profanity' => __('Profanity', MOLLOM_L10N),
       ),
       'values' => get_option('mollom_checks'),
+    ));
+    // Protection options section.
+    add_settings_field('mollom_unsure', __('When text analysis is unsure', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+      'type' => 'radios',
+      'name' => 'mollom_unsure',
+      'options' => array(
+        'captcha' => __('Show a CAPTCHA', MOLLOM_L10N),
+        'binary' => __('Accept the post', MOLLOM_L10N),
+      ),
+      'value' => get_option('mollom_unsure', 'captcha'),
     ));
     add_settings_field('mollom_bypass_roles', __('Bypass roles', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkboxes',
