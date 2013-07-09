@@ -111,6 +111,11 @@ Out of the box, the Mollom plugin allows to protect the WordPress comment form o
 
 The Mollom plugin does not provide an API for other plugins and custom forms yet, but we're happy to discuss your needs.  If you're interested, check the [issue queue](https://github.com/Mollom/wordpress-mollom/issues).
 
+= What if one of my visitors is blocked by Mollom? =
+
+Whenever a post is not accepted, the error message contains a link that allows users to report the incident to Mollom support staff, which is able to investigate and resolve the situation.  
+*Note: False-positive reports are purposively not submitted to your own site, since actual spammers are trying to game Mollom by reporting their correctly blocked spam posts, too.*
+
 
 == Upgrade Notice ==
 
