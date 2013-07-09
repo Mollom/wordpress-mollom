@@ -68,7 +68,7 @@ To get the best performance out of Mollom, ensure to disable all other spam filt
 
 == Frequently Asked Questions ==
 
-**Important:**  In case of any issues, ensure you have the latest stable release of the plugin installed first.
+**Important:**  Ensure you have the latest release of the Mollom plugin installed first.
 
 = My Mollom API keys do not work? =
 
@@ -96,6 +96,14 @@ Do **not** test Mollom without enabling the testing mode.  Doing so would negati
 
 Do you see the link to Mollom's privacy policy on the form?  If not, then the form is not protected.  
 *Note: The privacy policy link can be toggled in the plugin settings.*
+
+= The Mollom CAPTCHA and other elements do not appear? =
+
+Your theme does not use the [`comment_form()`](http://codex.wordpress.org/Function_Reference/comment_form) function (introduced in WordPress 3.0) to output the comment form.  Ensure the `comments.php` file of your theme contains:
+
+    <?php comment_form(); ?>
+
+Have a look at WordPress' default *Twenty Twelve* theme to see how it is used.
 
 = Can I protect other forms? =
 
