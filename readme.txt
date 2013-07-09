@@ -87,15 +87,14 @@ If all fails, [Mollom Support](https://mollom.com/contact) might be able to help
 
 Do **not** test Mollom without enabling the testing mode.  Doing so would negatively affect your own author reputation across all sites in the Mollom network.  To test Mollom:
 
-1. Go to the Mollom plugin settings page.
-1. Enable the _"Testing mode"_ option.  
-   *Note: Ensure to read the difference in behavior.*
+1. Enable the _"Testing mode"_ option on the Mollom plugin settings page.  
+   *Note: Ensure to read the [difference in behavior](https://mollom.com/faq/how-do-i-test-mollom).*
 1. Log out or switch to a different user, and perform your tests.
 1. Disable the testing mode once you're done with testing.
 
 = Mollom does not stop any spam on my form? =
 
-Do you see Mollom's privacy policy link on the protected form?  If not, then the form is not protected.  
+Do you see the link to Mollom's privacy policy on the form?  If not, then the form is not protected.  
 *Note: The privacy policy link can be toggled in the plugin settings.*
 
 = Can I protect other forms? =
