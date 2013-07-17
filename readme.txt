@@ -107,6 +107,7 @@ Your theme does not use the [`comment_form()`](http://codex.wordpress.org/Functi
 
 Have a look at WordPress' default *Twenty Twelve* theme to see how it is used.
 
+= Does Mollom support plugin XYZ? =
 = Can I protect other forms? =
 
 Out of the box, the Mollom plugin allows to protect the WordPress comment form only.  Built-in support for other WordPress core entity forms (users, posts) will follow soon.
