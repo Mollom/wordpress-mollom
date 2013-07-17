@@ -72,16 +72,12 @@ To get the best performance out of Mollom, ensure to disable all other spam filt
 
 = My Mollom API keys do not work? =
 
-There are multiple possible causes with corresponding error messages; ensure to check whether the message contains a hint at the cause already.  The most common issues:
+There are multiple possible causes with corresponding error messages; check whether the error message hints at the cause already.  The most common issues:
 
-* *Invalid:*  
-  Most likely, the entered API keys were not copied correctly.
-* *HTTP requests:*  
-  Most likely, a firewall on your server/computer or in your infrastructure happens to block outbound requests to *.mollom.com.  You may need to contact your hosting/server administrator to resolve the issue.
-* *Try again later:*  
-  API key verification might be undergoing temporary maintenance work for Mollom Free users.
-
-If all fails, [Mollom Support](https://mollom.com/contact) might be able to help.
+* **Invalid keys:**  The API keys were not copied correctly; try to copy and paste them again.
+* **Time offset:**  The local time of your server/operating system is incorrect and not synchronized with Coordinated Universal Time ([UTC](http://en.wikipedia.org/wiki/UTC)); consult your hosting provider or server operator to correct the server time (not timezone) and to enable an [NTP](http://en.wikipedia.org/wiki/Network_Time_Protocol) daemon to keep it synchronized.
+* **Unable to reach Mollom:**  A [firewall](http://en.wikipedia.org/wiki/Firewall_%28computing%29) on your server/computer or infrastructure may block outbound HTTP requests to Mollom servers; consult your hosting provider or server operator to allow outbound HTTP requests to *.mollom.com.
+* **Try again later:**  The service might be undergoing temporary maintenance work for Mollom Free users; it should normally be back up after a few minutes.
 
 = How can I test Mollom? =
 
