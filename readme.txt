@@ -70,6 +70,12 @@ To get the best performance out of Mollom, ensure to disable all other spam filt
 
 **Important:**  Ensure you have the latest release of the Mollom plugin installed first.
 
+= How do I get Mollom API keys? =
+
+1. [Sign up](https://mollom.com/pricing) on Mollom.com.
+1. In your [Site manager](https://mollom.com/site-manager), register the site you want API keys for.
+1. Click _"View keys"_ to see your public key and private key.
+
 = My Mollom API keys do not work? =
 
 There are multiple possible causes with corresponding error messages; check whether the error message hints at the cause already.  The most common issues:
