@@ -20,6 +20,13 @@ The Mollom service encompasses all spam filtering techniques that exist, using i
 
 Mollom is actively used by more than 50,000 sites, including Sony, twitter, MIT, Adobe, Warner Bros Records, LinuxJournal, NBC, and many others.  More than 4,500,000 posts are checked by Mollom _per day_.
 
+= Features =
+
+* Protects the comment form. (support for other core forms to follow soon)
+* Checks for spam and profanity.
+* Allows selected user roles to bypass the protection.
+* Integrates with WordPress' built-in comment moderation pages.
+
 Do you have multiple WordPress and other sites that need moderation?  Mollom's [Content Moderation Platform](http://mollom.com/moderation) is supported out of the box — Save time & moderate them all at once.
 
 If you like Mollom, consider to [write a review](http://wordpress.org/support/view/plugin-reviews/mollom) and blog about it! :)
