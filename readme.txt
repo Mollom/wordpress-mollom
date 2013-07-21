@@ -4,7 +4,7 @@ Donate link: https://mollom.com/pricing
 Tags: comments, spam, social, content, moderation, captcha, mollom
 Requires at least: 3.1.0
 Tested up to: 3.5.1
-Stable tag: 2.0
+Stable tag: 2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -136,6 +136,13 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 
 
 == Changelog ==
+
+= 2.1 =
+
+* Fixed comment reply form is not positioned below parent comment when form is re-rendered.
+* Added support for plugin translations (gettext string localizations).
+* Added FAQ.
+* Added option to retain unsure posts instead of showing a CAPTCHA.
 
 = 2.0 =
 
