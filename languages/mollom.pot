@@ -1,0 +1,244 @@
+# Copyright (C) 2013 Mollom
+# This file is distributed under the same license as the Mollom package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Mollom 2.0\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/mollom\n"
+"POT-Creation-Date: 2013-07-21 19:31:19+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2013-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: includes/Admin.php:46
+msgid "API keys"
+msgstr ""
+
+#: includes/Admin.php:47
+msgid "Protection options"
+msgstr ""
+
+#: includes/Admin.php:48
+msgid "Advanced settings"
+msgstr ""
+
+#: includes/Admin.php:51
+msgid "Public key"
+msgstr ""
+
+#: includes/Admin.php:59
+msgid "Private key"
+msgstr ""
+
+#: includes/Admin.php:69
+msgid "Checks"
+msgstr ""
+
+#: includes/Admin.php:73 includes/Admin.php:293
+msgid "Spam"
+msgstr ""
+
+#: includes/Admin.php:74
+msgid "Profanity"
+msgstr ""
+
+#: includes/Admin.php:78
+msgid "Bypass roles"
+msgstr ""
+
+#: includes/Admin.php:83
+msgid "Select user roles to exclude from all Mollom checks."
+msgstr ""
+
+#: includes/Admin.php:85
+msgid "When Mollom is down"
+msgstr ""
+
+#: includes/Admin.php:89
+msgid "Block all form submissions"
+msgstr ""
+
+#: includes/Admin.php:90
+msgid "Accept all form submissions"
+msgstr ""
+
+#: includes/Admin.php:93
+msgid ""
+"In case Mollom services are unreachable, no text analysis can be performed "
+"and no CAPTCHAs can be generated. Customers on <a href=\"%s\">paid plans</a> "
+"have access to <a href=\"%s\">Mollom's high-availability backend "
+"infrastructure</a>, not available to free users, reducing potential downtime."
+msgstr ""
+
+#: includes/Admin.php:98
+msgid "Privacy policy link"
+msgstr ""
+
+#: includes/Admin.php:101
+msgid "Link to Mollom's privacy policy"
+msgstr ""
+
+#: includes/Admin.php:103
+msgid ""
+"Displays a link to the recommended <a href=\"%s\">privacy policy on mollom."
+"com</a> on all protected forms. When disabling this option, you are required "
+"to inform visitors about data privacy through other means, as stated in the "
+"<a href=\"%s\">terms of service</a>."
+msgstr ""
+
+#: includes/Admin.php:110
+msgid "Reverse proxy IP addresses"
+msgstr ""
+
+#: includes/Admin.php:115
+msgid ""
+"If your site resides behind one or more reverse proxies, enter their IP "
+"addresses as a comma-separated list."
+msgstr ""
+
+#: includes/Admin.php:120
+msgid "Enable Mollom testing mode"
+msgstr ""
+
+#: includes/Admin.php:123
+msgid ""
+"Submitting \"ham\", \"unsure\", or \"spam\" on a protected form will trigger "
+"the corresponding behavior. Image CAPTCHAs will only respond to \"correct\" "
+"and audio CAPTCHAs only respond to \"demo\". This option should be disabled "
+"in production environments."
+msgstr ""
+
+#: includes/Admin.php:188
+msgid ""
+"Mollom testing mode is still enabled. <a href=\"%s\">Disable</a> it after "
+"testing."
+msgstr ""
+
+#: includes/Admin.php:204
+msgid "The Mollom API keys are not configured yet."
+msgstr ""
+
+#: includes/Admin.php:209
+msgid ""
+"The server time of this site is incorrect. The time of the operating system "
+"is not synchronized with the Coordinated Universal Time (UTC), which "
+"prevents a successful authentication with Mollom. The maximum allowed offset "
+"is %d minutes. Please consult your hosting provider or server operator to "
+"correct the server time."
+msgstr ""
+
+#: includes/Admin.php:215
+msgid "The configured Mollom API keys are invalid."
+msgstr ""
+
+#: includes/Admin.php:219
+msgid ""
+"The Mollom servers could not be contacted. Please make sure that your web "
+"server can make outgoing HTTP requests."
+msgstr ""
+
+#: includes/Admin.php:223
+msgid "The Mollom API keys could not be verified. Please try again later."
+msgstr ""
+
+#: includes/Admin.php:226
+msgid ""
+"The Mollom servers could be contacted, but the Mollom API keys could not be "
+"verified."
+msgstr ""
+
+#: includes/Admin.php:233
+msgid ""
+"Mollom servers verified your keys. The services are operating correctly."
+msgstr ""
+
+#: includes/Admin.php:287
+msgid "Ham"
+msgstr ""
+
+#: includes/Admin.php:290
+msgid "Unsure"
+msgstr ""
+
+#: includes/Entity.php:106
+msgid "Type the characters you see in this picture."
+msgstr ""
+
+#: includes/Entity.php:119
+msgid "Word verification"
+msgstr ""
+
+#: includes/Entity.php:125
+msgid ""
+"By submitting this form, you accept the <a href=\"%s\" target=\"_blank\" rel="
+"\"nofollow\">Mollom privacy policy</a>."
+msgstr ""
+
+#: includes/Entity.php:212
+msgid "Service unavailable"
+msgstr ""
+
+#: includes/Entity.php:213
+msgid ""
+"The spam filter installed on this site is currently unavailable. Per site "
+"policy, we are unable to accept new submissions until that problem is "
+"resolved. Please try resubmitting the form in a couple of minutes."
+msgstr ""
+
+#: includes/Entity.php:227
+msgid "Your submission has triggered the spam filter and will not be accepted."
+msgstr ""
+
+#: includes/Entity.php:235
+msgid "To complete this form, please complete the word verification below."
+msgstr ""
+
+#: includes/Entity.php:238
+msgid ""
+"The word verification was not completed correctly. Please complete this new "
+"word verification and try again."
+msgstr ""
+
+#: includes/Entity.php:259
+msgid ""
+"Your submission has triggered the profanity filter and will not be accepted "
+"until the inappropriate language is removed."
+msgstr ""
+
+#: includes/Entity.php:295
+msgid ""
+"If you feel this is in error, please <a href=\"%s\" target=\"_blank\">report "
+"that you are blocked</a>."
+msgstr ""
+
+#: mollom.php:214
+msgid ""
+"Duplicate comment detected; it looks as though you&#8217;ve already said "
+"that!"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Mollom"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://mollom.com"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"Protects you from spam and unwanted posts. <strong>Get started:</strong> 1) "
+"<em>Activate</em>, 2) <a href=\"https://mollom.com/pricing\">Sign up</a> and "
+"create API keys, 3) Set them in <a href=\"options-general.php?page=mollom"
+"\">settings</a>."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Matthias Vandermaesen"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://www.colada.be"
+msgstr ""

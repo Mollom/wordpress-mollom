@@ -54,6 +54,9 @@ register_activation_hook(__FILE__, array('MollomSchema', 'install'));
 // @see http://phptherightway.com
 // Note the priority argument semantics (4th argument to add_filter/add_action):
 //   WordPress $priority == Drupal $weight != Symfony $priority
+add_action('plugins_loaded', 'mollom_plugins_loaded');
+add_action('init', 'mollom_moderate');
+
 if (is_admin()) {
   add_action('admin_init', array('MollomAdmin', 'init'));
   add_action('admin_menu', array('MollomAdmin', 'registerPages'));
@@ -68,8 +71,6 @@ add_action('delete_comment', 'mollom_dispatch_hook');
 add_action('wp_set_comment_status', 'mollom_dispatch_hook', 10, 2);
 add_action('transition_comment_status', 'mollom_dispatch_hook', 10, 3);
 add_action('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
-
-add_action('init', 'mollom_moderate');
 
 add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
 
@@ -154,6 +155,13 @@ function mollom() {
     $instance = new $class();
   }
   return $instance;
+}
+
+/**
+ * Plugins loaded callback; Initializes localization.
+ */
+function mollom_plugins_loaded() {
+  load_plugin_textdomain(MOLLOM_L10N, FALSE, dirname(plugin_basename(__FILE__)) . '/languages/');
 }
 
 /**
