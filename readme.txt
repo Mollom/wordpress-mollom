@@ -49,6 +49,7 @@ This plugin is maintained on [GitHub](https://github.com/Mollom/wordpress-mollom
 1. [Sign up on Mollom.com](https://mollom.com/pricing) to create API keys for your site.
 1. Enter them on the Mollom plugin settings page on your site.
 
+For more detailed instructions, check our complete [Tutorial for WordPress](https://mollom.com/tutorials/wordpress) and [FAQ](http://wordpress.org/plugins/mollom/faq/).
 
 = Requirements =
 
@@ -64,6 +65,7 @@ Optionally, to enable the [Content Moderation Platform (CMP)](http://mollom.com/
 
         RewriteEngine On
         RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 
 
 = Compatibility =
