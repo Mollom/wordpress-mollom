@@ -77,14 +77,18 @@ class MollomAdmin {
       'values' => get_option('mollom_checks'),
     ));
     // Protection options section.
-    add_settings_field('mollom_unsure', __('When text analysis is unsure', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_unsure', __('When Mollom is unsure', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'radios',
       'name' => 'mollom_unsure',
       'options' => array(
-        'captcha' => __('Show a CAPTCHA', MOLLOM_L10N),
+        'captcha' => __('Show a CAPTCHA (recommended)', MOLLOM_L10N),
         'binary' => __('Accept the post', MOLLOM_L10N),
       ),
       'value' => get_option('mollom_unsure', 'captcha'),
+      'description' => vsprintf(__('Only a small fraction of posts are determined as unsure. <a href="%s">Mollom works best</a> by showing a CAPTCHA, since <a href="%s">Mollom CAPTCHAs are "intelligent"</a>.', MOLLOM_L10N), array(
+        'https://mollom.com/how-mollom-works',
+        'http://buytaert.net/mollom-captchas-are-intelligent',
+      )),
     ));
     add_settings_field('mollom_bypass_roles', __('Bypass roles', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkboxes',
