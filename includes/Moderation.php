@@ -50,8 +50,9 @@ class MollomModeration {
       header($_SERVER['SERVER_PROTOCOL'] . ' 401 Unauthorized');
       return FALSE;
     }
-    do_action('mollom_moderate_' . self::$entityType, self::$entityId, $action);
-    return TRUE;
+    // The actual moderation callback is part of the filter chain and returns
+    // TRUE on success, FALSE on failure.
+    return apply_filters('mollom_moderate_' . self::$entityType, self::$entityId, $action);
   }
 
   /**
