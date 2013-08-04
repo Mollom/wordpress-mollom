@@ -116,7 +116,7 @@ abstract class MollomEntity {
       ));
 
       $output .= "\n";
-      $output .= MollomForm::formatItem('text', __('Word verification', MOLLOM_L10N), $captcha);
+      $output .= MollomForm::formatItem('text', __('Word verification', MOLLOM_L10N), $captcha, __('Type the characters in the image above (not case-sensitive).', MOLLOM_L10N));
     }
 
     if (get_option('mollom_privacy_link', TRUE)) {
