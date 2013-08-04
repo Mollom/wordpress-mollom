@@ -94,7 +94,7 @@ abstract class MollomEntity {
     $output .= MollomForm::formatInput('hidden', 'mollom[contentId]', $values['contentId']);
     $output .= MollomForm::formatInput('hidden', 'mollom[captchaId]', $values['captchaId']);
 
-    $output .= '<div class="hidden">';
+    $output .= '<div style="display: none;">';
     $output .= MollomForm::formatInput('text', 'mollom[homepage]', $values['homepage']);
     $output .= '</div>';
 
