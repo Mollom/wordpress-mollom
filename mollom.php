@@ -198,7 +198,7 @@ function mollom_moderate() {
   // @todo Most likely fails on sites that don't have pretty URLs enabled.
   if (preg_match('@/mollom/moderate/(?P<contentId>[^/]+)/(?P<action>[^/]+)$@', $_SERVER['REQUEST_URI'], $args)) {
     echo (int) MollomModeration::handleRequest($args['contentId'], $args['action']);
-    //error_log(var_export(MollomModeration::$log, TRUE), 3, __DIR__ . '/includes/log.log');
+    //error_log(var_export(MollomModeration::$log, TRUE) . "\n", 3, __DIR__ . '/includes/log.log');
     exit;
   }
 }
