@@ -77,14 +77,18 @@ class MollomAdmin {
       'values' => get_option('mollom_checks'),
     ));
     // Protection options section.
-    add_settings_field('mollom_unsure', __('When text analysis is unsure', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_unsure', __('When Mollom is unsure', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'radios',
       'name' => 'mollom_unsure',
       'options' => array(
-        'captcha' => __('Show a CAPTCHA', MOLLOM_L10N),
+        'captcha' => __('Show a CAPTCHA (recommended)', MOLLOM_L10N),
         'binary' => __('Accept the post', MOLLOM_L10N),
       ),
       'value' => get_option('mollom_unsure', 'captcha'),
+      'description' => vsprintf(__('Only a small fraction of posts are determined as unsure. <a href="%s">Mollom works best</a> by showing a CAPTCHA, since <a href="%s">Mollom CAPTCHAs are "intelligent"</a>.', MOLLOM_L10N), array(
+        'https://mollom.com/how-mollom-works',
+        'http://buytaert.net/mollom-captchas-are-intelligent',
+      )),
     ));
     add_settings_field('mollom_bypass_roles', __('Bypass roles', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'checkboxes',
@@ -102,8 +106,8 @@ class MollomAdmin {
       ),
       'value' => get_option('mollom_fallback_mode', 'accept'),
       'description' => vsprintf(__('In case Mollom services are unreachable, no text analysis can be performed and no CAPTCHAs can be generated. Customers on <a href="%s">paid plans</a> have access to <a href="%s">Mollom\'s high-availability backend infrastructure</a>, not available to free users, reducing potential downtime.', MOLLOM_L10N), array(
-        'https://mollom.com/web-service-privacy-policy',
-        'https://mollom.com/terms-of-service',
+        'https://mollom.com/pricing',
+        'https://mollom.com/standard-service-level-agreement',
       )),
     ));
     add_settings_field('mollom_privacy_link', __('Privacy policy link', MOLLOM_L10N), array('MollomForm', 'printItemArray'), 'mollom', 'mollom_options', array(
@@ -112,8 +116,8 @@ class MollomAdmin {
       'label' => __("Link to Mollom's privacy policy", MOLLOM_L10N),
       'value' => get_option('mollom_privacy_link'),
       'description' => vsprintf(__('Displays a link to the recommended <a href="%s">privacy policy on mollom.com</a> on all protected forms. When disabling this option, you are required to inform visitors about data privacy through other means, as stated in the <a href="%s">terms of service</a>.', MOLLOM_L10N), array(
-        '@privacy-policy-url' => 'https://mollom.com/web-service-privacy-policy',
-        '@terms-of-service-url' => 'https://mollom.com/terms-of-service',
+        'https://mollom.com/web-service-privacy-policy',
+        'https://mollom.com/terms-of-service',
       )),
     ));
 
@@ -130,7 +134,6 @@ class MollomAdmin {
       'name' => 'mollom_testing_mode',
       'label' => __('Enable Mollom testing mode', MOLLOM_L10N),
       'value' => get_option('mollom_testing_mode'),
-      // @todo Sanitize.
       'description' => __('Submitting "ham", "unsure", or "spam" on a protected form will trigger the corresponding behavior. Image CAPTCHAs will only respond to "correct" and audio CAPTCHAs only respond to "demo". This option should be disabled in production environments.', MOLLOM_L10N),
     ));
   }
