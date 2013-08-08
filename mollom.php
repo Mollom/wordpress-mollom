@@ -54,6 +54,7 @@ register_activation_hook(__FILE__, array('MollomSchema', 'install'));
 // @see http://phptherightway.com
 // Note the priority argument semantics (4th argument to add_filter/add_action):
 //   WordPress $priority == Drupal $weight != Symfony $priority
+// Argument default values: $priority = 10, $accepted_args = 1
 add_action('plugins_loaded', 'mollom_plugins_loaded');
 add_action('init', 'mollom_moderate');
 
@@ -64,13 +65,25 @@ if (is_admin()) {
   add_action('admin_notices', array('MollomAdmin', 'testingModeWarning'));
 }
 
+// Comments.
 add_filter('comment_form_defaults', 'mollom_dispatch_hook');
 add_filter('preprocess_comment', 'mollom_dispatch_hook', 0);
 add_action('comment_post', 'mollom_dispatch_hook');
 add_action('delete_comment', 'mollom_dispatch_hook');
 add_action('wp_set_comment_status', 'mollom_dispatch_hook', 10, 2);
 add_action('transition_comment_status', 'mollom_dispatch_hook', 10, 3);
-add_action('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
+add_filter('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
+
+// Users.
+// @todo Multisite uses wp-signup.php.
+// @see register_new_user(), wp-login.php
+add_action('register_form', 'mollom_dispatch_hook');
+add_filter('registration_errors', 'mollom_dispatch_hook', 10, 3);
+// @see wp_create_user(), wp_insert_user(), wp-includes/user.php
+add_action('user_register', 'mollom_dispatch_hook');
+// @see wp_delete_user(), wp-admin/includes/user.php
+add_action('delete_user', 'mollom_dispatch_hook');
+add_filter('mollom_moderate_user', 'mollom_dispatch_hook', 10, 2);
 
 add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
 
@@ -99,6 +112,7 @@ add_filter('wp_die_handler', 'mollom_die_handler_callback', 100);
 function mollom_dispatch_hook($has_args = NULL) {
   static $instances = array();
   static $mapping = array(
+    // Comments.
     'comment_form_defaults' => array('MollomEntityComment', 'buildForm'),
     'preprocess_comment' => array('MollomEntityComment', 'validateForm'),
     'comment_post' => array('MollomEntityComment', 'save'),
@@ -106,6 +120,12 @@ function mollom_dispatch_hook($has_args = NULL) {
     'wp_set_comment_status' => array('MollomEntityComment', 'sendFeedback'),
     'transition_comment_status' => array('MollomEntityComment', 'transitionStatus'),
     'mollom_moderate_comment' => array('MollomEntityComment', 'moderate'),
+    // Users.
+    'register_form' => array('MollomEntityUser', 'buildForm'),
+    'registration_errors' => array('MollomEntityUser', 'validateForm'),
+    'user_register' => array('MollomEntityUser', 'save'),
+    'delete_user' => array('MollomEntityUser', 'delete'),
+    'mollom_moderate_user' => array('MollomEntityUser', 'moderate'),
   );
 
   $filter = current_filter();
@@ -178,7 +198,7 @@ function mollom_moderate() {
   // @todo Most likely fails on sites that don't have pretty URLs enabled.
   if (preg_match('@/mollom/moderate/(?P<contentId>[^/]+)/(?P<action>[^/]+)$@', $_SERVER['REQUEST_URI'], $args)) {
     echo (int) MollomModeration::handleRequest($args['contentId'], $args['action']);
-    //error_log(var_export(MollomModeration::$log, TRUE), 3, __DIR__ . '/includes/log.log');
+    //error_log(var_export(MollomModeration::$log, TRUE) . "\n", 3, __DIR__ . '/includes/log.log');
     exit;
   }
 }

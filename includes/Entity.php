@@ -172,13 +172,13 @@ abstract class MollomEntity {
     // munged user input or helper functions that equally munge data objects.
     $data = MollomForm::unescapeUserInput($data);
 
-    $data['authorIp'] = self::getAuthorIp();
+    $data += $this->getAuthorParams();
 
     if (isset($_POST['mollom']['homepage']) && $_POST['mollom']['homepage'] !== '') {
       $data['honeypot'] = $_POST['mollom']['homepage'];
     }
 
-    $author_data = array_intersect_key($data, array_flip(array('authorName', 'authorMail', 'authorUrl', 'authorIp', 'authorId', 'honeypot')));
+    $author_data = array_intersect_key($data, array_flip(array('authorIp', 'authorId', 'authorCreated', 'authorName', 'authorMail', 'authorUrl', 'honeypot')));
 
     // Check (unsure) CAPTCHA solution.
     if (!empty($_POST['mollom']['captchaId'])) {
@@ -402,6 +402,10 @@ abstract class MollomEntity {
       'id' => $_POST['mollom']['contentId'],
       'stored' => 1,
     );
+    // Special-case: Supply the authorId for newly registered users.
+    if ($this->getType() == 'user') {
+      $data['authorId'] = $id;
+    }
     mollom()->checkContent($data);
     // Save meta data.
     add_metadata($this->getType(), $id, 'mollom', $_POST['mollom']);
@@ -486,6 +490,37 @@ abstract class MollomEntity {
    */
   public function moderate($id, $action) {
     // No-op. There is no common denominator for all entity types in WP.
+  }
+
+  /**
+   * Returns Mollom author parameters for the current user.
+   *
+   * @return array
+   *   An associative array containing 'author*' parameters.
+   */
+  public function getAuthorParams() {
+    $data = array(
+      'authorIp' => self::getAuthorIp(),
+    );
+    $user = wp_get_current_user();
+    if (empty($user->ID)) {
+      return $data;
+    }
+    $data += array(
+      'authorId' => $user->ID,
+      'authorCreated' => strtotime($user->data->user_registered . ' ' . get_option('timezone_string')),
+      'authorMail' => $user->data->user_email,
+    );
+    if (!empty($user->data->display_name)) {
+      $data['authorName'] = $user->data->display_name;
+    }
+    else {
+      $data['authorName'] = $user->data->user_login;
+    }
+    if (!empty($user->data->user_url)) {
+      $data['authorUrl'] = $user->data->user_url;
+    }
+    return $data;
   }
 
   /**

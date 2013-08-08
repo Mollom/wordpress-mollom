@@ -32,9 +32,15 @@ class MollomModeration {
   public static function handleRequest($contentId, $action) {
     self::$contentId = $contentId;
     self::$action = $action;
+    self::log(array(
+      'message' => sprintf('%s moderation request for contentId %s', $action, $contentId),
+    ));
     // Verify the action.
     if (!in_array($action, array('approve', 'spam', 'delete'))) {
       header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
+      self::log(array(
+        'message' => 'Unsupported action',
+      ));
       return FALSE;
     }
     // Retrieve entity mapping.
@@ -45,13 +51,20 @@ class MollomModeration {
       ));
       return FALSE;
     }
+    self::log(array(
+      'message' => sprintf('Resolved %s to %s %d', $contentId, self::$entityType, self::$entityId),
+    ));
     // Validate OAuth Authorization header.
     if (!self::validateAuth()) {
       header($_SERVER['SERVER_PROTOCOL'] . ' 401 Unauthorized');
+      self::log(array(
+        'message' => 'Invalid authentication',
+      ));
       return FALSE;
     }
-    do_action('mollom_moderate_' . self::$entityType, self::$entityId, $action);
-    return TRUE;
+    // The actual moderation callback is part of the filter chain and returns
+    // TRUE on success, FALSE on failure.
+    return apply_filters('mollom_moderate_' . self::$entityType, self::$entityId, $action);
   }
 
   /**
