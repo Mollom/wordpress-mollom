@@ -40,9 +40,9 @@ class MollomAdmin {
     register_setting('mollom', 'mollom_privacy_link', 'intval');
 
     register_setting('mollom', 'mollom_bypass_roles', array('MollomAdmin', 'sanitizeCheckboxesValue'));
-    register_setting('mollom', 'mollom_retain_spam');
     register_setting('mollom', 'mollom_fallback_mode');
     register_setting('mollom', 'mollom_unsure');
+    register_setting('mollom', 'mollom_spam');
 
     // Configuration sections.
     add_settings_section('mollom_keys', __('API keys', MOLLOM_L10N), '__return_false', 'mollom');
@@ -98,15 +98,15 @@ class MollomAdmin {
       'values' => get_option('mollom_bypass_roles'),
       'description' => __('Select user roles to exclude from all Mollom checks.', MOLLOM_L10N),
     ));
-    add_settings_field('mollom_retain_spam', __('When a form submission is classified as spam', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
+    add_settings_field('mollom_spam', __('When text analysis is unsure', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'radios',
-      'name' => 'mollom_retain_spam',
+      'name' => 'mollom_spam',
       'options' => array(
-        'block' => __('Block it', MOLLOM_L10N),
-        'retain' => __('Retain it in the spam moderation queue', MOLLOM_L10N),
+        'discard' => __('Discard the post', MOLLOM_L10N),
+        'retain' => __('Retain the post for manual moderation', MOLLOM_L10N),
       ),
-      'value' => get_option('mollom_retain_spam', 'block'),
-      'description' => __('Form submissions classified as spam will not be saved to the database by default.', MOLLOM_L10N),
+      'value' => get_option('mollom_spam', 'discard'),
+      'description' => __('Comment submissions classified as spam will not be saved to the database by default.', MOLLOM_L10N),
     ));
     add_settings_field('mollom_fallback_mode', __('When Mollom is down', MOLLOM_L10N), array('MollomForm', 'printItemsArray'), 'mollom', 'mollom_options', array(
       'type' => 'radios',
