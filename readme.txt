@@ -129,6 +129,15 @@ Whenever a post is not accepted, the error message contains a link that allows u
 *Note: False-positive reports are purposively not submitted to your own site, since actual spammers are trying to game Mollom by reporting their correctly blocked spam posts, too.*
 
 
+= How do I upgrade from the old _WP-Mollom_ plugin? =
+
+1. Deactivate, uninstall, and delete the old `wp-mollom` plugin (version 0.7.5 or older).
+1. [Install](http://wordpress.org/plugins/mollom/installation/) the new Mollom plugin (version 2.0 or later).
+1. Re-enter your Mollom API keys.
+
+There is no automated upgrade path, because the plugin has been rewritten from scratch.  Re-installing the new is a matter of minutes.  We're sorry for this one-time inconvenience.
+
+
 == Upgrade Notice ==
 
 = 2.0 =
@@ -138,6 +147,7 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 == Changelog ==
 
 = 2.1 =
+2013-07-21
 
 * Fixed comment reply form is not positioned below parent comment when form is re-rendered.
 * Added support for plugin translations (gettext string localizations).
@@ -145,6 +155,149 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 * Added option to retain unsure posts instead of showing a CAPTCHA.
 
 = 2.0 =
+2013-07-07
 
 * Rewritten and re-architected for Mollom's new [REST API](http://mollom.com/api).
 
+= 0.7.5 =
+2009-12-20
+
+* fixed: wrong character encoding when comment is fed to wordpress after a CAPTCHA
+* fixed: url was also truncated in href if > 32 chars in the management module
+* fixed: changed 2 strings against typo's
+* improved: added pagination on the bottom of the management module
+* changed: contact details of plugin author
+
+= 0.7.4 =
+2009-04-18
+
+* added: vietnamese (vi) translation
+* added: bulgarian (bg_BG) translation
+* added: bangla (bn_BD) translation
+
+= 0.7.3 =
+2009-03-16
+
+* fixed: multiple moderation would incorrectly state 'moderation failed' due to incorrect set boolean.
+* added: german (de_DE) translation
+* added: italian (it_IT) translation
+
+= 0.7.2 =
+2009-02-12
+
+* fixed: closing a gap that allowed bypassing checkContent through spoofing $_POST['mollom_sessionid']
+* fixed: if mb_convert_encoding() is not available, the CAPTCHA would generate a PHP error. Now falls back to htmlentities().
+* improved: the check_trackback_content and check_comment_content are totally rewritten to make them more secure.
+* added: user roles capabilities. You can now exempt roles from a check by Mollom
+* added: simplified chinese (zh_CN) translation
+
+= 0.7.1 =
+2008-12-27
+
+* fixed: all plugin panels now show in the new WP 2.7 administration interface
+* fixed: non-western character sets are now handled properly in the captcha form
+* fixed: handles threaded comments properly now
+* fixed: handling multiple records in the manage module not correctly handled
+* improved: extra - non standard- fields added to the comment form don't get dropped anymore
+* improved: revamped the administration panel
+* improved: various smaller code improvements
+* added: the plugin is now compatible with the new plugin uninstall features in Wordpress 2.7
+* added: the 'quality' of 'spaminess' of a comment is now logged and shown as an extra indicator
+
+= 0.7.0 =
+2008-11-27
+
+* fixed: hover over statistics bar graph wouldn't yield numerical data
+* added: localization/internationalisation (i8n) support. Now you can translate wp-mollom through POEdit and the likes.
+
+= 0.6.2 =
+2008-11-10
+
+* fixed: wrong feedback qualifiers (spam, profanity, unwanted, low-quality) were transmitted to Mollom upon moderation
+
+= 0.6.1 =
+2008-09-24
+
+* fixed: division by 0 error on line 317
+* fixed: if 'unsure' but captcha was filled in correctly, HTML attributes in comment content would sometimes be eaten by kses.
+* improved: the mollom function got an overhaul to reflect the september 15 version of the Mollom API documentation
+* changed: mollom statistics are now hooked in edit-comments.php instead of plugins.php
+* added: _mollom_retrieve_server_list() function now handles all getServerList calls
+
+= 0.6.0 =
+2008-08-24
+
+* fixed: html is preserved in a comment when the visitor is confronted with the captcha
+* fixed: handling of session id's in show_captcha() en check_captcha() follows the API flow better.
+* fixed: broken bulk moderation of comments is now fixed
+* fixed: the IP adress was incorrectly passed to the 'mollom.checkCaptcha' call
+* fixed: the session_id is now passed correctly to _save_session() after the captcha is checked.
+* improved: more verbose status messages report when using the Mollom Manage module
+* improved: cleaned up some deprecated functions
+* improved: handling of Mollom feedback in _mollom_send_feedback() function
+* added: approve and unapprove options in the Mollom Manage module
+* added: link to the originating post in the Mollom Manage module
+* added: if a comment had to pass a CAPTCHA, it will be indicated in the Mollom Manage module
+* added: plugin has it's own HTTP USER AGENT string which will be send with XML RPC calls to the API
+* added: detailed statistics. You can find these under Plugins > Mollom
+
+= 0.5.2 =
+2008-07-20
+
+* fixed: passing $comment instead of $_POST to show_captcha() in check_captcha()
+* improved: implemented wpdb->prepare() in vunerable queries
+* improved: mollom_activate() function now more robust
+* changed: mollom_author_ip() reflects changes in the API documentation. This function is now 'reverse proxy aware'
+
+= 0.5.1 =
+2008-06-30
+
+* fixed: issues with the captcha page not being rendered correctly
+* added: mollom_manage_wp_queue() function which deals with Mollom feedback from the default WP moderation queue
+* improved: legacy code when activating the plugin (needed for upgrading from < 0.5.0 (testversions!)
+
+= 0.5.0 =
+2008-06-26
+
+* Added: installation/activation can contain legacy code and versioning for handling old (test)configurations
+* Added: PHPDoc style documentation of functions
+* Added: mollom_moderate_comment() template function. Allows moderation from your theme.
+* Removed: 'moderation mode'. Moderation should only be configured through the proper wordpress interface.
+* fixed: compatibility issues with the WP-OpenID plugin
+* Improved: the plugin relies far less on global variables now.
+* Improved: all mollom data is now saved to it's own seprerate, independent table.
+* Improved: SQL revision
+* Improved: error handling is now more verbose
+* Improved: status messages in the configuration/moderation panels now only show when relevant
+* Improved: handling of mollom servers not being available or unreachable
+
+= 0.4 =
+2008-06-03
+
+* Changed: 'configuration' now is under WP 'settings' menu instead of 'plugins'
+* Added: show_mollom_plugincount() as a template function to show off your mollom caught
+
+= 0.3 =
+2008-05-27
+
+* Added: trackback support. If ham: passed. If unsure/spam: blocked.
+* Added: 'moderation mode' mollom approved comments/trackbacks still need to be moderated
+* Added: 'Restore' When the plugin is deactivated, optionally purge all mollom related data
+* Changed: moderation isn't mandatory anymore, only optional. Comments aren't saved to the  database until the CAPTCHA is filled out correctly. Otherwise: never registered.
+* Improved: Error handling now relies on WP Error handling (WP_Error object)
+
+= 0.2 =
+2008-05-22
+
+* Added: bulk moderation of comments
+* Added: 'policy mode' disables commenting if the Mollom service is down
+* Improved: moderation interface is more userfriendly
+* Improved: only unmoderated messages with a mollom session id can be moderated
+* Improved: deactivation restores database to previous state. Removal of stored option values and deletion of the mollom_session_id column in $prefix_comments
+* Fixed: persistent storage of the mollom session id in the database
+* Fixed: no messages shown in the configuration screen triggers a PHP error
+
+= 0.1 =
+2008-05-12
+
+* Initial release to testers
