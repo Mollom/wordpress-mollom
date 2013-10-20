@@ -116,15 +116,19 @@ abstract class MollomEntity {
       ));
 
       $output .= "\n";
-      $output .= MollomForm::formatItem('text', __('Word verification', MOLLOM_L10N), $captcha, __('Type the characters in the image above (not case-sensitive).', MOLLOM_L10N));
+      $output .= MollomForm::formatItem('text', __('Word verification', MOLLOM_L10N), $captcha, __('Type the characters in the image above (not case-sensitive).', MOLLOM_L10N), array(
+        'item' => array('class' => array('mollom-captcha'))
+      ));
     }
 
     if (get_option('mollom_privacy_link', TRUE)) {
       $output .= "\n";
-      $output .= '<p class="description">';
+      $output .= '<p class="description mollom-privacy-policy">';
+      $output .= '<small>';
       $output .= vsprintf(__('By submitting this form, you accept the <a href="%s" target="_blank" rel="nofollow">Mollom privacy policy</a>.', MOLLOM_L10N), array(
         'https://mollom.com/web-service-privacy-policy',
       ));
+      $output .= '</small>';
       $output .= '</p>';
     }
 
