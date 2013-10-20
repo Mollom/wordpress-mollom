@@ -26,8 +26,8 @@ class MollomEntityUser extends MollomEntity {
    *
    * @see register_form
    */
-  public function buildForm() {
-    $output = parent::buildForm();
+  public function buildForm($fields) {
+    $output = parent::buildForm($fields);
     print $output;
     return $output;
   }
@@ -47,7 +47,7 @@ class MollomEntityUser extends MollomEntity {
    *
    * @see registration_errors
    */
-  public function validateForm($errors, $sanitized_user_login, $user_email) {
+  public function validateRegistrationForm($errors, $sanitized_user_login, $user_email) {
     if ($this->isPrivileged()) {
       return $errors;
     }

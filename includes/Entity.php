@@ -80,7 +80,7 @@ abstract class MollomEntity {
    *
    * @see MollomEntity::alterFormAction()
    */
-  public function buildForm() {
+  public function buildForm($fields) {
     if ($this->isPrivileged()) {
       return '';
     }
