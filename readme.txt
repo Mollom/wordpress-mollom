@@ -4,7 +4,7 @@ Donate link: https://mollom.com/pricing
 Tags: comments, spam, social, content, moderation, captcha, mollom
 Requires at least: 3.1.0
 Tested up to: 3.6
-Stable tag: 2.1
+Stable tag: 2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -147,6 +147,7 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 == Changelog ==
 
 = 2.2 =
+2013-10-22
 
 * Fixed CAPTCHA and honeypot form elements are not presented correctly in all themes.
 * Added user registration form protection.
