@@ -146,6 +146,11 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 
 == Changelog ==
 
+= 2.2 =
+
+* Fixed CAPTCHA and honeypot form elements are not presented correctly in all themes.
+* Added user registration form protection.
+
 = 2.1 =
 2013-07-21
 
