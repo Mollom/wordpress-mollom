@@ -43,7 +43,7 @@ class MollomEntityComment extends MollomEntity {
    * @see comment_form_defaults
    */
   public function buildForm($fields) {
-    $fields['comment_notes_after'] .= parent::buildForm();
+    $fields['comment_notes_after'] .= parent::buildForm($fields);
     return $fields;
   }
 

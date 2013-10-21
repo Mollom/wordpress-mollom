@@ -122,7 +122,7 @@ function mollom_dispatch_hook($has_args = NULL) {
     'mollom_moderate_comment' => array('MollomEntityComment', 'moderate'),
     // Users.
     'register_form' => array('MollomEntityUser', 'buildForm'),
-    'registration_errors' => array('MollomEntityUser', 'validateForm'),
+    'registration_errors' => array('MollomEntityUser', 'validateRegistrationForm'),
     'user_register' => array('MollomEntityUser', 'save'),
     'delete_user' => array('MollomEntityUser', 'delete'),
     'mollom_moderate_user' => array('MollomEntityUser', 'moderate'),
