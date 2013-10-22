@@ -3,7 +3,7 @@
 /*
   Plugin Name: Mollom
   Plugin URI: https://mollom.com
-  Version: 2.2
+  Version: 2.3-dev
   Text Domain: mollom
   Description: Protects you from spam and unwanted posts. <strong>Get started:</strong> 1) <em>Activate</em>, 2) <a href="https://mollom.com/pricing">Sign up</a> and create API keys, 3) Set them in <a href="options-general.php?page=mollom">settings</a>.
   Author: Matthias Vandermaesen

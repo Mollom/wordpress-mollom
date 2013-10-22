@@ -146,6 +146,9 @@ Required upgrade.  Uninstall the old wp-mollom plugin, re-install the new, and r
 
 == Changelog ==
 
+= 2.3 =
+
+
 = 2.2 =
 2013-10-22
 
