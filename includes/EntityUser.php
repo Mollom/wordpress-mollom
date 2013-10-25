@@ -76,6 +76,16 @@ class MollomEntityUser extends MollomEntity {
   }
 
   /**
+   * Saves Mollom data for a processed entity.
+   */
+  public function save($id, $data = array()) {
+    $data = array();
+    // Special-case: Supply the authorId for newly registered users.
+    $data['authorId'] = $id;
+    parent::save($id, $data);
+  }
+
+  /**
    * Moderates an entity.
    *
    * @param int $id

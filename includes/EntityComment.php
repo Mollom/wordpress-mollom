@@ -155,6 +155,15 @@ EOD;
   }
 
   /**
+   * Saves Mollom data for a processed entity.
+   */
+  public function save($id, $data = array()) {
+    $data = array();
+    $data['url'] = get_comment_link($id);
+    parent::save($id, $data);
+  }
+
+  /**
    * Reacts to comment status changes.
    *
    * When a spam comment is "unspammed", it might transition into either

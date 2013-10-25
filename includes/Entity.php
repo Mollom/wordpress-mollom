@@ -397,19 +397,15 @@ abstract class MollomEntity {
    *
    * @see http://codex.wordpress.org/Metadata_API
    */
-  public function save($id) {
+  public function save($id, $data = array()) {
     if (empty($_POST['mollom']['contentId'])) {
       return;
     }
     // Notify that the entity was stored.
-    $data = array(
+    $data += array(
       'id' => $_POST['mollom']['contentId'],
       'stored' => 1,
     );
-    // Special-case: Supply the authorId for newly registered users.
-    if ($this->getType() == 'user') {
-      $data['authorId'] = $id;
-    }
     mollom()->checkContent($data);
     // Save meta data.
     add_metadata($this->getType(), $id, 'mollom', $_POST['mollom']);
