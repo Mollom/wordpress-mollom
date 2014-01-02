@@ -106,6 +106,12 @@ class MollomEntityComment extends MollomEntity {
       $post = query_posts('p=' . $comment['comment_post_ID']);
       // @see template-loader.php
       $template = get_single_template();
+
+      // do not rely on the single.php to be present, it is not a requirement for a theme
+      if (empty($template)) {
+        $template = get_index_template();
+      }
+
       include $template;
       // Prevent wp_new_comment() from processing this POST further.
       exit;
