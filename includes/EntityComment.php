@@ -103,7 +103,17 @@ class MollomEntityComment extends MollomEntity {
       add_action('comment_form_after', array($this, 'afterFormRendering'), 100);
 
       // @see http://codex.wordpress.org/Function_Reference/WP_Query
-      $post = query_posts('p=' . $comment['comment_post_ID']);
+      //$post = query_posts('page_id=' . $comment['comment_post_ID']);
+      $id = $comment['comment_post_ID'];
+      $post = get_post($id);
+      $field = $post->post_type === 'post' ? 'p' : ($post->post_type === 'page' ? 'page_id' : 'attachment_id');
+      $args = array(
+          $field => $id,
+      );
+
+      $post = query_posts($field . '=' . $id);
+       // $id = $comment['comment_post_ID'];
+       // $post = get_post($id);
       // @see template-loader.php
       $template = get_single_template();
 
