@@ -90,6 +90,7 @@ class MollomEntityComment extends MollomEntity {
       'postBody' => isset($comment['comment_content']) ? $comment['comment_content'] : '',
       'contextUrl' => get_permalink(),
       'contextTitle' => get_the_title($comment['comment_post_ID']),
+      'contextCreated' => get_the_time('U', $comment['comment_post_ID']),
     );
     if (isset($comment['comment_type']) && $comment['comment_type'] == 'trackback') {
       $data['unsure'] = FALSE;
