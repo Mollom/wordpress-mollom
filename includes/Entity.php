@@ -221,6 +221,7 @@ abstract class MollomEntity {
 
     // Output the new contentId to include it in the next form submission attempt.
     $data['contentId'] = $_POST['mollom']['contentId'] = $result['id'];
+    $data['spamClassification'] = $_POST['mollom']['spamClassification'] = $result['spamClassification'];
     $data += $result;
 
     // Handle the spam classification result:

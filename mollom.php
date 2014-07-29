@@ -73,6 +73,7 @@ add_action('delete_comment', 'mollom_dispatch_hook');
 add_action('wp_set_comment_status', 'mollom_dispatch_hook', 10, 2);
 add_action('transition_comment_status', 'mollom_dispatch_hook', 10, 3);
 add_filter('mollom_moderate_comment', 'mollom_dispatch_hook', 10, 2);
+add_filter('pre_comment_approved', 'mollom_dispatch_hook', 10, 2);
 
 // Users.
 // @todo Multisite uses wp-signup.php.
@@ -120,6 +121,7 @@ function mollom_dispatch_hook($has_args = NULL) {
     'wp_set_comment_status' => array('MollomEntityComment', 'sendFeedback'),
     'transition_comment_status' => array('MollomEntityComment', 'transitionStatus'),
     'mollom_moderate_comment' => array('MollomEntityComment', 'moderate'),
+    'pre_comment_approved' => array('MollomEntityComment', 'setStatus'),
     // Users.
     'register_form' => array('MollomEntityUser', 'buildForm'),
     'registration_errors' => array('MollomEntityUser', 'validateRegistrationForm'),

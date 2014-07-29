@@ -98,7 +98,7 @@ class MollomEntityComment extends MollomEntity {
     $data = parent::validateForm($data);
 
     // If there are errors, re-render the page containing the form.
-    if ($this->hasErrors()) {
+    if ($this->hasErrors() && (get_option('mollom_spam', 'discard') == 'discard')) {
       add_action('wp_enqueue_scripts', array('MollomForm', 'enqueueScripts'));
       add_action('comment_form_before', array($this, 'beforeFormRendering'), -100);
       add_action('comment_form_after', array($this, 'afterFormRendering'), 100);
@@ -113,6 +113,7 @@ class MollomEntityComment extends MollomEntity {
     }
 
     $comment['mollom_content_id'] = $data['contentId'];
+    $comment['mollom_spam_classification'] = $data['spamClassification'];
     return $comment;
   }
 
@@ -185,6 +186,29 @@ EOD;
       $action = 'trash';
     }
     return wp_set_comment_status($id, $action);
+  }
+
+  /**
+   * Retains a comment entity in a specific queue
+   *
+   * The default comment status is determined based on the content classification
+   * by Mollom.
+   *
+   * @param mixed $approved
+   *   The initial approval status. Could be 0, 1 or 'spam'.
+   *
+   * @param array $comment_data
+   *   The submitted comment data
+   *
+   * @return
+   *   The desired approval status. Either 0, 1 or 'spam'.
+   */
+  public function setStatus($approved, $comment_data) {
+    if ($comment_data['mollom_spam_classification'] == 'spam') {
+      $approved = 'spam';
+    }
+
+    return $approved;
   }
 
 }
